@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="xs-gem5 中 store 指令的发射执行提交过程。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xs-gem5: store 指令的生命周期">
+<meta property="og:url" content="http://example.com/2025/09/03/Arch/simulator/xs-gem5/store/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="xs-gem5 中 store 指令的发射执行提交过程。">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-09-03T14:58:36.000Z">
+<meta property="article:modified_time" content="2025-09-04T01:42:11.567Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/03/Arch/simulator/xs-gem5/store/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>xs-gem5: store 指令的生命周期 | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/03/Arch/simulator/xs-gem5/store/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          xs-gem5: store 指令的生命周期
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2025-09-03 22:58:36" itemprop="dateCreated datePublished" datetime="2025-09-03T22:58:36+08:00">2025-09-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-09-04 09:42:11" itemprop="dateModified" datetime="2025-09-04T09:42:11+08:00">2025-09-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/" itemprop="url" rel="index"><span itemprop="name">Arch</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/simulator/" itemprop="url" rel="index"><span itemprop="name">simulator</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/simulator/xs-gem5/" itemprop="url" rel="index"><span itemprop="name">xs-gem5</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">xs-gem5 中 store 指令的发射执行提交过程。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="一条-store-指令的前世今生"><a href="#一条-store-指令的前世今生" class="headerlink" title="一条 store 指令的前世今生"></a>一条 store 指令的前世今生</h1><h2 id="发射-从-instQueue-到-storePipeline"><a href="#发射-从-instQueue-到-storePipeline" class="headerlink" title="发射: 从 instQueue 到 storePipeline"></a>发射: 从 instQueue 到 storePipeline</h2><p>Gem5 执行到 <code>IEW::executeInsts()</code> 函数时，根据 <code>fromIssue-&gt;size</code> 得知此时允许发射的指令有多少条，然后通过循环次从 instQueue 中取出可以发射的指令： <code>instQueue.getInstToExecute()</code></p>
+<p>若是此时指令已经被冲刷 (<code>inst-&gt;isSquashed()</code>) : 标记该指令已执行并且可以提交 (由 commit 阶段来处理被冲刷指令) 后继续处理下一条指令</p>
+<p>对于访存指令 (<code>inst-&gt;isMemRef()</code>) , 如果是 store 指令 (<code>inst-&gt;isStore()</code>) , 则将指令加入 store pipeline: <code>ldstQueue.issueToStorePipe(inst)</code>。随后执行流水线: <code>ldstQueue.executePipeSx()</code></p>
+<p><code>ldstQueue.issueToStorePipe()</code> 调用该指令对应硬件线程号的 <code>LSQUnit::issueToStorePipe()</code>, 主要是该 store 指令加入 <code>storePipeSx[0]</code> 的尾部</p>
+<h2 id="执行-从-storePipeline-到-storeQueue"><a href="#执行-从-storePipeline-到-storeQueue" class="headerlink" title="执行: 从 storePipeline 到 storeQueue"></a>执行: 从 storePipeline 到 storeQueue</h2><p><code>ldstQueue.executePipeSx()</code> 调用所有线程对应的 <code>LSQUnit::executePipeSx()</code>, 分别执行 load 流水线和 store 流水线: <code>executeLoadPipeSx()</code>, <code>executeStorePipeSx()</code>.</p>
+<p>对于 store 流水线：第一级进行地址翻译 <code>storeDoTranslate()</code>, 第二级写入 StoreQueue <code>storeDoWriteSQ()</code> 并检查是否被冲刷，第二三四级清空流水线 <code>emptyStorePipeSx()</code>。如果指令需要 replay 则终止该指令流水 <code>inst-&gt;endPipelining()</code> 并处理下一条指令。特别地，对于发生 TLBmiss 而需要 replay 的，还需要通知发射队列： <code>iewStage-&gt;deferMemInst(inst)</code></p>
+<h3 id="stage1-address-translation"><a href="#stage1-address-translation" class="headerlink" title="stage1: address translation"></a>stage1: address translation</h3><p>在 xs-gem5 中，指令的 <code>initiateAcc()</code> API 仅仅用于进行 TLB 访问, 在此处被调用</p>
+<ul>
+<li>inst-&gt;initiateAcc()</li>
+<li>xc-&gt;writeMem()</li>
+<li>cpu-&gt;pushRequest()<ul>
+<li>iew.ldstQueue.pushRequest()</li>
+</ul>
+</li>
+<li>LSQ::pushRequest()<ul>
+<li>计算是否需要突发传输：计算地址访问范围是否跨 cache block<ul>
+<li>如果跨 cache block: 则将请求设置为 <code>SplitDataRequest</code></li>
+<li>如果不跨 cache block: 则将请求设置为 <code>SingleDataRequest</code></li>
+</ul>
+</li>
+<li>设置请求并开始地址翻译：<code>request-&gt;initiateTranslation()</code></li>
+<li>将要写入的数据放入 inst-&gt;memData</li>
+</ul>
+</li>
+</ul>
+<h4 id="SplitDataRequest"><a href="#SplitDataRequest" class="headerlink" title="SplitDataRequest"></a>SplitDataRequest</h4><p>根据 cacheline 大小，将整个需要访问的内存区间划分成多个对 cacheline 的请求(头部和尾部需要单独处理以排除不需要访问的区间), 压入 <code>_reqs</code> ,对其中的每一个请求设置一些标志位后调用 MMU 开始地址翻译：<code>sendFragmentToTranslation()-&gt;translateTiming()</code></p>
+<h3 id="stage2-write-into-StoreQueue"><a href="#stage2-write-into-StoreQueue" class="headerlink" title="stage2: write into StoreQueue"></a>stage2: write into StoreQueue</h3><p>如果指令地址翻译已完成并且需要访存，则调用 <code>LSQUnit::write()</code> ，作用是将要写入的数据和指令信息写入 storeQueue 的 entry</p>
+<p>如果没有 fault, 则检查该 store 指令是否和在飞 load 指令存在违例：<code>checkViolations()</code></p>
+<h2 id="提交：-从-storeQueue-到-storeBuffer"><a href="#提交：-从-storeQueue-到-storeBuffer" class="headerlink" title="提交： 从 storeQueue 到 storeBuffer"></a>提交： 从 storeQueue 到 storeBuffer</h2><p>指令进入 LSQ::commitStore() 时将 storeQueue 中最年轻的指令标记为可以写回</p>
+<p>随后指令进入 LSQ::writebackStoreBuffer()</p>
+<ul>
+<li>指令先被写入 storeBuffer: offloadToStoreBuffer()<ul>
+<li>对于 split 请求<ul>
+<li>其每个子请求均插入 storeBuffer: <code>insertStoreBuffer()</code></li>
+<li>所有子请求均成功插入后，标记 store 指令完成并从 storeQueue 中移除该指令：<code>completeStore()</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>指令进入 storeBuffer 之后准备写入 cache : storeBufferEvictToCache()</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/03/Arch/cache/LLC/basic/" rel="prev" title="Last-Level Cache Design">
+      <i class="fa fa-chevron-left"></i> Last-Level Cache Design
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/03/Arch/simulator/xs-gem5/load/" rel="next" title="xs-gem5: load 指令的前世今生">
+      xs-gem5: load 指令的前世今生 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E6%9D%A1-store-%E6%8C%87%E4%BB%A4%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F"><span class="nav-number">1.</span> <span class="nav-text">一条 store 指令的前世今生</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%91%E5%B0%84-%E4%BB%8E-instQueue-%E5%88%B0-storePipeline"><span class="nav-number">1.1.</span> <span class="nav-text">发射: 从 instQueue 到 storePipeline</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C-%E4%BB%8E-storePipeline-%E5%88%B0-storeQueue"><span class="nav-number">1.2.</span> <span class="nav-text">执行: 从 storePipeline 到 storeQueue</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#stage1-address-translation"><span class="nav-number">1.2.1.</span> <span class="nav-text">stage1: address translation</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#SplitDataRequest"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">SplitDataRequest</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#stage2-write-into-StoreQueue"><span class="nav-number">1.2.2.</span> <span class="nav-text">stage2: write into StoreQueue</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8F%90%E4%BA%A4%EF%BC%9A-%E4%BB%8E-storeQueue-%E5%88%B0-storeBuffer"><span class="nav-number">1.3.</span> <span class="nav-text">提交： 从 storeQueue 到 storeBuffer</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
