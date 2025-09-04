@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Champsim Cache 简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Champsim Cache">
+<meta property="og:url" content="http://example.com/2025/09/04/Arch/simulator/champsim/cache/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="Champsim Cache 简介">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-09-04T06:51:38.000Z">
+<meta property="article:modified_time" content="2025-09-04T06:53:07.845Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/04/Arch/simulator/champsim/cache/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Champsim Cache | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/04/Arch/simulator/champsim/cache/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Champsim Cache
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2025-09-04 14:51:38 / Modified: 14:53:07" itemprop="dateCreated datePublished" datetime="2025-09-04T14:51:38+08:00">2025-09-04</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/" itemprop="url" rel="index"><span itemprop="name">Arch</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/simulator/" itemprop="url" rel="index"><span itemprop="name">simulator</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/simulator/champsim/" itemprop="url" rel="index"><span itemprop="name">champsim</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">Champsim Cache 简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Champsim-Cache"><a href="#Champsim-Cache" class="headerlink" title="Champsim Cache"></a>Champsim Cache</h1><p>坐标:: <code>cache.h</code> , <code>cache.cc</code></p>
+<p><code>class::CACHE</code></p>
+<h2 id="构造"><a href="#构造" class="headerlink" title="构造"></a>构造</h2><p>构造函数:<br><code>CACHE::CACHE(champsim::cache_builder&lt;&gt;)</code> ，由全局 env 通过 <a href="#cache_builder">cache_builder</a> 初始化</p>
+<p><a id="cache_builder"></a></p>
+<h3 id="cache-builder"><a href="#cache-builder" class="headerlink" title="cache_builder"></a>cache_builder</h3><p>模板类，需要的typename P 和 R 均继承自 cache_builder_module_type_holder。其中，P 代表 prefetcher，R 代表 replacement，通过模板的偏特化函数选择相应的类。</p>
+<h2 id="成员"><a href="#成员" class="headerlink" title="成员"></a>成员</h2><p>upper_levels&#x2F;lower_level:<br>上&#x2F;下级 cache 接口，channel_type（接口协议类）。对于 L1 Cache， upper_levers 连接 core 。</p>
+<p>lower_translate:<br>地址转换接口，channel_type。对于 L1Cache 而言，该端口连接 L1TLB； </p>
+<blockquote>
+<p>问题: 为什么 L2Cache 的该端口连接的是 L2 TLB?# ; LLC 的该端口留空。</p>
+</blockquote>
+<p>MAX_TAG:<br>每个周期最多可以同时接受几个 tag 访问请求，对于多端口 cache 而言，MAX_TAG &gt; 1</p>
+<p>MAX_FILL:<br>每个周期最多可以同时接受几个 refill 响应，取决于总线协议</p>
+<p>inflight_tag_check:<br>在飞的tag比较请求队列。每个周期开始时，会先从 translation_stash 中取出完成转换的请求，然后从上级 cache 中取出可以进行地址转换的请求，但是每个周期能取到的请求总数限制于 initiate_tag_bw 带宽之下。</p>
+<p>translation_stash:<br>地址转换请求的暂存队列</p>
+<p>pref_module_pimpl &#x2F; repl_module_pimpl:<br>预取器、替换策略的物理实现</p>
+<h3 id="成员类"><a href="#成员类" class="headerlink" title="成员类"></a>成员类</h3><ul>
+<li>请求类<ul>
+<li>tag 查找请求 : <code>tag_lookup_type</code></li>
+<li>mshr 请求 : <a href="#mshr_type">mshr_type</a></li>
+</ul>
+</li>
+<li>子系统类<ul>
+<li>预取器 <code>prefetcher_module_concept</code></li>
+<li>替换策略 <code>replacement_module_concept</code></li>
+</ul>
+</li>
+<li>mshr_type <a id="mshr_type"></a><br>用于访问和处理</li>
+</ul>
+<p>data_promise:<br>waitable 对象，下级 cache 返回数据后被赋值。当赋值完成的 cycle 到来时会被调入 <a href="#handle_fill">handle_fill</a> 处理</p>
+<h2 id="operable-接口实现"><a href="#operable-接口实现" class="headerlink" title="operable 接口实现"></a>operable 接口实现</h2><ul>
+<li>initialize()<ul>
+<li>预取器初始化: <code>impl_prefetcher_initialize()</code> ，直接调用成员预取器的 <code>impl_prefetcher_initialize()</code></li>
+<li>替换策略初始化: <code>impl_initialize_replacement()</code> ，直接调用成员替换策略的 <code>impl_initialize_replacement()</code></li>
+</ul>
+</li>
+<li>begin_phase(): 初始化各统计变量</li>
+<li>end_phase(unsigned cpu): 收集并统计最终的各统计变量的结果</li>
+<li>operate()<ul>
+<li>调用所有上级cache 的 <code>check_collision()</code></li>
+<li>Finish returns : 处理下级 cache 的响应<ul>
+<li>对于下级 cache returned 队列中的每个响应调用 <a href="#finish_packet">finish_packet</a></li>
+<li>计算下级 cache returned 队列中的响应个数累加到 progress</li>
+<li>清空下级 cache 的 returned 响应队列</li>
+</ul>
+</li>
+<li>Finish translations : 如果 cache 存在TLB端口， 处理 TLB 返回的结果<ul>
+<li>处理过程同下级 cache</li>
+</ul>
+</li>
+<li>Perform fills ：对于 MSHR 队列和 inflight_writes 队列<ul>
+<li>在 fill_bw 带宽内，每个队列选择所有 data_promise 已准备好的 entry（应当在队列的头部保存所有准备好 fill 的 entry）</li>
+<li>对 fill 范围的每个请求进行 <a href="#handle_fill">handle_fill</a>， 遇到第一个 handle 失败的作为结束地址</li>
+<li>将 handle 成功的请求移出该队列，并消耗相应 fill_bw 带宽</li>
+</ul>
+</li>
+<li>计算本周期可以接受的 tag 请求带宽，并将 translation_stash 中完成转换的请求加入 inflight_tag_check 队列<ul>
+<li>计算出当前周期可以接受的新的 tag_check 请求的带宽 : initiate_tag_bw</li>
+<li>在 initiate_tag_bw 的带宽下，对于 translation_stash 中的请求，如果完成地址转换，将其移入 inflight_tag_check，并消耗相应带宽</li>
+<li>[red]#如果有多个上级 cache，交换这些cache的位置？(看不懂)#</li>
+</ul>
+</li>
+<li>将上级 cache 中的 tag 请求，在带宽约束下移入 inflight_tag_check 队列 <ul>
+<li>对于上级 cache 的所有请求队列，计算出每个上级cache可以占用的tag带宽</li>
+<li>在每个上级cache能占用的带宽之下，将请求队列中可以进行地址转换的的请求移入 inflight_tag_check，并消耗相应的 initiate_tag_bw</li>
+</ul>
+</li>
+<li>发射地址转换请求 : 对每个请求依次检查是否完成地址转换，若未完成，则通知TLB: <code>issue_translation()</code><ul>
+<li>对于 inflight tag check 中的请求而言，是第一次发送地址转换请求</li>
+<li>对于 translation_stash 中的请求而言，是上一个周期未完成的地址转换请求</li>
+</ul>
+</li>
+<li>本周期 inflight_tag_check 中未完成的地址转换请求加入 translation_stash</li>
+<li>Perform tag checks<ul>
+<li>根据目前 inflight tag check 请求找到其中已经完成地址转换的请求得到请求地址范围</li>
+<li>将这些tag请求依次 <a href="#try_hit">try_hit</a></li>
+<li>对于 tag 比较结果为 miss 的请求，进行 <a href="#do_handle_miss">do_handle_miss</a></li>
+<li>消耗相应的 tag_check 带宽 (每次 operate 最大带宽为 <code>MAX_TAG</code> )</li>
+<li>从 inflight tag check 请求中删除已完成的 tag check 请求</li>
+</ul>
+</li>
+<li>调用预取器的 <code>operate()</code></li>
+<li>返回消耗的总带宽：包括 下级返回数据和完成地址转换消耗的带宽 + fill消耗带宽 + 初始化tag带宽 + tag check带宽</li>
+</ul>
+</li>
+</ul>
+<p><a id="do_handle_miss"></a><br>do_handle_miss():</p>
+<ul>
+<li>对于没有设置 <code>m_wq_full_addr</code> 的 write miss ， 调用 <a href="#handle_write">handle_write</a> 处理请求：此时的请求属于写回miss后的替换block</li>
+<li>对于其他请求，调用 <a href="#handle_miss">handle_miss</a></li>
+</ul>
+<blockquote>
+<p>至于 m_wq_full_addr 到底什么意思不太懂？champsim default 设置中 l1cache 均设置了该变量，而 l2 和 llc 均未设置该变量</p>
+</blockquote>
+<p>带宽消耗:<br>最终 operate() 返回所有操作的请求数：</p>
+<p>progress:<br>包括:<br>. 下级 cache 每周期响应返回请求数据的个数<br>. TLB 每周期响应返回请求数据的个数<br>. 每周期从 inflight_tag_check 移入 translation_stash 的请求数</p>
+<p>initiate_tag_bw:<br>每个周期可以接受的新的 tag 访问请求，用于补充 inflight_tag_check 队列。主要消耗来自：</p>
+<ol>
+<li>每个周期刚开始 translation_stash 中已完成地址转换的请求</li>
+<li>上级 cache 中可以进行地址转换的请求</li>
+</ol>
+<p>fill_bw:<br>每周期可以处理的 refill 数量，用于处理 MSHR 队列和 inflight_writes 中的未响应请求</p>
+<p>tag_check_bw:<br>每周期可以访问的 tag 的请求数</p>
+<h2 id="CACHE-操作实现"><a href="#CACHE-操作实现" class="headerlink" title="CACHE 操作实现"></a>CACHE 操作实现</h2><ul>
+<li><p><code>finish_packet()</code> <a id="finish_packet"></a>: 处理下级 cache 返回的数据</p>
+<ol>
+<li>找到 MSHR 队列中地址匹配的 entry ， 并将下级 cache 返回的数据和将来完成 fill 的时间打包为 waitable 对象并赋值给其 data_promise</li>
+<li>找到 MSHR 队列中第一个 data_promise 未赋值（意味着下级 cache 尚未返回该 entry 请求的数据） 的 entry，将地址匹配的 entry 和该entry交换位置，目的是希望所有 data_promise 已完成的 entry 都放到队列的前面以便于处理 refill。</li>
+</ol>
+</li>
+<li><p><code>finish_translation()</code> <a id="finish_translation"></a></p>
+<ul>
+<li>找到 <code>translation_stash</code> 中未完成地址转换的 entry，从其中找出与 TLB 返回的地址匹配的 entry</li>
+<li>将这些 entry 标记为完成地址转换并将转换后的物理地址写入相应的entry： <code>mark_translated</code></li>
+<li>将 inflight_tag_check 队列中的所有地址匹配的 entry 都 <code>mark_translated</code></li>
+</ul>
+</li>
+<li><p><code>handle_fill()</code> <a id="handle_fill"></a>: 根据下级cache返回的数据 refill 当前cache</p>
+<ol>
+<li>根据地址确定要 refill 的 cache set</li>
+<li>如果该 set 的各个 way 均 valid ，则调用 <code>impl_find_victim</code> 找到要替换的 way ；如果有 way 不是 valid ，优先选该 way 做替换</li>
+<li>找到要替换的 way 后，如果该 way valid 且 dirty，需写回下级 cache ，  <code>lower_level-&gt;add_wq(writeback_packet)</code> </li>
+<li>通知 prefetcher 和 replacement 此次 refill 的具体信息，便于其更新状态<ul>
+<li><code>impl_prefetch_cache_fill</code> , <code>impl_replacement_cache_fill</code></li>
+</ul>
+</li>
+<li>完成真正的 refill 操作： fill_block 直接赋值给 cache block</li>
+<li>将 refill 的具体信息打包为 mshr 的 response_type 加入 该 mshr entry 的 to_return 队列<br>  (此时原先 miss 的请求再次 &lt;<try_hit>&gt; 将 hit 并返回数据同时移出 MSHR 队列)</li>
+</ol>
+</li>
+</ul>
+<blockquote>
+<p><code>impl_find_victim</code>, <code>impl_replacement_cache_fill</code> 均由 replament 模块的成员 repl_module_pimpl 实现</p>
+</blockquote>
+<ul>
+<li><code>try_hit()</code> <a id="try_hit"></a>: 比较 tag ，检查是否 hit<ol>
+<li>根据地址确定要访问 的 cache set, 没找到则 miss</li>
+<li>更新 prefetcher 和 replacement：<br> <code>impl_prefetcher_cache_operate</code> , <code>impl_update_replacement_state</code></li>
+<li>如果 hit</li>
+</ol>
+<ul>
+<li>将响应加入请求 handle_pkt 的 to_return 队列</li>
+<li>对于写请求，置位 hit block 的 dirty 位</li>
+<li>如果该 hit block 是预取来的，将 prefetch 位置0</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>Champsim trace 信息并不包含访问的字节数， cpu 对内存的访问是否 hit 只会通过比较 block_num 和 block_offset 决定，并不会实际返回数据。</p>
+</blockquote>
+<ul>
+<li><p><code>handle_miss()</code> <a id="handle_miss"></a></p>
+<ol>
+<li>将请求包装成 mshr 请求</li>
+<li>查找 MSHR 队列中是否有地址匹配的 entry</li>
+</ol>
+<ul>
+<li>如果有，则将当前请求和该 entry merge 到一起</li>
+<li>如果 MSHR 队列已满，则 处理失败，返回 false</li>
+<li>否则（无匹配项且队列未满）:<ul>
+<li>向下级 cache 发送读取请求 <code>lowerlevel-&gt;add_rq()</code></li>
+<li>为该请求分配一个 MSHR entry</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><code>handle_write()</code> <a id="handle_write"></a></p>
+<ol>
+<li>将请求打包为 mshr_type , 设置 FILL_LATENCY 后触发事件</li>
+<li>将该 mshr_type 加入 <code>inflight_writes</code></li>
+</ol>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/04/Arch/simulator/champsim/config/" rel="prev" title="Champsim Configuration">
+      <i class="fa fa-chevron-left"></i> Champsim Configuration
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/04/Arch/simulator/champsim/utility/" rel="next" title="Champsim Utility Class">
+      Champsim Utility Class <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Champsim-Cache"><span class="nav-number">1.</span> <span class="nav-text">Champsim Cache</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E9%80%A0"><span class="nav-number">1.1.</span> <span class="nav-text">构造</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#cache-builder"><span class="nav-number">1.1.1.</span> <span class="nav-text">cache_builder</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%90%E5%91%98"><span class="nav-number">1.2.</span> <span class="nav-text">成员</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%90%E5%91%98%E7%B1%BB"><span class="nav-number">1.2.1.</span> <span class="nav-text">成员类</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#operable-%E6%8E%A5%E5%8F%A3%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.3.</span> <span class="nav-text">operable 接口实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CACHE-%E6%93%8D%E4%BD%9C%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.4.</span> <span class="nav-text">CACHE 操作实现</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
