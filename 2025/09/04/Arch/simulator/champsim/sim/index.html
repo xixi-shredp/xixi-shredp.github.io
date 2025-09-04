@@ -20,19 +20,19 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="xs-gem5 中 load 指令的发射执行过程。">
+  <meta name="description" content="Champsim 仿真简介">
 <meta property="og:type" content="article">
-<meta property="og:title" content="xs-gem5: load 指令的前世今生">
-<meta property="og:url" content="http://example.com/2025/09/03/Arch/simulator/xs-gem5/load/index.html">
+<meta property="og:title" content="Champsim Simulation">
+<meta property="og:url" content="http://example.com/2025/09/04/Arch/simulator/champsim/sim/index.html">
 <meta property="og:site_name" content="xixi&#39;s blog">
-<meta property="og:description" content="xs-gem5 中 load 指令的发射执行过程。">
+<meta property="og:description" content="Champsim 仿真简介">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2025-09-03T15:03:37.000Z">
-<meta property="article:modified_time" content="2025-09-04T01:41:47.556Z">
+<meta property="article:published_time" content="2025-09-04T03:10:37.000Z">
+<meta property="article:modified_time" content="2025-09-04T03:32:34.780Z">
 <meta property="article:author" content="xixi">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://example.com/2025/09/03/Arch/simulator/xs-gem5/load/">
+<link rel="canonical" href="http://example.com/2025/09/04/Arch/simulator/champsim/sim/">
 
 
 <script id="page-configurations">
@@ -45,7 +45,7 @@
   };
 </script>
 
-  <title>xs-gem5: load 指令的前世今生 | xixi's blog</title>
+  <title>Champsim Simulation | xixi's blog</title>
   
 
 
@@ -166,7 +166,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/03/Arch/simulator/xs-gem5/load/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/04/Arch/simulator/champsim/sim/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.png">
@@ -179,7 +179,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          xs-gem5: load 指令的前世今生
+          Champsim Simulation
         </h1>
 
         <div class="post-meta">
@@ -188,16 +188,10 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
+              
 
-              <time title="Created: 2025-09-03 23:03:37" itemprop="dateCreated datePublished" datetime="2025-09-03T23:03:37+08:00">2025-09-03</time>
+              <time title="Created: 2025-09-04 11:10:37 / Modified: 11:32:34" itemprop="dateCreated datePublished" datetime="2025-09-04T11:10:37+08:00">2025-09-04</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2025-09-04 09:41:47" itemprop="dateModified" datetime="2025-09-04T09:41:47+08:00">2025-09-04</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -212,12 +206,12 @@
                 </span>
                   , 
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Arch/simulator/xs-gem5/" itemprop="url" rel="index"><span itemprop="name">xs-gem5</span></a>
+                  <a href="/categories/Arch/simulator/champsim/" itemprop="url" rel="index"><span itemprop="name">champsim</span></a>
                 </span>
             </span>
 
           
-            <div class="post-description">xs-gem5 中 load 指令的发射执行过程。</div>
+            <div class="post-description">Champsim 仿真简介</div>
 
         </div>
       </header>
@@ -228,63 +222,91 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="load-指令的执行"><a href="#load-指令的执行" class="headerlink" title="load 指令的执行"></a>load 指令的执行</h1><h2 id="发射-从-instQueue-到-loadPipeline"><a href="#发射-从-instQueue-到-loadPipeline" class="headerlink" title="发射: 从 instQueue 到 loadPipeline"></a>发射: 从 instQueue 到 loadPipeline</h2><p>Gem5 执行到 <code>IEW::executeInsts()</code> 函数时，根据 <code>fromIssue-&gt;size</code> 得知此时允许发射的指令有多少条，然后通过循环次从 instQueue 中取出可以发射的指令： <code>instQueue.getInstToExecute()</code></p>
-<p>若是此时指令已经被冲刷 (<code>inst-&gt;isSquashed()</code>) : 标记该指令已执行并且可以提交 (由 commit 阶段来处理被冲刷指令) 后继续处理下一条指令</p>
-<p>对于访存指令 (<code>inst-&gt;isMemRef()</code>) , 如果是 load 指令 (<code>inst-&gt;isLoad()</code>) , 则将指令加入 load pipeline: <code>ldstQueue.issueToLoadPipe(inst)</code>。随后执行流水线: <code>ldstQueue.executePipeSx()</code></p>
-<p><code>ldstQueue.issueToLoadPipe()</code> 调用该指令对应硬件线程号的 <code>LSQUnit::issueToLoadPipe()</code>, 主要是将该 load 指令加入 <code>loadPipeSx[0]</code> 的尾部</p>
-<h2 id="执行-loadPipeline"><a href="#执行-loadPipeline" class="headerlink" title="执行: loadPipeline"></a>执行: loadPipeline</h2><p><code>ldstQueue.executePipeSx()</code> 调用所有线程对应的 <code>LSQUnit::executePipeSx()</code>, 分别执行 load 流水线和 store 流水线: <code>executeLoadPipeSx()</code>, <code>executeStorePipeSx()</code>.</p>
-<p>对于 load 流水线：如果指令被冲刷，则将指令标记已执行和可以提交，以在 commit 阶段处理。</p>
-<ol>
-<li>第一级: 进行地址翻译 <code>loadDoTranslate()</code></li>
-<li>第二级<ul>
-<li>通知调度器对 load 指令预测唤醒: <code>iewStage-&gt;getScheduler()-&gt;specWakeUpFromLoadPipe(inst)</code></li>
-<li>向访存系统发送 load 请求: <code>loadDoSendRequest()</code></li>
-</ul>
-</li>
-<li>第三级:<ul>
-<li>接收数据: <code>loadDoRecvData()</code></li>
-<li>对于预取指令，忽略 fault.</li>
-</ul>
-</li>
-<li>第四级: 将 load 数据写回: <code>loadDoWriteback()</code> (实际上什么也没做, 相当于空函数)</li>
+        <h1 id="Champsim-Simulation"><a href="#Champsim-Simulation" class="headerlink" title="Champsim Simulation"></a>Champsim Simulation</h1><h2 id="基类-operable"><a href="#基类-operable" class="headerlink" title="基类 operable"></a>基类 operable</h2><p>坐标： <code>operable.h</code> , <code>operable.cc</code></p>
+<h3 id="各成员的作用"><a href="#各成员的作用" class="headerlink" title="各成员的作用"></a>各成员的作用</h3><p>clock_period:<br>返回对象的时钟周期，单位ps</p>
+<p>current_time:<br>返回对象当前已运行的时间，以全局时钟周期为单位</p>
+<p>warmup:<br>记录该对象是否处于warmup phase下，以决定是否记录stat信息</p>
+<p><a id="operable_operate_on"></a><br>operate_on(const champsim::chrono::clock&amp; clock):<br>按照给定的时钟（一般是全局时钟），更新对象的 <code>current_time</code> ，并执行 <code>operate()</code></p>
+<h3 id="派生类定义接口"><a href="#派生类定义接口" class="headerlink" title="派生类定义接口"></a>派生类定义接口</h3><p>initialize():<br>初始化操作，在<a href="#champsim_main">champsim_main</a>的最开始被调用</p>
+<p>operate():<br>每个周期执行的操作，在<a href="#champsim_do_cycle">champsim_do_cycle</a>时调用<a href="#operable_operate_on">operable::operate_on()</a> 的内部被调用</p>
+<p>begin_phase():<br>每个 phase 开始后(<a href="#champsim_do_phase">champsim_do_phase</a>)最先执行的操作</p>
+<p><a id="operable_end_phase"></a><br>end_phase(unsigned):<br>每个 phase 完成后(<a href="#champsim_do_phase%5D">champsim_do_phase</a>执行的操作</p>
+<p><a id="operable_print_deadlock"></a><br>print_deadlock():<br>phase 触发 deadlock 时(<a href="#champsim_do_phase">champsim_do_phase</a>)调用</p>
+<h2 id="仿真运行流程"><a href="#仿真运行流程" class="headerlink" title="仿真运行流程"></a>仿真运行流程</h2><p>坐标： <code>main.cc</code> , <code>champsim.cc</code></p>
+<h3 id="main"><a href="#main" class="headerlink" title="main()"></a>main()</h3><ol>
+<li>进入 <code>main()</code> 函数之前，根据配置初始化全局配置变量</li>
 </ol>
-<p>在 load 流水线中，如果 load 指令需要 replay :  </p>
 <ul>
-<li>needSTLFReplay() || needCacheBlockedReplay() || needRescheduleReplay()<ul>
-<li>将指令取消发射(<code>iewStage-&gt;loadCancel()</code>)</li>
-<li>从 load 流水线中清空(<code>inst-&gt;endPipelining()</code>)</li>
+<li>主要利用模板的偏特化，根据配置生成的 <code>.csconfig/core_inst.inc</code> 和 <code>.csconfig/core_inst.cc.inc</code> 以初始化 <code>configured_environment</code></li>
+<li>主要的实现在 <code>.csconfig/core_inst.cc.inc</code> ，初始化包括channels, DRAM, vmem, ptws, caches, cores，并建立引用，通过 <code>xxx_view()</code> 的API访问这些引用</li>
+<li>其中一个比较特殊的引用 <code>operable_view()</code> 包括了cores, caches, ptws 以及DRAM的引用，这也说明这些类都是 operable 的派生类</li>
 </ul>
-</li>
-<li>第三级流水线上如果检查需要 replay ,则<ul>
-<li>如果是 bank conflict 导致: 发射队列重新发射指令 <code>inst-&gt;issueQue-&gt;retryMem(inst)</code></li>
-<li>如果是 cache miss 导致：<code>iewStage-&gt;cacheMissLdReplay()</code></li>
-<li>如果是 tlb miss 导致：<code>iewStage-&gt;deferMemInst()</code></li>
-<li>随后将指令取消发射并从 load 流水线中清空</li>
-</ul>
-</li>
-</ul>
-<p>load 指令走完流水线后如果不需要 replay 则标记指令可以写回(<code>iewStage-&gt;readyToFinish(inst)</code>) 并将该指令踢出流水线。 (正常退出)</p>
-<h3 id="stage1-address-translation"><a href="#stage1-address-translation" class="headerlink" title="stage1: address translation"></a>stage1: address translation</h3><p>在 xs-gem5 中，指令的 <code>initiateAcc()</code> API 仅仅用于进行 TLB 访问, 在此处被调用</p>
+<ol start="2">
+<li>进入 <code>main()</code> 函数后，配置各种命令行参数后进入 <code>champsim::main()</code></li>
+</ol>
 <ul>
-<li>inst-&gt;initiateAcc()</li>
-<li>xc-&gt;initiateMemRead()</li>
-<li>cpu-&gt;pushRequest()<ul>
-<li>iew.ldstQueue.pushRequest()</li>
+<li>app接受命令行输入参数</li>
+<li>确定warmup指令数和sim指令数(如果warmup指令数未给定，默认为sim指令数的20%)</li>
+<li>初始化 trace reader</li>
+<li>初始化 phases：warmup phase 和 simulation phase</li>
+<li>执行 <code>champsim::main()</code> 并返回相应的phase_stat信息</li>
+</ul>
+<ol start="3">
+<li>champsim::main() <a id="champsim_main"></a></li>
+</ol>
+<ul>
+<li>先初始化env中所有的 operable 对象:  <code>op.initialize();</code></li>
+<li>然后依次执行所有的phase:(事实上只有warmup和simulation两个phase) <a href="#champsim_do_phase">champsim_do_phase</a> </li>
+<li>将phase的运行结果返回（warmup phase除外）</li>
+</ul>
+<h3 id="champsim-do-phase"><a href="#champsim-do-phase" class="headerlink" title="champsim::do_phase()"></a>champsim::do_phase()</h3><p><a id="champsim_do_phase"></a></p>
+<ol>
+<li>Initialize phase</li>
+</ol>
+<ul>
+<li>先执行 env 中所有的 operable 对象的 <code>begin_phase()</code></li>
+<li>计算所有 operable 对象中的最小时钟周期（往往是core主频周期）</li>
+<li>初始化活锁检测器</li>
+</ul>
+<ol start="2">
+<li>Perform phase</li>
+</ol>
+<ul>
+<li>通过 phase_complete 记录所有 phases 的执行是否完成</li>
+<li>while主循环：检查 phase_complete 是否均为true<ul>
+<li>全局时钟 tick 上面计算出的最小周期，相当于Core内时钟的一个cycle</li>
+<li>执行 <code>champsim::do_cycle()</code></li>
+<li>检测活锁</li>
+<li>检测死锁<ul>
+<li>通过判断stall_cycles是否超过DEADLOCK_CYCLE（默认500）</li>
+<li>如果死锁， 调用每个 operable 的 &lt;&lt;operable_print_deadlock, print_deadlock()&gt;&gt; ，并调用 <code>abort()</code> 退出。</li>
 </ul>
 </li>
-<li>LSQ::pushRequest()<ul>
-<li>计算是否需要突发传输：计算地址访问范围是否跨 cache block<ul>
-<li>如果跨 cache block: 则将请求设置为 <code>SplitDataRequest</code></li>
-<li>如果不跨 cache block: 则将请求设置为 <code>SingleDataRequest</code></li>
+<li>检测phase是否已完成</li>
+<li>如果 cpu 的仿真指令数大于设置仿真指令数，则置位 phase_complete 中相应位</li>
+<li>如果已完成，执行每个 operable 的 &lt;&lt;operable_end_phase, end_phase()&gt;&gt;</li>
 </ul>
 </li>
-<li>设置请求并开始地址翻译：<code>request-&gt;initiateTranslation()</code></li>
-<li>将要写入的数据放入 inst-&gt;memData</li>
+<li>执行结束，收集stat信息<ul>
+<li>输出CPU的执行信息</li>
+<li>返回各个module的stat信息<ul>
+<li>所有cpu的sim_stats，roi_stats 分别插入到 stats.sim_cpu_stats 和 stats.sim_cpu_stats 中</li>
+<li>所有cache的sim_stats，roi_stats 分别插入到 stats.sim_cache_stats 和 stats.sim_cache_stats 中</li>
+<li>所有dram …</li>
 </ul>
 </li>
 </ul>
-<h4 id="SplitDataRequest"><a href="#SplitDataRequest" class="headerlink" title="SplitDataRequest"></a>SplitDataRequest</h4><p>根据 cacheline 大小，将整个需要访问的内存区间划分成多个对 cacheline 的请求(头部和尾部需要单独处理以排除不需要访问的区间), 压入 <code>_reqs</code> ,对其中的每一个请求设置一些标志位后调用 MMU 开始地址翻译：<code>sendFragmentToTranslation()-&gt;translateTiming()</code></p>
-<h3 id="stage2-todo"><a href="#stage2-todo" class="headerlink" title="stage2: todo"></a>stage2: todo</h3><h3 id="stage3-todo"><a href="#stage3-todo" class="headerlink" title="stage3: todo"></a>stage3: todo</h3><h3 id="stage4-todo"><a href="#stage4-todo" class="headerlink" title="stage4: todo"></a>stage4: todo</h3>
+</li>
+</ul>
+<h3 id="champsim-do-cycle"><a href="#champsim-do-cycle" class="headerlink" title="champsim::do_cycle()"></a>champsim::do_cycle()</h3><p><a id="champsim_do_cycle"></a></p>
+<ul>
+<li>将 env 中所有的 operable 对象按 current_time 从小到大排序<br>current_time 记录每个 operable 对象从复位开始执行的周期数</li>
+<li>Operate：对每个 operable 对象执行 <code>op.operate_on(global_clock)</code><br>返回该 operable 对象执行的(progress)</li>
+<li>Read from trace: 对于每个cpu，将 trace 读入input_queue</li>
+</ul>
+<h2 id="Utility-Functions"><a href="#Utility-Functions" class="headerlink" title="Utility Functions"></a>Utility Functions</h2><p>get_span: 根据请求访问起始地址和允许的带宽大小确定允许访问的起始地址 (in <code>span.h</code> )</p>
+<p>get_span_p: 在访问范围内，从开始地址向后找到第一个不满足函数要求的地址作为终止地址 (in <code>span.h</code> )</p>
+
     </div>
 
     
@@ -299,12 +321,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2025/09/03/Arch/simulator/xs-gem5/store/" rel="prev" title="xs-gem5: store 指令的生命周期">
-      <i class="fa fa-chevron-left"></i> xs-gem5: store 指令的生命周期
+    <a href="/2025/09/03/Arch/simulator/xs-gem5/load/" rel="prev" title="xs-gem5: load 指令的前世今生">
+      <i class="fa fa-chevron-left"></i> xs-gem5: load 指令的前世今生
     </a></div>
       <div class="post-nav-item">
-    <a href="/2025/09/04/Arch/simulator/champsim/sim/" rel="next" title="Champsim Simulation">
-      Champsim Simulation <i class="fa fa-chevron-right"></i>
+    <a href="/2025/09/04/Arch/simulator/champsim/config/" rel="next" title="Champsim Configuration">
+      Champsim Configuration <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -364,7 +386,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#load-%E6%8C%87%E4%BB%A4%E7%9A%84%E6%89%A7%E8%A1%8C"><span class="nav-number">1.</span> <span class="nav-text">load 指令的执行</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%91%E5%B0%84-%E4%BB%8E-instQueue-%E5%88%B0-loadPipeline"><span class="nav-number">1.1.</span> <span class="nav-text">发射: 从 instQueue 到 loadPipeline</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C-loadPipeline"><span class="nav-number">1.2.</span> <span class="nav-text">执行: loadPipeline</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#stage1-address-translation"><span class="nav-number">1.2.1.</span> <span class="nav-text">stage1: address translation</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#SplitDataRequest"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">SplitDataRequest</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#stage2-todo"><span class="nav-number">1.2.2.</span> <span class="nav-text">stage2: todo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#stage3-todo"><span class="nav-number">1.2.3.</span> <span class="nav-text">stage3: todo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#stage4-todo"><span class="nav-number">1.2.4.</span> <span class="nav-text">stage4: todo</span></a></li></ol></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Champsim-Simulation"><span class="nav-number">1.</span> <span class="nav-text">Champsim Simulation</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%B1%BB-operable"><span class="nav-number">1.1.</span> <span class="nav-text">基类 operable</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%84%E6%88%90%E5%91%98%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="nav-number">1.1.1.</span> <span class="nav-text">各成员的作用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B4%BE%E7%94%9F%E7%B1%BB%E5%AE%9A%E4%B9%89%E6%8E%A5%E5%8F%A3"><span class="nav-number">1.1.2.</span> <span class="nav-text">派生类定义接口</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%BF%E7%9C%9F%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="nav-number">1.2.</span> <span class="nav-text">仿真运行流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#main"><span class="nav-number">1.2.1.</span> <span class="nav-text">main()</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#champsim-do-phase"><span class="nav-number">1.2.2.</span> <span class="nav-text">champsim::do_phase()</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#champsim-do-cycle"><span class="nav-number">1.2.3.</span> <span class="nav-text">champsim::do_cycle()</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Utility-Functions"><span class="nav-number">1.3.</span> <span class="nav-text">Utility Functions</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
