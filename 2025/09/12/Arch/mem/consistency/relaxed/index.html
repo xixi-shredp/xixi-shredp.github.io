@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Relaxed(Weaker) Memory Consistency Model 松散内存模型简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Relaxed(Weaker) Memory Consistency Model">
+<meta property="og:url" content="http://example.com/2025/09/12/Arch/mem/consistency/relaxed/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="Relaxed(Weaker) Memory Consistency Model 松散内存模型简介">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/Arch/mem/consistency/relaxed/xc_switch.svg">
+<meta property="og:image" content="http://example.com/images/Arch/mem/consistency/relaxed/xc_basic_impl.svg">
+<meta property="article:published_time" content="2025-09-12T12:01:45.000Z">
+<meta property="article:modified_time" content="2025-09-12T12:25:50.340Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/Arch/mem/consistency/relaxed/xc_switch.svg">
+
+<link rel="canonical" href="http://example.com/2025/09/12/Arch/mem/consistency/relaxed/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Relaxed(Weaker) Memory Consistency Model | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/12/Arch/mem/consistency/relaxed/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Relaxed(Weaker) Memory Consistency Model
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2025-09-12 20:01:45 / Modified: 20:25:50" itemprop="dateCreated datePublished" datetime="2025-09-12T20:01:45+08:00">2025-09-12</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/" itemprop="url" rel="index"><span itemprop="name">Arch</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/mem/" itemprop="url" rel="index"><span itemprop="name">mem</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/mem/consistency/" itemprop="url" rel="index"><span itemprop="name">consistency</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">Relaxed(Weaker) Memory Consistency Model 松散内存模型简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p><strong>首次提出</strong>:<br>M. Dubois, C. Scheurich, and F. A. Briggs. Memory access buffering in multiprocessors. In Proc. of the 13th Annual International Symposium on Computer Architecture, pp. 434–42, June 1986. DOI: 10.1145&#x2F;285930.285991. 81</p>
+<p><strong>1990s综述</strong>:<br>S. V. Adve and K. Gharachorloo. Shared memory consistency models: A tutorial. IEEE Computer, 29(12):66–76, December 1996. DOI: 10.1109&#x2F;2.546611. 81</p>
+<p><strong>正确性证明</strong><br>A. Meixner and D. J. Sorin. Dynamic verification of memory consistency in cachecoherent multithreaded computer architectures. In Proc. of the International Conference on Dependable Systems and Networks, pp. 73–82, June 2006. DOI: 10.1109&#x2F;dsn.2006.29. 81</p>
+</blockquote>
+<p>提出的动机：优化性能<br>如果一些访存操作的顺序不影响最后程序执行结果的正确性，可以允许这些访存操作之间重排序以获得更高的性能</p>
+<ol>
+<li>Non-FIFO, 写合并的 write buffer<ul>
+<li>违反了 TSO</li>
+<li>要求 store 之间不能有 FENCE</li>
+</ul>
+</li>
+<li>预测执行的实现更简单<ul>
+<li>预测乱序执行时不需要检查预测指令最终的正确性 (由程序员保证)</li>
+</ul>
+</li>
+</ol>
+<p>relaxed memory models:  </p>
+<ol>
+<li><a href="#xc">eXample relaxed Consistency model (XC)</a></li>
+<li><a href="#rc">Release Consistency (RC)</a></li>
+<li><a href="#rvwmo">RISC-V Weak Memory Order (RVWMO)</a></li>
+<li><a href="#ibm_power">IBM Power Memory Model</a></li>
+<li>Alpha<ul>
+<li>类似 XC</li>
+<li>R. L. Sites, Ed. Alpha Architecture Reference Manual. Digital Press, 1992. 58, 81</li>
+</ul>
+</li>
+<li>SPARC Relaxed Memory Order (RMO)<ul>
+<li>类似 XC ，支持 TSO, PSO, RMO ，大部分实现使用 TSO</li>
+<li>D. L. Weaver and T. Germond, Eds. SPARC Architecture Manual (Version 9). PTR Prentice Hall, 1994. 58, 81, 82</li>
+</ul>
+</li>
+<li>ARM<ul>
+<li>ARM v7 类似 IBM Power</li>
+<li>ARM. ARM Architecture Reference Manual, ARMv7-A and ARMv7-R Edition Errata Markup. Downloaded January 13, 2011. 81, 82</li>
+<li>ARM. ARM v7A+R Architectural Reference Manual. Available from ARM Ltd.</li>
+<li>ARM v8 类似 RVWMO</li>
+<li>ARM. ARM v8 Architectural Reference Manual. Available from ARM Ltd</li>
+</ul>
+</li>
+</ol>
+<h1 id="eXample-relaxed-Consistency-model-XC"><a href="#eXample-relaxed-Consistency-model-XC" class="headerlink" title="eXample relaxed Consistency model (XC)"></a>eXample relaxed Consistency model (XC)</h1><p><a id="xc"></a></p>
+<ul>
+<li>使用 FENCE 指令来定序，默认情况下 load&#x2F;store 都是不定序指令</li>
+<li>FENCE 只作用于当前的核，不会影响其他核的访存顺序</li>
+</ul>
+<p>XC execution 的要求:  </p>
+<ol>
+<li>所有核将自己的 load, store, Fence 插入 global order &lt;m 的时候需满足:<ul>
+<li>if L(a) &lt;p FENCE &#x3D;&gt; L(a) &lt;m FENCE</li>
+<li>if S(a) &lt;p FENCE &#x3D;&gt; S(a) &lt;m FENCE</li>
+<li>if FENCE &lt;p FENCE &#x3D;&gt; FENCE &lt;m FENCE</li>
+<li>if FENCE &lt;p L(a) &#x3D;&gt; FENCE &lt;m L(a)</li>
+<li>if FENCE &lt;p S(a) &#x3D;&gt; FENCE &lt;m S(a)</li>
+</ul>
+</li>
+<li>所有核将自己的地址相同的 load, store 插入 global order &lt;m 的时候需满足:<ul>
+<li>if L(a) &lt;p L’(a) &#x3D;&gt; L(a) &lt;m L’(a)</li>
+<li>if S(a) &lt;p S(a) &#x3D;&gt; S(a) &lt;m S(a)</li>
+<li>if S(a) &lt;p S’(a) &#x3D;&gt; S(a) &lt;m S’(a)</li>
+</ul>
+</li>
+<li>每次 load 拿到的值是该 load 之前的相同地址的最后一次 store 的值<ul>
+<li>Value of L(a) &#x3D; Value of $MAX_{&lt;m} {S(a) | S(a) &lt;m L(a) or S(a) &lt;p L(a) }$</li>
+</ul>
+</li>
+</ol>
+<p>XC ordering rules (X 表示强制定序, B 表示需要 bypass, A 表示地址相同时需要定序)  </p>
+<table>
+	<tr align="center">
+	    <td colspan="6">Operation 2</td>
+	</tr>
+	<tr>
+	    <td rowspan="5">Operation 1</td>
+	    <td></td>
+	    <td>Load</td>
+	    <td>Store</td>
+	    <td>RMW</td>
+	    <td>FENCE</td>
+	</tr>
+	<tr>
+	    <td>Load</td>
+	    <td>A</td>
+	    <td>A</td>
+	    <td>A</td>
+	    <td>X</td>
+	</tr>
+	<tr>
+	    <td>Store</td>
+	    <td>B</td>
+	    <td>A</td>
+	    <td>A</td>
+	    <td>X</td>
+	</tr>
+	<tr>
+	    <td>RWM</td>
+	    <td>A</td>
+	    <td>A</td>
+	    <td>A</td>
+	    <td>X</td>
+	</tr>
+	<tr>
+	    <td>FENCE</td>
+	    <td>X</td>
+	    <td>X</td>
+	    <td>X</td>
+	    <td>X</td>
+	</tr>
+</table>
+
+
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><h3 id="System"><a href="#System" class="headerlink" title="System"></a>System</h3><p>The Switch<br><img src="/images/Arch/mem/consistency/relaxed/xc_switch.svg" alt="xc_switch"></p>
+<p>cache-coherence system<br><img src="/images/Arch/mem/consistency/relaxed/xc_basic_impl.svg" alt="xc_basic_impl"></p>
+<h3 id="原子指令"><a href="#原子指令" class="headerlink" title="原子指令"></a>原子指令</h3><p>简易实现  </p>
+<ol>
+<li>执行原子指令前排空 write buffer</li>
+<li>获取相应 block 的读写 coherence 状态</li>
+<li>执行 load 和 store ，在二者的执行之间 cache 将该 block 踢出</li>
+</ol>
+<p>为优化性能，可以不排空 write buffer (XC 模型允许重排序)</p>
+<p>因此， XC 模型下的原子指令并不能保证同步，需要在原子指令后添加 FENCE 指令实现同步。</p>
+<h3 id="FENCE"><a href="#FENCE" class="headerlink" title="FENCE"></a>FENCE</h3><p>3种实现:  </p>
+<ol>
+<li>nop</li>
+<li>draining: 等待所有前序访存指令完成， Xi -&gt; FENCE -&gt;Yi</li>
+<li>without draining: 满足 Xi -&gt; FENCE -&gt;Yi 的前提下不去排空前序访存指令</li>
+</ol>
+<h2 id="同步原语"><a href="#同步原语" class="headerlink" title="同步原语"></a>同步原语</h2><p>锁的实现需要在每次获取锁或者释放锁的前后都加上 FENCE 指令</p>
+<h1 id="Release-Consistency-RC"><a href="#Release-Consistency-RC" class="headerlink" title="Release Consistency (RC)"></a>Release Consistency (RC)</h1><p><a id="rc"></a></p>
+<blockquote>
+<p>K. Gharachorloo, D. Lenoski, J. Laudon, P. Gibbons, A. Gupta, and J. Hennessy. Memory consistency and event ordering in scalable shared-memory. In Proc. of the 17th Annual International Symposium on Computer Architecture, pp. 15–26, May 1990. DOI: 10.1109&#x2F;isca.1990.134503. 72, 81</p>
+</blockquote>
+<p>相比于 XC, RC 认为每个同步操作都被 FENCE 包围过于浪费性能</p>
+<p>因此提供了 ACQUIER 和 RELEASE 的同步原语用于获取和释放锁 (相比于 XC 的 FENCE 会排序其前后两个方向的访存操作, ACQUIRE 和 RELEASE 只会排序某一个方向的访存指令)</p>
+<p>RC rules:  </p>
+<ol>
+<li>ACQUIRE -&gt; Load, Store (but not Load, Store -&gt; ACQUIRE) </li>
+<li>Load, Store -&gt; RELEASE (but not RELEASE -&gt; Load, Store) </li>
+<li>SC ordering of ACQUIREs and RELEASEs:<ul>
+<li>ACQUIRE -&gt; ACQUIRE </li>
+<li>ACQUIRE -&gt; RELEASE </li>
+<li>RELEASE -&gt; ACQUIRE </li>
+<li>RELEASE -&gt; RELEASE</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>relaxed models 属性  </p>
+<ol>
+<li>causality 因果</li>
+<li>write atomicity &#x2F; store atomicity &#x2F; multi-copy atomicity 写原子性<ul>
+<li>一个核的 store 可以被所有其他核一次看到</li>
+<li>必要不充分条件: 正确处理 Independent Read Independent Write (IRIW)</li>
+<li>隐含了 causality 因果性</li>
+</ul>
+</li>
+</ol>
+</blockquote>
+<h1 id="RISC-V-Weak-Memory-Order-RVWMO"><a href="#RISC-V-Weak-Memory-Order-RVWMO" class="headerlink" title="RISC-V Weak Memory Order (RVWMO)"></a>RISC-V Weak Memory Order (RVWMO)</h1><p><a id="rvwmo"></a></p>
+<p>融合了 XC 和 RC:  </p>
+<ol>
+<li>定义了 global memory order ，存在多条 FENCE 指令变体</li>
+<li>load &#x2F; store 可以带 RELEASE&#x2F;ACQUIRE 标记</li>
+</ol>
+<h2 id="RELEASE-ACQUIRE-orderings"><a href="#RELEASE-ACQUIRE-orderings" class="headerlink" title="RELEASE&#x2F;ACQUIRE orderings"></a>RELEASE&#x2F;ACQUIRE orderings</h2><ul>
+<li>ACQUIRE 标记: $ACQUIRE-RC_{PC}$ , $ACQUIRE-RC_{SC}$</li>
+<li>RELEASE 标记: $RELEASE-RC_{PC}$ , $RELEASE-RC_{SC}$</li>
+</ul>
+<p>load&#x2F;store 可以带任意的标记， RMW 指令只能带 $RC_{SC}$ 标记</p>
+<p>ordering  </p>
+<ol>
+<li>ACQUIRE -&gt; Load,Store</li>
+<li>Load,Store -&gt; RELEASE</li>
+<li>$RELEASE-RC_{SC}$ -&gt; $ACQUIRE-RC_{SC}$</li>
+</ol>
+<h2 id="FENCE-orderings"><a href="#FENCE-orderings" class="headerlink" title="FENCE orderings"></a>FENCE orderings</h2><p>FENCE 指令  </p>
+<ol>
+<li>FENCE RW,RW <ul>
+<li>load, store -&gt; load, store</li>
+</ul>
+</li>
+<li>FENCE RW,W<ul>
+<li>load, store -&gt; store</li>
+</ul>
+</li>
+<li>FENCE R,RW<ul>
+<li>load -&gt; load, store</li>
+</ul>
+</li>
+<li>FENCE R,R<ul>
+<li>load -&gt; load</li>
+</ul>
+</li>
+<li>FENCE W,W<ul>
+<li>store -&gt; store</li>
+</ul>
+</li>
+<li>FENCE.TSO<ul>
+<li>load -&gt; load, store</li>
+<li>store -&gt; store</li>
+</ul>
+</li>
+</ol>
+<h2 id="Dependency-induced-orderings"><a href="#Dependency-induced-orderings" class="headerlink" title="Dependency-induced orderings"></a>Dependency-induced orderings</h2><p>对于存在数据依赖&#x2F;地址依赖的访存指令， RVWMO 会隐式地强制定序</p>
+<h2 id="Same-address-orderings"><a href="#Same-address-orderings" class="headerlink" title="Same address orderings"></a>Same address orderings</h2><p>对于相同地址的访存指令， RVWMO 规定了：  </p>
+<ol>
+<li>Load -&gt; Store</li>
+<li>Store -&gt; Store</li>
+<li>部分情况下的 Load -&gt; Load<ul>
+<li>相同地址的两条 load 之间没有对同一地址的 store</li>
+<li>两条 load 返回的值来自于不同的 store</li>
+</ul>
+</li>
+</ol>
+<h2 id="RWM"><a href="#RWM" class="headerlink" title="RWM"></a>RWM</h2><p>RISC-V 支持 2 种 RMW 指令：  </p>
+<ol>
+<li>Atomic Memory Operations (AMO)</li>
+<li>Load Reserved&#x2F;Store Conditionals (LdR&#x2F;StC) (成对使用)<ol>
+<li>LdR 将取出值之后保留</li>
+<li>StC 在保留值依然有效时才可成功执行</li>
+</ol>
+</li>
+</ol>
+<h1 id="IBM-Power-Memory-Model"><a href="#IBM-Power-Memory-Model" class="headerlink" title="IBM Power Memory Model"></a>IBM Power Memory Model</h1><p><a id="ibm_power"></a></p>
+<blockquote>
+<p>IBM. Power ISA Version 2.06 Revision B. <a target="_blank" rel="noopener" href="http://www.power.org/resources/">http://www.power.org/resources/</a> downloads&#x2F; PowerISA_V2.06B_V2_PUBLIC.pdf, July 2010. 78, 81</p>
+</blockquote>
+<p><a id="cumulative">cumulative:</a><br>定义 FENCE 之前的所有访存操作为集合 X, 之后的所有访存操作为集合 Y</p>
+<ol>
+<li>将其他核排在 FENCE 之前的操作加入集合 X</li>
+<li>将其他核排在 FENCE 之后的操作加入集合 Y (可能是由于数据依赖、控制依赖或其他 FENCE )</li>
+<li>递归地执行前两项</li>
+</ol>
+<p>Power model  </p>
+<ol>
+<li>store 相对与其他核而言，而非内存，所以不保证 total memory order<ul>
+<li>一个核需要使用 FENCE 对 store 定序之后，其他核才可以看到相同的 store 顺序</li>
+</ul>
+</li>
+<li>部分 FENCE 具有累积效果 &lt;<cumulative>&gt;</li>
+<li>有 3 种 FENCE:<ul>
+<li>SYNC or HWSYNC (cumulative): 将 X 的所有操作排到 Y 前</li>
+<li>LWSYNC (cumulative)<ul>
+<li>loads in X -&gt; loads in Y</li>
+<li>loads in X -&gt; stores in Y</li>
+<li>stores in X -&gt; stores in Y</li>
+</ul>
+</li>
+<li>ISYNC (not cumulative): 用于排序两条来自同一核的 load 指令</li>
+</ul>
+</li>
+<li>某些情况尽管没有 FENCE 依旧会排序<ul>
+<li>如：前序 load 计算后序访存指令的地址，此时会隐式排序</li>
+</ul>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/12/Arch/mem/consistency/TSO/" rel="prev" title="Total Store Order (TSO)">
+      <i class="fa fa-chevron-left"></i> Total Store Order (TSO)
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/14/Arch/cache/replacement/coarse/recency-based/" rel="next" title="Recency-Based Cache Replacement Policies">
+      Recency-Based Cache Replacement Policies <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#eXample-relaxed-Consistency-model-XC"><span class="nav-number">1.</span> <span class="nav-text">eXample relaxed Consistency model (XC)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.1.</span> <span class="nav-text">实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#System"><span class="nav-number">1.1.1.</span> <span class="nav-text">System</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E5%AD%90%E6%8C%87%E4%BB%A4"><span class="nav-number">1.1.2.</span> <span class="nav-text">原子指令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FENCE"><span class="nav-number">1.1.3.</span> <span class="nav-text">FENCE</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8C%E6%AD%A5%E5%8E%9F%E8%AF%AD"><span class="nav-number">1.2.</span> <span class="nav-text">同步原语</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Release-Consistency-RC"><span class="nav-number">2.</span> <span class="nav-text">Release Consistency (RC)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#RISC-V-Weak-Memory-Order-RVWMO"><span class="nav-number">3.</span> <span class="nav-text">RISC-V Weak Memory Order (RVWMO)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#RELEASE-ACQUIRE-orderings"><span class="nav-number">3.1.</span> <span class="nav-text">RELEASE&#x2F;ACQUIRE orderings</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FENCE-orderings"><span class="nav-number">3.2.</span> <span class="nav-text">FENCE orderings</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Dependency-induced-orderings"><span class="nav-number">3.3.</span> <span class="nav-text">Dependency-induced orderings</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Same-address-orderings"><span class="nav-number">3.4.</span> <span class="nav-text">Same address orderings</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RWM"><span class="nav-number">3.5.</span> <span class="nav-text">RWM</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#IBM-Power-Memory-Model"><span class="nav-number">4.</span> <span class="nav-text">IBM Power Memory Model</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

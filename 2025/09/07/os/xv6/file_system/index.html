@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="xv6 文件系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="File System in xv6">
+<meta property="og:url" content="http://example.com/2025/09/07/os/xv6/file_system/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="xv6 文件系统">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-09-07T09:30:53.000Z">
+<meta property="article:modified_time" content="2025-09-07T09:33:10.263Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/07/os/xv6/file_system/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>File System in xv6 | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/07/os/xv6/file_system/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          File System in xv6
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2025-09-07 17:30:53 / Modified: 17:33:10" itemprop="dateCreated datePublished" datetime="2025-09-07T17:30:53+08:00">2025-09-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/" itemprop="url" rel="index"><span itemprop="name">os</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/xv6/" itemprop="url" rel="index"><span itemprop="name">xv6</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">xv6 文件系统</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>xv6 文件系统分为7层：</p>
+<ol>
+<li>File Descriptor<ul>
+<li>用于抽象 Unix 系统资源（管道，设备，文件等）</li>
+</ul>
+</li>
+<li>Pathname<ul>
+<li>提供层级式的路径名</li>
+</ul>
+</li>
+<li>Directory<ul>
+<li>每个目录被实现为一种特殊的 inode</li>
+<li>包含一组目录项，每项包含一个文件名和 i-number</li>
+</ul>
+</li>
+<li>Inode<ul>
+<li>提供单独的文件, 每个文件由一个 inode 表示</li>
+<li>每个 inode 有唯一的 i-number 和一些 blocks 来存储文件的数据</li>
+</ul>
+</li>
+<li>Logging<ul>
+<li>允许更高层级将针对多个 blocks 的更新打包进一个 transaction</li>
+<li>并确保一个 transaction 内的块都会被原子地更新（确保崩溃一致性）</li>
+</ul>
+</li>
+<li>Buffer Cache<ul>
+<li>缓存来自 disk 的 blocks ，并和 disk 同步对于他们的访问</li>
+<li>确保一次只有一个内核进程可以修改任何 block 上的数据</li>
+</ul>
+</li>
+<li>Disk<ul>
+<li>在 virtio 硬件驱动上读写 blocks</li>
+</ul>
+</li>
+</ol>
+<h1 id="Disk"><a href="#Disk" class="headerlink" title="Disk"></a>Disk</h1><p>512 字节的 block 所组成的标号序列的设备</p>
+<p>操作系统使用的 block size 和 disk 实际实现的 block size 可能不同（但通常情况下一致）</p>
+<p>xv6 将读入内存的 block 放入结构体 struct buf</p>
+<h2 id="inode-block-和-content-block-在-Disk-中的存储"><a href="#inode-block-和-content-block-在-Disk-中的存储" class="headerlink" title="inode block 和 content block 在 Disk 中的存储"></a>inode block 和 content block 在 Disk 中的存储</h2><p>xv6 disk 分为几个 sections:</p>
+<ol>
+<li>block 0: boot sector</li>
+<li>block 1: superblock 包含文件系统元数据<ul>
+<li>文件系统大小(blocks), data blocks 数量, inodes 数量, log blocks 数量</li>
+<li>通过 mkfs 程序写入</li>
+</ul>
+</li>
+<li>block 2-m : log blocks</li>
+<li>block m-n : inode blocks<ul>
+<li>每个 block 内有多个 inodes</li>
+</ul>
+</li>
+<li>block n-x : bitmap blocks 追踪哪些 data blocks 被使用</li>
+<li>block x-y : data blocks<ul>
+<li>每个 data block 都在 bitmap 中被标记: free or hold</li>
+</ul>
+</li>
+</ol>
+<h1 id="Buffer-Cache"><a href="#Buffer-Cache" class="headerlink" title="Buffer Cache"></a>Buffer Cache</h1><p>两个任务：</p>
+<ol>
+<li>同步对于 disk blocks 的访问，确保每个 block 在内存中只有一个 copy, 且一次只有一个内核线程可以使用该 copy</li>
+<li>缓存常用 blocks, 不需要反复从磁盘读 (功能同 cache 类似)</li>
+</ol>
+<p>接口：  </p>
+<ul>
+<li>bread: 获取一个 buf 结构体(slepp-locked)，包含相应 block 的一个 copy, 可以直接在内存中读写</li>
+<li>bwrite: 将一个修改过的 buf 写入 disk 中相应的位置</li>
+<li>brelse: 释放 buf (内核线程在 bwrite 后必须调用 brelse)</li>
+</ul>
+<p>每个 buf 有一个 sleep-lock 来确保每次只有一个内核线程可以访问 buf</p>
+<h2 id="实现-in-kernel-bio-c"><a href="#实现-in-kernel-bio-c" class="headerlink" title="实现 in kernel/bio.c"></a>实现 in <code>kernel/bio.c</code></h2><p>buffer cache 实现为所有 buffer 的双端链表</p>
+<p>每个 buffer 有2个状态域，valid 表明该 buffer 是否持有一个 block 的 copy, disk 表明 buffer 的内容已经被提交给 disk</p>
+<ul>
+<li>binit(): 将所有 buffer 组成的数组初始化为双端链表，之后所有对 buffer 的访问均通过 <code>bcache.head</code> 访问而非静态数组 <code>buf</code></li>
+<li>bread(): 调用 <code>bget()</code> 从给定 sector 获取一个 buffer<ul>
+<li>如果未找到，则从 disk 中读取 buffer: <code>virtio_disk_rw(b, 0)</code></li>
+<li>bget(): 扫描 buffer 链表<ul>
+<li>如果找到 buffer ,则给 buffer 上锁(sleep-lock)并返回</li>
+<li>如果未找到 buffer ,则选择一个未使用的 buffer 替换掉(refcnt &#x3D;&#x3D; 0)，同时标记 valid &#x3D; 0</li>
+<li>如果没有找到未使用的 buffer，则 panic (说明系统中有太多的进程同时运行, 也可以 sleep 进程等待 buffer 可用)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>bwrite(): 调用 <code>virtio_disk_rw(b, 1)</code> 将修改过的 buffer 写入 disk</li>
+<li>brelse(): 释放 sleeplock 并将 buffer 加入到 buffer 链表的前端(为了使未使用的 buffer 尽可能在链表前端, 以减少链表扫描的时间)</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/06/Arch/cache/LLC/basic/" rel="prev" title="Last-Level Cache in Cache Hierarchy">
+      <i class="fa fa-chevron-left"></i> Last-Level Cache in Cache Hierarchy
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/08/Arch/cache/replacement/overview/" rel="next" title="Cache Replacement Policy Overview">
+      Cache Replacement Policy Overview <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Disk"><span class="nav-number">1.</span> <span class="nav-text">Disk</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#inode-block-%E5%92%8C-content-block-%E5%9C%A8-Disk-%E4%B8%AD%E7%9A%84%E5%AD%98%E5%82%A8"><span class="nav-number">1.1.</span> <span class="nav-text">inode block 和 content block 在 Disk 中的存储</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Buffer-Cache"><span class="nav-number">2.</span> <span class="nav-text">Buffer Cache</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0-in-kernel-bio-c"><span class="nav-number">2.1.</span> <span class="nav-text">实现 in kernel&#x2F;bio.c</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

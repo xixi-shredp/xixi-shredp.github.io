@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="BIOS 和 UEFI 简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="BIOS and UEFI">
+<meta property="og:url" content="http://example.com/2025/09/10/os/generic/boot/bios_uefi/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="BIOS 和 UEFI 简介">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/os/generic/boot/bios_uefi/boot.drawio.svg">
+<meta property="article:published_time" content="2025-09-10T02:28:44.000Z">
+<meta property="article:modified_time" content="2025-09-10T07:32:57.840Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/os/generic/boot/bios_uefi/boot.drawio.svg">
+
+<link rel="canonical" href="http://example.com/2025/09/10/os/generic/boot/bios_uefi/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>BIOS and UEFI | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/10/os/generic/boot/bios_uefi/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          BIOS and UEFI
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2025-09-10 10:28:44 / Modified: 15:32:57" itemprop="dateCreated datePublished" datetime="2025-09-10T10:28:44+08:00">2025-09-10</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/" itemprop="url" rel="index"><span itemprop="name">os</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/generic/" itemprop="url" rel="index"><span itemprop="name">generic</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/generic/boot/" itemprop="url" rel="index"><span itemprop="name">boot</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">BIOS 和 UEFI 简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>整理参考自：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/721468044">知乎 TrustZero：一文搞懂UEFI</a></p>
+</blockquote>
+<h1 id="BIOS"><a href="#BIOS" class="headerlink" title="BIOS"></a>BIOS</h1><p>当我们提到BIOS时，根据上下文的不同，它可能代表不同的含义：</p>
+<ol>
+<li>BIOS标准：这是一个广泛的概念，指的是一种在计算机启动时初始化硬件并加载操作系统引导程序的标准接口。</li>
+<li>具体的BIOS实现——即特定于主板的固件：<ul>
+<li>这是由主板制造商编写或授权的代码。</li>
+<li>当计算机开机时，硬件被设置为开始执行BIOS。这是CPU需要知道的全部内容，即CPU不需要了解驱动器、文件系统或操作系统。BIOS负责初始化硬件，加载引导加载程序（如GRUB或Windows Boot Manager），然后引导加载程序负责加载并启动操作系统。</li>
+</ul>
+</li>
+</ol>
+<p>简而言之，BIOS是计算机启动过程中的一个重要环节，它负责在操作系统加载之前初始化硬件，并为操作系统的启动提供必要的环境。而UEFI（统一可扩展固件接口）是BIOS的现代替代品，提供了更多的功能和更好的安全性。</p>
+<h2 id="BIOS-标准"><a href="#BIOS-标准" class="headerlink" title="BIOS 标准"></a>BIOS 标准</h2><p>BIOS 标准定义了以下内容：</p>
+<ol>
+<li>一个硬编码的内存位置，计算机在开机时 CPU 将从该位置开始执行 BIOS 代码。</li>
+<li>磁盘位置，操作系统制造商可以在这些位置放置其引导加载程序以启动其操作系统。</li>
+<li>APIs：<ul>
+<li>从硬盘和软盘读写数据（因此不是所有程序都需要直接处理 IDE &#x2F; SATA 等总线）</li>
+<li>读取键盘按键 &#x3D;&gt; BIOS 是一个硬件抽象层。</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>但 BIOS API 使用并不多，因为：</p>
+<ul>
+<li>开发人员与操作系统的硬件抽象API进行交互，甚至操作系统本身也不使用太多的BIOS API（因为它们直接控制硬件以获得更高级别的访问权限，这样就很不安全了）</li>
+<li>即使在DOS时代，应用程序开发人员也可能使用DOS API进行抽象，而不是直接使用BIOS。</li>
+</ul>
+</blockquote>
+<h2 id="BIOS-实现"><a href="#BIOS-实现" class="headerlink" title="BIOS 实现"></a>BIOS 实现</h2><p>BIOS的实现是特定于主板的</p>
+<p>局限性: 由于引导加载程序大小的限制，大多数操作系统不得不使用复杂的链式启动过程。</p>
+<h3 id="启动过程"><a href="#启动过程" class="headerlink" title="启动过程"></a>启动过程</h3><p>CPU 复位后从一个特定的内存位置（x86: 0xFFFFFFF0, RISC-V: 厂商规定）开始执行代码，这个内存位置由主板的 BIOS 代码 ROM 提供支持。</p>
+<p>对于硬盘来说，存在一个引导扇区 &#x2F; 主引导记录(MBR)，它包含引导加载程序，并且其大小限制实际上是 440 字节，因此仅凭这个大小的引导加载程序无法加载现代操作系统。加载操作系统至少意味着引导加载程序必须从磁盘读取内核(Linux &#x2F; Windows等）并将其控制权交给它。</p>
+<p>通常, MBR 中的引导加载程序会将控制权传递给 active partition 的引导加载程序(VBR, 卷引导记录)，但它也有相同的大小限制。</p>
+<p>为了让引导加载程序从磁盘读取内核, <strong>它必须知道如何遍历文件系统以访问内核。</strong> 因此，引导加载程序会从文件系统的根目录读取并链式加载一个“第二阶段”——一个可以更大、因此可以包含更复杂代码的文件。</p>
+<h4 id="windows"><a href="#windows" class="headerlink" title="windows"></a>windows</h4><p>在Windows中，这个第二阶段过去被称为 NTLDR (NT加载程序)，位于 C 盘的根目录下</p>
+<p><img src="/images/os/generic/boot/bios_uefi/boot.drawio.svg" alt="BIOS 启动 windows 过程"></p>
+<p>引导加载程序组件分布在各个地方。有三个不同的特定于 Windows 的位置用于开始加载实际的内核。</p>
+<h4 id="Linux"><a href="#Linux" class="headerlink" title="Linux"></a>Linux</h4><p>Linux（链式GRUB）的情况也大致相同</p>
+<h1 id="UEFI"><a href="#UEFI" class="headerlink" title="UEFI"></a>UEFI</h1><p>UEFI 文档: <a target="_blank" rel="noopener" href="https://uefi.org/specs/UEFI/2.10/index.html">https://uefi.org/specs/UEFI/2.10/index.html</a></p>
+<p>EFI (Extensible Firmware Interface，可扩展固件接口) 是现代计算机系统中用来替代传统 BIOS 的一种新标准。</p>
+<p>UEFI: 统一可扩展固件接口（Unified Extensible Firmware Interface）</p>
+<h2 id="与-BIOS-的区别"><a href="#与-BIOS-的区别" class="headerlink" title="与 BIOS 的区别"></a>与 BIOS 的区别</h2><p>与 BIOS 执行相同的任务，但有一个 <strong>基本区别：它将所有关于初始化和启动的数据存储在 .efi 文件中，而不是存储在固件上</strong><br>这个 .efi 文件存储在硬盘上一个名为 EFI 系统分区（EFI System Partition, ESP）的特殊分区中。这个 ESP 分区还包含引导加载程序。</p>
+<p>UEFI 被设计用来克服旧版 BIOS 的许多限制，包括：</p>
+<ul>
+<li>UEFI 支持高达 8 ZB 的驱动器大小，而 BIOS 仅支持 2TB </li>
+<li>UEFI 启动更快</li>
+<li>UEFI 具有独立的驱动程序支持，而 BIOS 的驱动程序支持存储在 ROM 中，因此更新 BIOS 固件有点困难</li>
+<li>UEFI 提供类似“安全启动”（Secure Boot）的安全功能，防止计算机从未经授权&#x2F;未签名的应用程序启动<ul>
+<li>有助于防止 rootkit</li>
+<li>也会妨碍双系统启动，因为它将其他操作系统视为未签名的应用程序</li>
+<li>BIOS 允许在不更改任何设置的情况下运行多个操作系统。从现代的角度来看，这可能是一个安全问题，但对用户来说没有麻烦。</li>
+</ul>
+</li>
+<li>UEFI 以 32 位或 64 位模式运行，而 BIOS 以 16 位模式运行。<ul>
+<li>UEFI 能够提供 GUI, 允许使用鼠标进行导航，而 BIOS 仅允许使用键盘进行导航。</li>
+<li>如果操作系统以 16 位模式运行，使用 BIOS 不需要编写与硬件交互的代码。它可以直接使用 BIOS 提供的 API.否则，如果操作系统切换到 32 位或 64 位模式，则需要提供自己的与硬件交互的子程序。</li>
+</ul>
+</li>
+</ul>
+<p>由于 UEFI 自身相对于 BIOS 存在一些限制，所以也提供了传统模式（Legacy mode）。在该模式下，可以像拥有 BIOS 固件一样运行所有内容</p>
+<h2 id="UEFI-架构"><a href="#UEFI-架构" class="headerlink" title="UEFI 架构"></a>UEFI 架构</h2><h2 id="UEFI-启动过程"><a href="#UEFI-启动过程" class="headerlink" title="UEFI 启动过程"></a>UEFI 启动过程</h2><ol>
+<li>cpu reset 后启动 UEFI 固件并启动加电自检(POST) <ul>
+<li>检查硬件组件的完整性</li>
+</ul>
+</li>
+<li>POST 成功完成后，UEFI 固件会查找可启动设备</li>
+<li>在 UEFI 系统中，固件与 UEFI 启动管理器交互, 启动管理器会查阅 UEFI 启动变量<ul>
+<li>UEFI 启动管理器: 一个负责加载操作系统的软件</li>
+<li>UEFI 启动变量： 包含有关可用启动选项及其优先级的信息，存储在非易失性存储器中，用户或系统管理员可以对其进行修改以自定义启动配置</li>
+</ul>
+</li>
+<li>UEFI 固件在启动管理器的帮助下，定位 SSD 上 EFI 系统分区（ESP）中存储的 UEFI 引导加载程序<ul>
+<li>UEFI 引导加载程序是一个小程序，它了解文件系统并知道如何将操作系统内核加载到内存中</li>
+</ul>
+</li>
+<li>一旦 UEFI 引导加载程序加载了操作系统内核，控制权便转移给操作系统，并向用户呈现用户界面</li>
+</ol>
+<h3 id="EFI-系统分区"><a href="#EFI-系统分区" class="headerlink" title="EFI 系统分区"></a>EFI 系统分区</h3><p>通常是一个采用 FAT32 格式化的分区，最小空间为 100MB</p>
+<p>该分区包含 EFI 应用程序，这些应用程序通常位于自己的目录中。可能包含多个 EFI 应用程序，因为可能安装了多个操作系统。</p>
+<h3 id="EFI-变量"><a href="#EFI-变量" class="headerlink" title="EFI 变量"></a>EFI 变量</h3><p>存储在主板的 NVRAM 中</p>
+<ul>
+<li>每台电脑的主板上都有自己的EFI变量。这些变量里可能包含了一些特定的设置或参数，是启动操作系统时必需的</li>
+</ul>
+<p>重要变量:   </p>
+<ol>
+<li>默认启动项 (BootCurrent)</li>
+</ol>
+<p>对于 Linux 系统来说，有一个特别的 EFI 应用程序: EFI stub, 它可以直接从 EFI 环境启动 Linux 内核，而不需要传统的引导加载程序（如 GRUB ）。此时 EFI 变量里就会包含 Linux 内核启动时需要的命令行参数，比如指定根文件系统所在的分区。而如果使用 GRUB 这样的引导加载程序，这些参数就会写在 GRUB 的配置文件中</p>
+<p>EFI 变量可以从操作系统内部直接修改</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/10/os/linux/partition_resize/" rel="prev" title="Linux 磁盘扩容">
+      <i class="fa fa-chevron-left"></i> Linux 磁盘扩容
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/12/Arch/mem/consistency/overview/" rel="next" title="Memory Consistency And Cache Coherence">
+      Memory Consistency And Cache Coherence <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#BIOS"><span class="nav-number">1.</span> <span class="nav-text">BIOS</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#BIOS-%E6%A0%87%E5%87%86"><span class="nav-number">1.1.</span> <span class="nav-text">BIOS 标准</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BIOS-%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.2.</span> <span class="nav-text">BIOS 实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B"><span class="nav-number">1.2.1.</span> <span class="nav-text">启动过程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#windows"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">windows</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Linux"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">Linux</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#UEFI"><span class="nav-number">2.</span> <span class="nav-text">UEFI</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8E-BIOS-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">2.1.</span> <span class="nav-text">与 BIOS 的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UEFI-%E6%9E%B6%E6%9E%84"><span class="nav-number">2.2.</span> <span class="nav-text">UEFI 架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UEFI-%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B"><span class="nav-number">2.3.</span> <span class="nav-text">UEFI 启动过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#EFI-%E7%B3%BB%E7%BB%9F%E5%88%86%E5%8C%BA"><span class="nav-number">2.3.1.</span> <span class="nav-text">EFI 系统分区</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#EFI-%E5%8F%98%E9%87%8F"><span class="nav-number">2.3.2.</span> <span class="nav-text">EFI 变量</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

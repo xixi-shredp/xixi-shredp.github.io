@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="一致性简介：Memory Consistency 和 Cache Coherence">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Memory Consistency And Cache Coherence">
+<meta property="og:url" content="http://example.com/2025/09/12/Arch/mem/consistency/overview/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="一致性简介：Memory Consistency 和 Cache Coherence">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/Arch/mem/consistency/overview/consistency-model.svg">
+<meta property="og:image" content="http://example.com/images/Arch/mem/consistency/overview/coherence_box.svg">
+<meta property="og:image" content="http://example.com/images/Arch/mem/consistency/overview/cache_controller.svg">
+<meta property="og:image" content="http://example.com/images/Arch/mem/consistency/overview/memory_controller.svg">
+<meta property="article:published_time" content="2025-09-12T08:56:23.000Z">
+<meta property="article:modified_time" content="2025-09-12T09:18:20.691Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/Arch/mem/consistency/overview/consistency-model.svg">
+
+<link rel="canonical" href="http://example.com/2025/09/12/Arch/mem/consistency/overview/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Memory Consistency And Cache Coherence | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/12/Arch/mem/consistency/overview/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Memory Consistency And Cache Coherence
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2025-09-12 16:56:23 / Modified: 17:18:20" itemprop="dateCreated datePublished" datetime="2025-09-12T16:56:23+08:00">2025-09-12</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/" itemprop="url" rel="index"><span itemprop="name">Arch</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/mem/" itemprop="url" rel="index"><span itemprop="name">mem</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/mem/consistency/" itemprop="url" rel="index"><span itemprop="name">consistency</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">一致性简介：Memory Consistency 和 Cache Coherence</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Consistency-A-K-A-Memory-Consistency-Memory-Consistency-Model-or-Memory-Model"><a href="#Consistency-A-K-A-Memory-Consistency-Memory-Consistency-Model-or-Memory-Model" class="headerlink" title="Consistency (A.K.A., Memory Consistency, Memory Consistency Model, or Memory Model)"></a>Consistency (A.K.A., Memory Consistency, Memory Consistency Model, or Memory Model)</h1><p>定义:<br>在共享内存上执行的多线程程序所被允许的访存行为的规范。</p>
+<p>对程序员可见</p>
+<h2 id="共享内存行为"><a href="#共享内存行为" class="headerlink" title="共享内存行为"></a>共享内存行为</h2><p>问题:  </p>
+<ul>
+<li>乱序 CPU 可能对访存顺序重新排序，这样的重排对于单核本身而言执行结果是正确的，但在多核中可能与其他核的访存顺序在并发执行时存在矛盾</li>
+<li>并发执行的结果存在不确定性</li>
+</ul>
+<p>这些不确定的执行结果可能是非预期的，但均没有违反 coherence 定义的 SWMR 不变性。</p>
+<p>共享内存行为应当定义所有线程的所有执行。</p>
+<h2 id="内存一致性模型"><a href="#内存一致性模型" class="headerlink" title="内存一致性模型"></a>内存一致性模型</h2><table>
+<thead>
+<tr>
+<th>Consistency Model</th>
+<th>Feature</th>
+<th>Implement</th>
+<th>Case</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Sequential Consistency (SC)</td>
+<td>最严格，最符合直觉</td>
+<td>严格定序</td>
+<td>MIPS R10K</td>
+</tr>
+<tr>
+<td>Total Store Order (TSO)</td>
+<td>性能有提升</td>
+<td>使用 FIFO 保证写顺序</td>
+<td>x86 and historical SPARC systems</td>
+</tr>
+<tr>
+<td>relaxed&#x2F;weak memory consistency models (XC)</td>
+<td>性能更高，实现更简单</td>
+<td>FENCE 指令实现同步</td>
+<td>IBM Power</td>
+</tr>
+</tbody></table>
+<ul>
+<li>TSO 在执行模型和实现上均是 SC 的子集，因此 TSO 比 SC 更松散 (relaxed&#x2F;weaker)</li>
+</ul>
+<h2 id="与-Coherence-的区别"><a href="#与-Coherence-的区别" class="headerlink" title="与 Coherence 的区别"></a>与 Coherence 的区别</h2><p><img src="/images/Arch/mem/consistency/overview/consistency-model.svg" alt="Consistency Model"></p>
+<ul>
+<li>Consistency 规定程序访存行为</li>
+<li>Coherence 提供内存抽象 (black box)</li>
+</ul>
+<h2 id="Good-Memory-Consistency-Model-3P-1P"><a href="#Good-Memory-Consistency-Model-3P-1P" class="headerlink" title="Good Memory Consistency Model (3P + 1P)"></a>Good Memory Consistency Model (3P + 1P)</h2><ol>
+<li>Programmability 可编程性：应当使多线程编程更容易</li>
+<li>Performance 性能：在合理的功耗面积的约束下可以达到高性能</li>
+<li>Portability 可移植性：可以被广泛采用，具有后向兼容性，可以翻译为其他模型</li>
+<li>Precision 精确性：足够精确的定义（数学语言）</li>
+</ol>
+<h1 id="Coherence-A-K-A-Cache-Coherence"><a href="#Coherence-A-K-A-Cache-Coherence" class="headerlink" title="Coherence (A.K.A., Cache Coherence)"></a>Coherence (A.K.A., Cache Coherence)</h1><p>Cache 一致性，硬件用于实现 Memory Consistency 的手段，对程序员不可见</p>
+<h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><p>实现视角的定义:<br><a href="#invariants">满足 SWMR Invariant 和 Data-Value Invarient</a></p>
+<p>程序员视角的定义:  </p>
+<ol>
+<li>类似 Sequential consistency (SC) 的定义: 以每个执行线程的程序顺序为准在单个内存地址上执行多个线程的访存</li>
+<li>两个不变性的定义: <ul>
+<li>liveness invariant: 每个 store 最终对所有的核可见</li>
+<li>safety invariant: 对同一内存地址的写入必须串行化</li>
+</ul>
+</li>
+<li>Hennessy and Patterson 定义, 三个不变性:<ul>
+<li>对地址 A 的 load 访问获取该核先前对 A 的 store, 除非有其他核在这之间有对 A store </li>
+<li>对地址 A 的 load 访问获取其他核对 A 的 store, 要求该 store 和该 load 之间间隔的时间足够长，且二者之间没有发生过其他 store</li>
+<li>对同一地址的 store 必须串行化</li>
+</ul>
+</li>
+</ol>
+<p>问题场景:<br>多个线程对同一内存地址(存在多个副本)的访问中至少有一个是写</p>
+<p>目的:<br>使 cache 在共享内存中的行为同在单核系统中一致。具体而言，实现的一致性协议需要使一个线程对某个 cache 的写可以被其他线程看到（广播到所有 cache ）</p>
+<p><img src="/images/Arch/mem/consistency/overview/coherence_box.svg" alt="coherence box"></p>
+<p>不同的 Cache 一致性协议实现对于广播的时机不同:  </p>
+<ol>
+<li><a href="#consistency_agnostic_coherence">consistency-agnostic coherence</a><ul>
+<li>同步广播：写请求在返回给 core 之前对其他所有 core 可见</li>
+</ul>
+</li>
+<li>Consistency-directed coherence<ul>
+<li>异步广播: 写请求可以在对其他所有 core 可见之前返回（其他 core 可以观察到写之前的值）</li>
+<li>由 Consistency 管理写请求的顺序以保证正确性 </li>
+<li>主要用于 GPGPU 中并取得较高的性能提升</li>
+</ul>
+</li>
+</ol>
+<h2 id="Consistency-Agnostic-Coherence"><a href="#Consistency-Agnostic-Coherence" class="headerlink" title="Consistency-Agnostic Coherence"></a>Consistency-Agnostic Coherence</h2><p><a id="consistency_agnostic_coherence"></a></p>
+<p>其行为类似对原子存储的访问 (without cache)</p>
+<ul>
+<li>最常见的一致性协议： MOESI</li>
+<li>一致性协议的硬件实现</li>
+<li>Snooping 一致性协议<ul>
+<li>硬件实现简单： cache 控制器争夺共享总线并广播请求</li>
+<li>可扩展性差，现代总线过多导致比较复杂</li>
+<li>cases: Sun UltraEnterprise E10000, IBM Power5</li>
+</ul>
+</li>
+<li>Directory 一致性协议<ul>
+<li>可扩展性更高</li>
+<li>每个 cache 存储一部分地址空间的内容，没有副本, cache 之间通过数据包通信（只有一个目的 cache ）</li>
+<li>cases: SGI Origin 2000, AMD HyperTransport, HyperTransport Assist, and Intel QuickPath Interconnect (QPI)</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>Token Coherence<ul>
+<li>每个内存地址拥有一定的 token (token 数等于核心数), 当一个核拥有所有的 token 时才可以对该内存地址进行写访问，拥有一个或多个 token 才可以进行读访问</li>
+</ul>
+</li>
+</ul>
+<p>Coherence Invariants 需要满足的不变性要求：(二者共同保证了同步传播)<br><a id="invariants"></a></p>
+<ol>
+<li>Single-Writer, Multiple-Reader (SWMR) Invariant: 在任意时间对同一内存地址的访问中最多有一个写，且在写访问时不允许其他的读访问</li>
+<li>Data-Value Invariant: 对于一个内存地址的访问，该值从任意时间段开始到下一次写之间的时间段内保持不变</li>
+</ol>
+<p>维持 Coherence Invariants: Coherence Protocols -&gt; invalidate protocols  </p>
+<ul>
+<li>如果一个核试图读一个内存地址<ul>
+<li>向其他核发送信息获取该内存的当前值</li>
+<li>确保其他核的该内存的副本没有处于写状态</li>
+</ul>
+</li>
+<li>如果一个核试图写一个内存地址<ul>
+<li>如果该核还没有该内存有效的只读 cache 副本，则向其他核发送信息获取该内存的当前值</li>
+<li>确保其他核该内存的副本没有处于写访问或读访问</li>
+</ul>
+</li>
+</ul>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>Coherence Protocols 实现的粒度:<br>一般而言以 cache block 为基本粒度，但是理论上可以有更细(硬件代价更高昂)或者更粗(性能更差)的粒度</p>
+<p>cache protocol 需要实现的结构:: (coherence controller)<br>组成一个分布式系统，互相交换信息 (for each cache block) 。每一个控制器本质上是一个有限状态机的集合，每个状态机管理一个 cache block 的状态，并且接受和处理事件。</p>
+<ul>
+<li>在 cache 端，为 <a href="#cache_controller">cache controller</a></li>
+<li>在 LLC&#x2F;memory 端，为 <a href="#memory_controller">memory_controller</a></li>
+</ul>
+<h3 id="cache-controller"><a href="#cache-controller" class="headerlink" title="cache controller"></a>cache controller</h3><p><a id="cache_controller"></a></p>
+<p><img src="/images/Arch/mem/consistency/overview/cache_controller.svg" alt="Cache Controller"></p>
+<ul>
+<li>core side: 接受来自核的访存请求，返回数据值</li>
+<li>network side: 发送和接受一致性请求(通过互联网络与系统其他的控制器交互)</li>
+</ul>
+<h3 id="memory-controller"><a href="#memory-controller" class="headerlink" title="memory controller"></a>memory controller</h3><p><a id="memory_controller"></a></p>
+<p><img src="/images/Arch/mem/consistency/overview/memory_controller.svg" alt="Memory Controller"></p>
+<ul>
+<li>只有 network 端</li>
+<li>不会发送一致性请求和接受一致性响应</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/10/os/generic/boot/bios_uefi/" rel="prev" title="BIOS and UEFI">
+      <i class="fa fa-chevron-left"></i> BIOS and UEFI
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/12/Arch/mem/consistency/SC/" rel="next" title="Sequential Consistency (SC)">
+      Sequential Consistency (SC) <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Consistency-A-K-A-Memory-Consistency-Memory-Consistency-Model-or-Memory-Model"><span class="nav-number">1.</span> <span class="nav-text">Consistency (A.K.A., Memory Consistency, Memory Consistency Model, or Memory Model)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B1%E4%BA%AB%E5%86%85%E5%AD%98%E8%A1%8C%E4%B8%BA"><span class="nav-number">1.1.</span> <span class="nav-text">共享内存行为</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.2.</span> <span class="nav-text">内存一致性模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8E-Coherence-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">1.3.</span> <span class="nav-text">与 Coherence 的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Good-Memory-Consistency-Model-3P-1P"><span class="nav-number">1.4.</span> <span class="nav-text">Good Memory Consistency Model (3P + 1P)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Coherence-A-K-A-Cache-Coherence"><span class="nav-number">2.</span> <span class="nav-text">Coherence (A.K.A., Cache Coherence)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">2.1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Consistency-Agnostic-Coherence"><span class="nav-number">2.2.</span> <span class="nav-text">Consistency-Agnostic Coherence</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.3.</span> <span class="nav-text">实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#cache-controller"><span class="nav-number">2.3.1.</span> <span class="nav-text">cache controller</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#memory-controller"><span class="nav-number">2.3.2.</span> <span class="nav-text">memory controller</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

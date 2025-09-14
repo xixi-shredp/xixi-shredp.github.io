@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="硬件 cache 预取器简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hardware Cache Prefetcher">
+<meta property="og:url" content="http://example.com/2025/09/14/Arch/cache/prefetch/overview/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="硬件 cache 预取器简介">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/Arch/cache/prefetch/overview/nextline.svg">
+<meta property="og:image" content="http://example.com/images/Arch/cache/prefetch/overview/fdip.svg">
+<meta property="og:image" content="http://example.com/images/Arch/cache/prefetch/overview/discontinuity_predictor.svg">
+<meta property="article:published_time" content="2025-09-14T08:37:45.000Z">
+<meta property="article:modified_time" content="2025-09-14T08:41:03.218Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/Arch/cache/prefetch/overview/nextline.svg">
+
+<link rel="canonical" href="http://example.com/2025/09/14/Arch/cache/prefetch/overview/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Hardware Cache Prefetcher | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/14/Arch/cache/prefetch/overview/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Hardware Cache Prefetcher
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2025-09-14 16:37:45 / Modified: 16:41:03" itemprop="dateCreated datePublished" datetime="2025-09-14T16:37:45+08:00">2025-09-14</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/" itemprop="url" rel="index"><span itemprop="name">Arch</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/cache/" itemprop="url" rel="index"><span itemprop="name">cache</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/cache/prefetch/" itemprop="url" rel="index"><span itemprop="name">prefetch</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">硬件 cache 预取器简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>硬件预取的任务:  </p>
+<ol>
+<li>预测访存地址 (决定:精确率 accuracy) 取决于：<ul>
+<li>程序本身的访存行为</li>
+<li>在 cache 层级结构中的哪个层次进行预取<ul>
+<li>L1 可以捕获所有的访存，精确度高，但浪费资源（ L1 一般会 hit ，不需要预取，会浪费大量的预取资源）</li>
+<li>低层级 cache 捕获的访存请求少</li>
+</ul>
+</li>
+<li>cache placement 和 replacement 策略</li>
+</ul>
+</li>
+<li>预测何时预取 (决定:及时性 timely)<ul>
+<li>太早：可能会踢出处理器此时需要先使用的 cache block</li>
+<li>太晚：可能由于访存延时导致迟迟得不到预取的结果</li>
+</ul>
+</li>
+<li>决定如何放置预取数据<ul>
+<li>binding prefetch ：预取到寄存器<ul>
+<li>浪费寄存器资源</li>
+<li>即使此时访存负载很高，依旧会强制预取</li>
+<li>语义错误（预取无效地址会触发 page fault）</li>
+<li>不能应用到指令预取</li>
+</ul>
+</li>
+<li>non-binding prefetch：预取到 cache 或者 buffer 中<ul>
+<li>这些 cache 和 buffer 同样需要参与一致性协议</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>预取策略的评估指标 (trade-off)  </p>
+<ol>
+<li>Coverage 覆盖率: 在处理器显式的访存请求中，预测成功的占比</li>
+<li>Accuracy 精确度: 实际发射的访存请求中，预取有用的占比</li>
+</ol>
+</blockquote>
+<h1 id="指令预取-Instruction-Prefetching"><a href="#指令预取-Instruction-Prefetching" class="headerlink" title="指令预取 Instruction Prefetching"></a>指令预取 Instruction Prefetching</h1><ol>
+<li>更适用于大规模指令工作负载，如服务器和云工作负载。（桌面应用程序和科学计算的工作负载相比之下指令规模并不大）</li>
+<li>CPU 内部的乱序执行只能 overlap 数据访存的延时，对于指令访存则起不了太大作用</li>
+</ol>
+<p>现有预取器对比:  </p>
+<table>
+<thead>
+<tr>
+<th>预取器</th>
+<th>Accuracy</th>
+<th>Cost</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#nextline-prefetch">Next-Line Prefetching</a></td>
+<td>50%</td>
+<td>&lt; 1 KB</td>
+</tr>
+<tr>
+<td><a href="#FDP">Fetch-Directed Prefetching</a></td>
+<td>&gt; 50%</td>
+<td>&lt; 1 KB</td>
+</tr>
+<tr>
+<td><a href="#discontinuity-prefetch">Discontinuity Prefetching</a></td>
+<td>&gt; 50%</td>
+<td>&gt; 1 KB</td>
+</tr>
+<tr>
+<td><a href="#prescient-fetch">Prescient Fetch</a></td>
+<td>&gt; 50%</td>
+<td>&gt; 1 KB</td>
+</tr>
+<tr>
+<td><a href="#TIFS">Temporal Instruction Fetch Streaming (TIFS)</a></td>
+<td>95%</td>
+<td>~ 64 KB&#x2F;core</td>
+</tr>
+<tr>
+<td><a href="#RDIP">Return-address stack-Directed Instruction Prefetching (RDIP)</a></td>
+<td>&gt; 95%</td>
+<td>~ 64 KB&#x2F;core</td>
+</tr>
+<tr>
+<td><a href="#proactive-IF">Proactive Instruction Fetch</a></td>
+<td>&gt; 99%</td>
+<td>~ 256 KB&#x2F;core</td>
+</tr>
+</tbody></table>
+<h2 id="Next-Line-Prefetching"><a href="#Next-Line-Prefetching" class="headerlink" title="Next-Line Prefetching"></a>Next-Line Prefetching</h2><p><a id="nextline-prefetch"></a></p>
+<blockquote>
+<p>A. J. Smith. “Sequential Program Prefetching in Memory Hierarchies.” Computer, v. 11, no. 12, 1978. DOI: 10.1109&#x2F;C-M.1978.218016. 7, 15</p>
+</blockquote>
+<p>最简单，顺序预取，适用于顺序指令流的场景</p>
+<p><img src="/images/Arch/cache/prefetch/overview/nextline.svg" alt="nextline"></p>
+<ol>
+<li>从下级 cache 预取到的指令被放入 Stream buffer(一个小的全相联 buffer)</li>
+<li>当 Stream buffer 中的一条指令被处理器请求取走时，该指令转移到 cache 中并向下级 cache 发起下一次预取</li>
+</ol>
+<p>第一个实现的机器为 <em>IBM System&#x2F;360 Model 91</em></p>
+<blockquote>
+<p>扩展: 将每次预取的长度扩展为连续的基本块  </p>
+<ol>
+<li>A. Ramirez, O. J. Santana, J. L. Larriba-Pey and M. Valero. “Fetching Instruction  Streams.” In Proc. of the 35th Annual ACM&#x2F;IEEE International Symposium on Microarchitecture, 2002. 8</li>
+<li>O. J. Santana, A. Ramirez, and M. Valero. “Enlarging Instruction Streams.” IEEE Transactions on Computers, v. 56, no. 10, 2007. DOI: 10.1109&#x2F;TC.2007.70742. 8, 11</li>
+</ol>
+</blockquote>
+<h2 id="Fetch-Directed-Prefetching"><a href="#Fetch-Directed-Prefetching" class="headerlink" title="Fetch-Directed Prefetching"></a>Fetch-Directed Prefetching</h2><p><a id="FDP"></a></p>
+<p>Branch-predictor-directed prefetchers: 利用分支预测器以探索指令流的变化  </p>
+<blockquote>
+<ol>
+<li>I-C. K. Chen, C-C. Lee, and T. N. Mudge. “Instruction Prefetching Using Branch Prediction Information.” In Proc. of the IEEE International Conference on Computer Design, 1997. DOI: 10.1109&#x2F;ICCD.1997.628926. 9</li>
+<li><strong>G. Reinman, B. Calder, and T. Austin. “Fetch Directed Instruction Prefetching.” In Proc. of the 32nd Annual ACM&#x2F;IEEE International Symposium on Microarchitecture, 1999. 9</strong></li>
+<li>A. V. Veidenbaum, Q. Zhao, and A. Shameer. “Non-Sequential Instruction Cache Prefetching for Multiple–Issue Processors.” International Journal of High Speed Computing, v. 10, no. 1, 1999. DOI: 10.1142&#x2F;S0129053399000065. 9</li>
+<li>R. Panda, P. V. Gratz, and D. A. Jiménez. “B-Fetch: Branch Prediction Directed Prefetching for In-Order Processors.” In Proc. of the 18th International Symposium on High-Performance Computer Architecture, 2012. DOI: 10.1109&#x2F;L-CA.2011.33. 9</li>
+<li>T. Sherwood, S. Sair, and B. Calder. “Predictor-Directed Stream Buffers.” In Proc. of the 33rd Annual ACM&#x2F;IEEE International Symposium on Microarchitecture, 2000. DOI: 10.1145&#x2F;360128.360135. 9</li>
+</ol>
+</blockquote>
+<h3 id="Fetch-Directed-Instruction-Prefetching-FDIP"><a href="#Fetch-Directed-Instruction-Prefetching-FDIP" class="headerlink" title="Fetch-Directed Instruction Prefetching (FDIP)"></a>Fetch-Directed Instruction Prefetching (FDIP)</h3><p><img src="/images/Arch/cache/prefetch/overview/fdip.svg" alt="fdip"></p>
+<ul>
+<li>将分支预测器从 IFU 中解耦出来，并在二者之间引入 <em>fetch target queue</em> (FTQ)</li>
+<li>预取器使用 FTQ 中的地址从 L2 Cache 中预取指令块，并放入一个小的全相联 buffer : <em>Prefetch Buffer</em></li>
+<li>IFU 会并行访问 Prefetch Buffer 和 L1 ICache</li>
+<li>L1 ICache 中空闲的端口还会监测 Prefetch Buffer 中是否有相应的指令块以避免二者之间存储冗余的指令块</li>
+<li>L1 ICache 会将 miss 的地址放入 <em>prefetch instruction queue</em> (PIQ) 以准备预取</li>
+</ul>
+<p>limit:  在所有的指令 cache miss 中有将近一半需要超过 16 个连续的正确分支预测才能生成候选的预取地址 (统计数据)</p>
+<h2 id="Discontinuity-Prefetching"><a href="#Discontinuity-Prefetching" class="headerlink" title="Discontinuity Prefetching"></a>Discontinuity Prefetching</h2><p><a id="discontinuity-prefetch"></a></p>
+<p>定位于处理指令序列中的不连续性：函数调用、跳转分支、 traps</p>
+<table>
+	<tr align="center">
+      <td>Prefetcher </td>
+      <td>From </td>
+	    <td>Features </td>
+	</tr>
+	<tr>
+	    <td>Wrong-Path  Prefetching</td>
+	    <td>J. Pierce, and T. N. Mudge. “Wrong-Path Instruction Prefetching.” In Proc. of the 29th Annual ACM/IEEE International Symposium on Microarchitecture, 1996. 11</td>
+	    <td>解决 FDIP 中对于分支未跳转路径的处理问题（这条路径之后很可能会被使用）</td>
+	</tr>
+	<tr>
+	    <td>Branch-History Guided Prefetcher</td>
+	    <td>V. Srinivasan, E. S. Davidson, G. S. Tyson, M. J. Charney, and T. R. Puzak. “Branch History Guided Instruction Prefetching.” In Proc. of the 7th International Symposium on High-Performance Computer Architecture, 2001. DOI: 10.1109/HPCA.2001.903271. 11</td>
+	    <td rowspan="5">根据更早的指令预测不连续的指令流（使用分支预测器追踪）</td>
+	</tr>
+	<tr>
+	    <td>Execution-History Guided Prefetcher</td>
+	    <td>Y. Zhang, S. Haga, and R. Barua. “Execution History Guided Instruction Prefetching.” In Proc. of the 16th Annual International Conference on Supercomputing, 2002. DOI: 10.1145/514191.514220. 11</td>
+	</tr>
+	<tr>
+	    <td>Multiple-Stream Predictor</td>
+	    <td>O. J. Santana, A. Ramirez, and M. Valero. “Enlarging Instruction Streams.” IEEE Transactions on Computers, v. 56, no. 10, 2007. DOI: 10.1109/TC.2007.70742. 8, 11</td>
+	</tr>
+	<tr>
+	    <td>Next-Trace Predictors</td>
+	    <td>Q. Jacobson, E. Rotenberg, and J. E. Smith. “Path-Based Next Trace Prediction.” In Proc. of the 30th Annual ACM/IEEE International Symposium on Microarchitecture, 1997. DOI: 10.1109/MICRO.1997.645793. 11</td>
+	</tr>
+	<tr>
+	    <td>Call Graph Prefetching (对服务器应用程序很有效果)</td>
+	    <td>M. Annavaram, J. M. Patel, and E. S. Davidson. “Call Graph Prefetching for Database Applications.” ACM Transactions on Computer Systems, v. 21, no. 4, 2003. DOI: 10.1145/945506.945509. 11</td>
+	</tr>
+	<tr>
+	    <td><a href="#DiscontinuityPredictor">DiscontinuityPredictor</a></td>
+	    <td></td>
+	    <td></td>
+	</tr>
+</table>
+
+<h3 id="Discontinuity-Predictor"><a href="#Discontinuity-Predictor" class="headerlink" title="Discontinuity Predictor"></a>Discontinuity Predictor</h3><p><a id = "DiscontinuityPredictor"></a></p>
+<p>Recent Example</p>
+<blockquote>
+<p>L. Spracklen, Y. Chou, and S. G. Abraham. “Effective Instruction Prefetching in Chip Multiprocessors for Modern Commercial Applications.” In Proc. of the 11th International Symposium on High-Performance Computer Architecture, 2005. DOI: 10.1109&#x2F; HPCA.2005.13. 11</p>
+</blockquote>
+<p><img src="/images/Arch/cache/prefetch/overview/discontinuity_predictor.svg" alt="discontinuity_predictor"></p>
+<ul>
+<li>维护一张表示取指不连续性的表： discontinuity table<ul>
+<li>包含 被预测为跳转的分支的基本块的 PC 到分支目标地址的映射 (只预测一个分支跳转目标)</li>
+</ul>
+</li>
+<li>IFU 取指时，查询 discontinuity table <ul>
+<li>如果地址匹配，除了顺序预取外，还预取不连续路径</li>
+</ul>
+</li>
+<li>简单且硬件开销很小</li>
+<li>只能跨越单一的取指不连续性<ul>
+<li>递归查询以探索其他路径会导致预取的基本块数量呈指数增长</li>
+<li>限制最多跨越一次不连续性会限制预取器的预测能力</li>
+</ul>
+</li>
+<li>覆盖率有限<ul>
+<li>因为对于每个 cache block 该表只会记录单一不连续性，而实际情况下一个指令块内可能包含多个跳转分支</li>
+</ul>
+</li>
+</ul>
+<h2 id="Prescient-Fetch"><a href="#Prescient-Fetch" class="headerlink" title="Prescient Fetch"></a>Prescient Fetch</h2><p><a id="prescient-fetch"></a></p>
+<p>todo…</p>
+<h2 id="Temporal-Instruction-Fetch-Streaming-TIFS"><a href="#Temporal-Instruction-Fetch-Streaming-TIFS" class="headerlink" title="Temporal Instruction Fetch Streaming (TIFS)"></a>Temporal Instruction Fetch Streaming (TIFS)</h2><p><a id="TIFS"></a></p>
+<p>todo…</p>
+<h2 id="Return-address-stack-Directed-Instruction-Prefetching-RDIP"><a href="#Return-address-stack-Directed-Instruction-Prefetching-RDIP" class="headerlink" title="Return-address stack-Directed Instruction Prefetching (RDIP)"></a>Return-address stack-Directed Instruction Prefetching (RDIP)</h2><p><a id="RDIP"></a></p>
+<p>todo…</p>
+<h2 id="Proactive-Instruction-Fetch"><a href="#Proactive-Instruction-Fetch" class="headerlink" title="Proactive Instruction Fetch"></a>Proactive Instruction Fetch</h2><p><a id="proactive-IF"></a></p>
+<p>todo…</p>
+<h1 id="References"><a href="#References" class="headerlink" title="References"></a>References</h1><ol>
+<li>A Primer on Hardware Prefetching</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/14/Arch/cache/coherence/snooping/" rel="prev" title="Snooping Coherence Protocols">
+      <i class="fa fa-chevron-left"></i> Snooping Coherence Protocols
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8C%87%E4%BB%A4%E9%A2%84%E5%8F%96-Instruction-Prefetching"><span class="nav-number">1.</span> <span class="nav-text">指令预取 Instruction Prefetching</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Next-Line-Prefetching"><span class="nav-number">1.1.</span> <span class="nav-text">Next-Line Prefetching</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fetch-Directed-Prefetching"><span class="nav-number">1.2.</span> <span class="nav-text">Fetch-Directed Prefetching</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Fetch-Directed-Instruction-Prefetching-FDIP"><span class="nav-number">1.2.1.</span> <span class="nav-text">Fetch-Directed Instruction Prefetching (FDIP)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Discontinuity-Prefetching"><span class="nav-number">1.3.</span> <span class="nav-text">Discontinuity Prefetching</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Discontinuity-Predictor"><span class="nav-number">1.3.1.</span> <span class="nav-text">Discontinuity Predictor</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Prescient-Fetch"><span class="nav-number">1.4.</span> <span class="nav-text">Prescient Fetch</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Temporal-Instruction-Fetch-Streaming-TIFS"><span class="nav-number">1.5.</span> <span class="nav-text">Temporal Instruction Fetch Streaming (TIFS)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Return-address-stack-Directed-Instruction-Prefetching-RDIP"><span class="nav-number">1.6.</span> <span class="nav-text">Return-address stack-Directed Instruction Prefetching (RDIP)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Proactive-Instruction-Fetch"><span class="nav-number">1.7.</span> <span class="nav-text">Proactive Instruction Fetch</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#References"><span class="nav-number">2.</span> <span class="nav-text">References</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

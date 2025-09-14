@@ -34,8 +34,13 @@
 <meta property="og:image" content="http://example.com/images/Arch/cache/LLC/basic/combination_private_and_shared_llc.svg">
 <meta property="og:image" content="http://example.com/images/Arch/cache/LLC/basic/centralized_llc_snooping.svg">
 <meta property="og:image" content="http://example.com/images/Arch/cache/LLC/basic/centralized_llc_directory.svg">
+<meta property="og:image" content="http://example.com/images/Arch/cache/LLC/basic/distribute_llc.svg">
+<meta property="og:image" content="http://example.com/images/Arch/cache/LLC/basic/uca.svg">
+<meta property="og:image" content="http://example.com/images/Arch/cache/LLC/basic/NUCA_L2_single_core.svg">
+<meta property="og:image" content="http://example.com/images/Arch/cache/LLC/basic/s_nuca.svg">
+<meta property="og:image" content="http://example.com/images/Arch/cache/LLC/basic/d_nuca.svg">
 <meta property="article:published_time" content="2025-09-06T10:39:56.000Z">
-<meta property="article:modified_time" content="2025-09-07T09:25:06.538Z">
+<meta property="article:modified_time" content="2025-09-13T03:30:13.431Z">
 <meta property="article:author" content="xixi">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://example.com/images/Arch/cache/LLC/basic/shared_llc_shared_bus.svg">
@@ -210,7 +215,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2025-09-07 17:25:06" itemprop="dateModified" datetime="2025-09-07T17:25:06+08:00">2025-09-07</time>
+                <time title="Modified: 2025-09-13 11:30:13" itemprop="dateModified" datetime="2025-09-13T11:30:13+08:00">2025-09-13</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -242,13 +247,26 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>cache hierarchy 的主要分类：</p>
+        <ul>
+<li>访存往往是系统瓶颈</li>
+<li>多核处理器会给访存系统带来更大压力：在芯片引脚数固定的情况下，需要传输的数据量急剧增多</li>
+</ul>
+<p>访存系统设计的目标：最小化片外访存数</p>
+<p>访存系统效率的影响因素：片上 caches 的访问延时和 hit rate</p>
+<p>LLC 设计的趋势：</p>
+<ul>
+<li>占据处理器芯片一半的面积</li>
+<li>采用多 bank 设计，分散在各个芯片之间</li>
+<li>访问时延取决于需要在片间传输的距离</li>
+<li>LLC 策略需要减少长距离的通信（可以使用开销较低的片上网络）</li>
+</ul>
+<p>cache hierarchy 的主要分类：</p>
 <ol>
 <li>shared vs. private</li>
 <li>centralized vs. distributed</li>
 <li>uniform vs. non-uniform access</li>
 </ol>
-<p>根据 cache level 的不同，有的 level 采用 private 和 unform access 设计，有的 level 采用 shared 和 non-uniform access 设计</p>
+<p>根据 cache level 的不同，有的 level 采用 private 和 uniform access 设计，有的 level 采用 shared 和 non-uniform access 设计</p>
 <p>cache hierarchy 的发展趋势：从两级 (L1, L2) 扩展到三级 (L1, L2, L3&#x2F;LLC) ，且 LLC 的 hit rate, latency, complexity 都具有一定的优化空间</p>
 <h1 id="Shared-vs-Private-Cache"><a href="#Shared-vs-Private-Cache" class="headerlink" title="Shared vs. Private Cache"></a>Shared vs. Private Cache</h1><p>以 inclusive cache 为例</p>
 <h2 id="Shared-LLC"><a href="#Shared-LLC" class="headerlink" title="Shared LLC"></a>Shared LLC</h2><h3 id="Shared-bus-实现（对应-snooping-based-coherence-protocol）"><a href="#Shared-bus-实现（对应-snooping-based-coherence-protocol）" class="headerlink" title="Shared bus 实现（对应 snooping-based coherence protocol）"></a>Shared bus 实现（对应 snooping-based coherence protocol）</h3><p>以 2 级 cache 系统为例</p>
@@ -362,7 +380,7 @@
 </blockquote>
 <h1 id="Centralized-vs-Distributed-LLC"><a href="#Centralized-vs-Distributed-LLC" class="headerlink" title="Centralized vs. Distributed LLC"></a>Centralized vs. Distributed LLC</h1><p>Centralized LLC 和 Distributed LLC 主要针对 Shared LLC ，但 private LLC 也可采用</p>
 <p>由于 L2 Cache 较大，可以采用分 bank 的设计来降低走线延时，由 L2 Cache 内的互连网络将请求传送到对应的 bank 上。</p>
-<h2 id="Centralized-LLC"><a href="#Centralized-LLC" class="headerlink" title="Centralized LLC"></a>Centralized LLC</h2><p><strong>主要特征：LLC 的物理布局上是在一起的</strong></p>
+<h2 id="Centralized-LLC"><a href="#Centralized-LLC" class="headerlink" title="Centralized LLC"></a>Centralized LLC</h2><p><strong>定义：LLC 在芯片上占据连续区域</strong></p>
 <p>互联网络的设计：</p>
 <ol>
 <li>L2 cache 的互连网络和核间的互连网络分开  <ul>
@@ -377,14 +395,161 @@
 </ol>
 <p>使用 snooping-based coherence protocol 实现的 Centralized LLC:<br><img src="/images/Arch/cache/LLC/basic/centralized_llc_snooping.svg" alt="使用 snooping-based coherence protocol 实现的 Centralized LLC"></p>
 <p>使用 directory-based coherence protocol 实现的 Centralized LLC:<br><img src="/images/Arch/cache/LLC/basic/centralized_llc_directory.svg" alt="使用 directory-based coherence protocol 实现的 Centralized LLC"></p>
-<hr>
-<p>优点：</p>
-<ol>
+<ul>
+<li>优点：<ol>
 <li>简化了 bank 间的数据搬移</li>
-<li>简化了 L2 bank 间以及和下一级存储间的互联</li>
+<li>简化了 bank 间以及和下一级存储间的互联</li>
 </ol>
-<h2 id="Distributed-LLC"><a href="#Distributed-LLC" class="headerlink" title="Distributed LLC"></a>Distributed LLC</h2><p>todo…</p>
-<h1 id="Uniform-vs-Non-Uniform-LLC"><a href="#Uniform-vs-Non-Uniform-LLC" class="headerlink" title="Uniform vs. Non-Uniform LLC"></a>Uniform vs. Non-Uniform LLC</h1><p>todo…</p>
+</li>
+<li>缺点：不适用于核数较多的设计<ul>
+<li>结温和互联网络(可扩展性和线长)的限制</li>
+</ul>
+</li>
+</ul>
+<h2 id="Distributed-LLC"><a href="#Distributed-LLC" class="headerlink" title="Distributed LLC"></a>Distributed LLC</h2><p><strong>定义：LLC 的每个 bank 和一个核或者一组核在物理布局上紧耦合在一起</strong></p>
+<p>典型布局：L2 的每个 bank 和每个核(以及 L1 cache) 布局到一起，称为一个 tile ，由片上网络连接所有的 tile</p>
+<p>分 tile 的 Distributed LLC 的 2 级 cache 系统典型布局:<br><img src="/images/Arch/cache/LLC/basic/distribute_llc.svg" alt="分 tile 的 Distributed LLC 的 2 级 cache 系统典型布局"></p>
+<ul>
+<li>L1 miss 时，请求会通过片上网络路由到具有相应数据块的 L2 bank 所在的 tile </li>
+<li>优点：设计和验证具有可扩展性<ul>
+<li>可以设计单个 tile ，制造时实例化面积预算下尽可能多的 tile</li>
+</ul>
+</li>
+<li>缺点：L2 bank 间以及和下一级存储之间的数据移动代价较大</li>
+</ul>
+<blockquote>
+<p>private LLC cache 的物理布局本身就类似于 distributed shared LLC cache ，都是一个 tile 包含一个 LLC bank ，区别在于 LLC 如何管理和组织数据（LLC cache 空间是共享还是私有）</p>
+</blockquote>
+<h1 id="Uniform-vs-Non-Uniform-LLC"><a href="#Uniform-vs-Non-Uniform-LLC" class="headerlink" title="Uniform vs. Non-Uniform LLC"></a>Uniform vs. Non-Uniform LLC</h1><h2 id="Uniform-Cache-Access-UCA"><a href="#Uniform-Cache-Access-UCA" class="headerlink" title="Uniform Cache Access (UCA)"></a>Uniform Cache Access (UCA)</h2><ul>
+<li><strong>cache 访问所有 block 的延时都是相同的，都是最坏情况下的延时</strong></li>
+<li>当核内流水线需要知道 cache hit latency 时，可以简化流水线指令调度逻辑</li>
+</ul>
+<p>UCA 分 bank 设计采用 <strong>H-tree 拓扑</strong> ：<br><img src="/images/Arch/cache/LLC/basic/uca.svg" alt="分 bank 设计的 UCA(H-tree) "></p>
+<ul>
+<li>每一个 bank 从 cache 控制器看都是等价的，因此使得每一个 bank 的访问时间都是相同的 </li>
+<li>每个请求都是从 cache 控制器发出到指定的 block</li>
+</ul>
+<h2 id="Non-Uniform-Cache-Access-NUCA"><a href="#Non-Uniform-Cache-Access-NUCA" class="headerlink" title="Non-Uniform Cache Access (NUCA)"></a>Non-Uniform Cache Access (NUCA)</h2><blockquote>
+<p>鼻祖：Kim<br>C. Kim, D. Burger, and S. Keckler. An Adaptive, Non-Uniform Cache Structure for WireDominated On-Chip Caches. In Proceedings of ASPLOS, 2002.</p>
+</blockquote>
+<ul>
+<li><strong>cache 访问不同 block 的延时不同</strong></li>
+<li>在分 Bank 的设计中，针对不同 Bank 的访问延时不同</li>
+</ul>
+<p>架构可行性：</p>
+<ol>
+<li>如果核内流水线不会基于 L2 cache 访问时间调度流水线，那 L2 cache 访问时间不同就是可接受的 </li>
+<li>采用 <strong>网格状拓扑结构</strong> 连接 cache 控制器和各个 bank<ul>
+<li>bank 的延时是其大小和需要路由请求数量的函数</li>
+<li>网格上的请求模式很不规律，需要复杂的机制支持路由和流控制</li>
+<li>需要复杂的片上网络来处理 core 和 cache bank 之间的仲裁</li>
+<li>在分 tile 架构中，不同 cache block 的延时取决于网络距离</li>
+</ul>
+</li>
+</ol>
+<h3 id="Physical-Design"><a href="#Physical-Design" class="headerlink" title="Physical Design"></a>Physical Design</h3><p>以一个核心的连接为例：<br><img src="/images/Arch/cache/LLC/basic/NUCA_L2_single_core.svg" alt="单核 NUCA 物理布局"></p>
+<p>两种物理实现方式：  </p>
+<ol>
+<li>每个 cache bank之间以及和 cache 控制器之间采用专用的通道<ul>
+<li>每次访问冲突更低，路由开销更低</li>
+<li>专用通道对金属布线的要求太高，以至于不可行</li>
+<li>不具有可扩展性</li>
+</ul>
+</li>
+<li>采用网格拓扑的片上网络<ul>
+<li>确保金属布线开销可以接受</li>
+<li>提供相对较高的带宽和较低的冲突</li>
+<li>具有可扩展性</li>
+</ul>
+</li>
+</ol>
+<h3 id="Logical-Policies"><a href="#Logical-Policies" class="headerlink" title="Logical Policies"></a>Logical Policies</h3><p>对于数据的管理，需要解决的问题：  </p>
+<ol>
+<li><a href="#nuca_mappnig">Mapping</a>: 一个数据块可能存放的位置</li>
+<li><a href="#nuca_search">Search</a>: 定位一个数据块需要的机制</li>
+<li><a href="#nuca_movement">Movement</a>: 改变一个数据块位置需要的机制</li>
+</ol>
+<h4 id="Mappnig"><a href="#Mappnig" class="headerlink" title="Mappnig"></a>Mappnig</h4><p><a id="nuca_mapping"></a></p>
+<p><img src="/images/Arch/cache/LLC/basic/s_nuca.svg" alt="S-NUCA"><br><strong>策略1: Static-NUCA or S-NUCA</strong><br>cache 的sets 放在不同的 bank 中，一个 set 的所有 way 放在同一个 bank</p>
+<ul>
+<li>block 地址和相应的 cache index 域足以定位到 set 所在的 bank</li>
+<li>block 到 bank 的映射唯一</li>
+<li>不需要用于搜索数据块的机制</li>
+<li>不需要在 bank 之间移动数据</li>
+</ul>
+<p><img src="/images/Arch/cache/LLC/basic/d_nuca.svg" alt="D-NUCA"><br><strong>策略2: Dynamic-NUCA or D-NUCA</strong><br>cache 的 set 和 way 放在不同的 bank 中</p>
+<ul>
+<li>必须定义相应的策略确定在访问该块时块的位置</li>
+<li>需要在不同的 way 之间移动数据块以最小化平均访问时间</li>
+<li>需要一种搜索机制来快速定位可能位于 W 个 bank 中的某个块</li>
+</ul>
+<h4 id="Search"><a href="#Search" class="headerlink" title="Search"></a>Search</h4><p><a id="nuca_search"></a></p>
+<p><strong>针对 D-NUCA</strong>  </p>
+<ol>
+<li>incremental: 以渐近的方式搜索<ol>
+<li>首先查找最近或最可能的 bank</li>
+<li>如果找不到，则继续找下一个最近或最可能的 bank</li>
+</ol>
+</li>
+<li>multicast: 将请求发给所有的 bank, 同时进行搜索<ul>
+<li>在不导致更多网络竞争的情况下，可以提高性能 </li>
+<li>显著增加功耗</li>
+</ul>
+</li>
+<li>incremental + multicast<ol>
+<li>对最可能的 N 个 bank 同时搜索</li>
+<li>如果找不到，继续对接下来最可能的 N 个 bank 同时搜索</li>
+</ol>
+</li>
+<li>Smart Search: 每个 block 的部分 tag 存储在 cache 控制器中，查找前首先根据这些 tag 定位到某些 bank (缩小搜索范围)，然后对这些 bank 进行搜索<ul>
+<li>单核性能较好（所有 block 的替换都通过 cache 控制器）</li>
+<li>多核扩展性较差（这些标签需要在每个核的 cache 控制器中冗余维护）</li>
+</ul>
+</li>
+</ol>
+<p>在 D-NUCA 实现高效的搜索依旧是一个问题！</p>
+<h4 id="Movement"><a href="#Movement" class="headerlink" title="Movement"></a>Movement</h4><p><a id="nuca_movement"></a></p>
+<p>目的：使频繁访问的数据块移动到更加靠近 cache 控制器的 bank 中</p>
+<p><strong>Generational Promotion</strong>:  </p>
+<ul>
+<li>cache miss 时，数据块会被放到最远的 bank 中</li>
+<li>后续该块每次 hit 时，和相邻 bank 交换位置，逐渐靠近 cache 控制器</li>
+</ul>
+<hr>
+<ul>
+<li>NUCA cache 比 相同大小的 UCA cache 和多级 cache 性能更优</li>
+<li>D-NUCA cache 比 S-NUCA 的性能高 10% 左右 (引入智能搜索后，17%)</li>
+<li>Futurn Research: 结合 S-NUCA 和 D-NUCA</li>
+</ul>
+<h1 id="Exclusive-Non-Inclusive-vs-Inclusive-LLC"><a href="#Exclusive-Non-Inclusive-vs-Inclusive-LLC" class="headerlink" title="Exclusive&#x2F;Non-Inclusive vs. Inclusive LLC"></a>Exclusive&#x2F;Non-Inclusive vs. Inclusive LLC</h1><h2 id="Inclusive-Hierarchy"><a href="#Inclusive-Hierarchy" class="headerlink" title="Inclusive Hierarchy"></a>Inclusive Hierarchy</h2><p>定义：<br>如果 L1-L2 层是 inclusive, 则 L1 的每一个 block 在 L2 中都有一个副本</p>
+<ul>
+<li>当一个 block 被踢出 L2 时，L1 中对应的 block 也要被踢出</li>
+<li>多核共享 L2 时，所有核的 L1 中相应的 block 都要被踢出</li>
+</ul>
+<p>优势：  </p>
+<ul>
+<li>当 L1 miss 时，可以很容易定位到数据块：要么在 L2 中，要么在 L2 指向的某个 L1 的 modified block</li>
+<li>当 L2 miss 时，请求可以直接发送给下一级存储</li>
+</ul>
+<p>缺点：浪费空间（所有 L1 blocks 在 L2 中都有冗余存储）</p>
+<h2 id="Exclusive-Non-Inclusive-Hierarchy"><a href="#Exclusive-Non-Inclusive-Hierarchy" class="headerlink" title="Exclusive &#x2F; Non-Inclusive Hierarchy"></a>Exclusive &#x2F; Non-Inclusive Hierarchy</h2><p>Exclusive 定义：一个数据块只能存在于 L1 或者 L2 ，不能同时存在于二者</p>
+<p>Non-Inclusive 定义：不保证 L1 中的数据块在 L2 中有副本</p>
+<p>优点：整体 caches 空间利用率高（几乎没有 cache block 重复）</p>
+<p>缺点：数据搜索比较复杂：  </p>
+<ul>
+<li>L1 miss 时，需要搜索其他 L1 caches 和 L2 cache</li>
+<li>对于 snooping-based coherence 而言，不会显著增加开销，因为本身就会广播搜索</li>
+<li>同 snooping, 可扩展性较差</li>
+</ul>
+<hr>
+<blockquote>
+<p><strong>write policy</strong>: (write-through vs. write-back)  </p>
+<ul>
+<li>Inclusive Hierarchy 都可以兼容这两种策略</li>
+<li>write-through 性能更好，但对互联带宽和功耗预算要求较高</li>
+<li>write-back 更加适用于 Exclusive &#x2F; Non-Inclusive Hierarchy.</li>
+</ul>
+</blockquote>
 
     </div>
 
@@ -403,7 +568,10 @@
     <a href="/2025/09/04/Arch/simulator/champsim/utility/" rel="prev" title="Champsim Utility Class">
       <i class="fa fa-chevron-left"></i> Champsim Utility Class
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/07/os/xv6/file_system/" rel="next" title="File System in xv6">
+      File System in xv6 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -462,7 +630,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Shared-vs-Private-Cache"><span class="nav-number">1.</span> <span class="nav-text">Shared vs. Private Cache</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Shared-LLC"><span class="nav-number">1.1.</span> <span class="nav-text">Shared LLC</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Shared-bus-%E5%AE%9E%E7%8E%B0%EF%BC%88%E5%AF%B9%E5%BA%94-snooping-based-coherence-protocol%EF%BC%89"><span class="nav-number">1.1.1.</span> <span class="nav-text">Shared bus 实现（对应 snooping-based coherence protocol）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Scalable-network-%E5%AE%9E%E7%8E%B0%EF%BC%88%E5%AF%B9%E5%BA%94-directory-based-coherence-protocol%EF%BC%89"><span class="nav-number">1.1.2.</span> <span class="nav-text">Scalable network 实现（对应 directory-based coherence protocol）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Private-LLC"><span class="nav-number">1.2.</span> <span class="nav-text">Private LLC</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Shared-bus-%E5%AE%9E%E7%8E%B0%EF%BC%88%E5%AF%B9%E5%BA%94-snooping-based-coherence-protocol%EF%BC%89-1"><span class="nav-number">1.2.1.</span> <span class="nav-text">Shared bus 实现（对应 snooping-based coherence protocol）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Scalable-network-%E5%AE%9E%E7%8E%B0%EF%BC%88%E5%AF%B9%E5%BA%94-directory-based-coherence-protocol%EF%BC%89-1"><span class="nav-number">1.2.2.</span> <span class="nav-text">Scalable network 实现（对应 directory-based coherence protocol）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Combination-of-shared-and-private-LLC"><span class="nav-number">1.3.</span> <span class="nav-text">Combination of shared and private LLC</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Centralized-vs-Distributed-LLC"><span class="nav-number">2.</span> <span class="nav-text">Centralized vs. Distributed LLC</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Centralized-LLC"><span class="nav-number">2.1.</span> <span class="nav-text">Centralized LLC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Distributed-LLC"><span class="nav-number">2.2.</span> <span class="nav-text">Distributed LLC</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Uniform-vs-Non-Uniform-LLC"><span class="nav-number">3.</span> <span class="nav-text">Uniform vs. Non-Uniform LLC</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Shared-vs-Private-Cache"><span class="nav-number">1.</span> <span class="nav-text">Shared vs. Private Cache</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Shared-LLC"><span class="nav-number">1.1.</span> <span class="nav-text">Shared LLC</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Shared-bus-%E5%AE%9E%E7%8E%B0%EF%BC%88%E5%AF%B9%E5%BA%94-snooping-based-coherence-protocol%EF%BC%89"><span class="nav-number">1.1.1.</span> <span class="nav-text">Shared bus 实现（对应 snooping-based coherence protocol）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Scalable-network-%E5%AE%9E%E7%8E%B0%EF%BC%88%E5%AF%B9%E5%BA%94-directory-based-coherence-protocol%EF%BC%89"><span class="nav-number">1.1.2.</span> <span class="nav-text">Scalable network 实现（对应 directory-based coherence protocol）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Private-LLC"><span class="nav-number">1.2.</span> <span class="nav-text">Private LLC</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Shared-bus-%E5%AE%9E%E7%8E%B0%EF%BC%88%E5%AF%B9%E5%BA%94-snooping-based-coherence-protocol%EF%BC%89-1"><span class="nav-number">1.2.1.</span> <span class="nav-text">Shared bus 实现（对应 snooping-based coherence protocol）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Scalable-network-%E5%AE%9E%E7%8E%B0%EF%BC%88%E5%AF%B9%E5%BA%94-directory-based-coherence-protocol%EF%BC%89-1"><span class="nav-number">1.2.2.</span> <span class="nav-text">Scalable network 实现（对应 directory-based coherence protocol）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Combination-of-shared-and-private-LLC"><span class="nav-number">1.3.</span> <span class="nav-text">Combination of shared and private LLC</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Centralized-vs-Distributed-LLC"><span class="nav-number">2.</span> <span class="nav-text">Centralized vs. Distributed LLC</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Centralized-LLC"><span class="nav-number">2.1.</span> <span class="nav-text">Centralized LLC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Distributed-LLC"><span class="nav-number">2.2.</span> <span class="nav-text">Distributed LLC</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Uniform-vs-Non-Uniform-LLC"><span class="nav-number">3.</span> <span class="nav-text">Uniform vs. Non-Uniform LLC</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Uniform-Cache-Access-UCA"><span class="nav-number">3.1.</span> <span class="nav-text">Uniform Cache Access (UCA)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Non-Uniform-Cache-Access-NUCA"><span class="nav-number">3.2.</span> <span class="nav-text">Non-Uniform Cache Access (NUCA)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Physical-Design"><span class="nav-number">3.2.1.</span> <span class="nav-text">Physical Design</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Logical-Policies"><span class="nav-number">3.2.2.</span> <span class="nav-text">Logical Policies</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Mappnig"><span class="nav-number">3.2.2.1.</span> <span class="nav-text">Mappnig</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Search"><span class="nav-number">3.2.2.2.</span> <span class="nav-text">Search</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Movement"><span class="nav-number">3.2.2.3.</span> <span class="nav-text">Movement</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Exclusive-Non-Inclusive-vs-Inclusive-LLC"><span class="nav-number">4.</span> <span class="nav-text">Exclusive&#x2F;Non-Inclusive vs. Inclusive LLC</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Inclusive-Hierarchy"><span class="nav-number">4.1.</span> <span class="nav-text">Inclusive Hierarchy</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Exclusive-Non-Inclusive-Hierarchy"><span class="nav-number">4.2.</span> <span class="nav-text">Exclusive &#x2F; Non-Inclusive Hierarchy</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -478,14 +646,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-count">22</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
   </nav>
@@ -571,6 +739,19 @@
 
 
 
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
 
 
   
