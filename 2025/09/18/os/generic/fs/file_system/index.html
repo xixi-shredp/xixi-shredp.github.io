@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="文件系统简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="文件系统 File System">
+<meta property="og:url" content="http://example.com/2025/09/18/os/generic/fs/file_system/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="文件系统简介">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/os/generic/fs/file_system/disk_img_model.png">
+<meta property="og:image" content="http://example.com/images/os/generic/fs/file_system/first_fs.png">
+<meta property="og:image" content="http://example.com/images/os/generic/fs/file_system/ffs_block_group.png">
+<meta property="og:image" content="http://example.com/images/os/generic/fs/file_system/fs_ext2.png">
+<meta property="og:image" content="http://example.com/images/os/generic/fs/file_system/ext2_inode.png">
+<meta property="og:image" content="http://example.com/images/os/generic/fs/file_system/ext3.png">
+<meta property="og:image" content="http://example.com/images/os/generic/fs/file_system/data_journaling.png">
+<meta property="og:image" content="http://example.com/images/os/generic/fs/file_system/metadata_journaling.png">
+<meta property="og:image" content="http://example.com/images/os/generic/fs/file_system/lfs_imap.png">
+<meta property="article:published_time" content="2025-09-18T03:15:03.000Z">
+<meta property="article:modified_time" content="2025-09-18T08:23:45.655Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/os/generic/fs/file_system/disk_img_model.png">
+
+<link rel="canonical" href="http://example.com/2025/09/18/os/generic/fs/file_system/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>文件系统 File System | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/18/os/generic/fs/file_system/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          文件系统 File System
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2025-09-18 11:15:03 / Modified: 16:23:45" itemprop="dateCreated datePublished" datetime="2025-09-18T11:15:03+08:00">2025-09-18</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/" itemprop="url" rel="index"><span itemprop="name">os</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/generic/" itemprop="url" rel="index"><span itemprop="name">generic</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/generic/fs/" itemprop="url" rel="index"><span itemprop="name">fs</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">文件系统简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="文件系统API"><a href="#文件系统API" class="headerlink" title="文件系统API"></a>文件系统API</h1><h2 id="文件（file）"><a href="#文件（file）" class="headerlink" title="文件（file）"></a>文件（file）</h2><p>低级名称：inode 号（inode number）</p>
+<p>内容：<code>vector&lt;char&gt;</code> </p>
+<h3 id="文件描述符（file-descriptor）-指向操作系统对象的指针"><a href="#文件描述符（file-descriptor）-指向操作系统对象的指针" class="headerlink" title="文件描述符（file descriptor）: 指向操作系统对象的指针"></a>文件描述符（file descriptor）: 指向操作系统对象的指针</h3><p>通过指针可以访问 “everything”，是一个整数，每个进程私有</p>
+<p>与其他系统调用的交互：</p>
+<ul>
+<li>fork 时会被子进程继承</li>
+<li>execve 时文件描述符不变</li>
+</ul>
+<h3 id="文件偏移（offset）-文件的读写自带-“游标”"><a href="#文件偏移（offset）-文件的读写自带-“游标”" class="headerlink" title="文件偏移（offset）: 文件的读写自带 “游标”"></a>文件偏移（offset）: 文件的读写自带 “游标”</h3><p>Offset 管理：</p>
+<ul>
+<li>read&#x2F;write: 会自动维护 offset</li>
+<li>lseek: 修改 offset 位置</li>
+</ul>
+<p>与其他系统调用的交互：</p>
+<ul>
+<li>open 时，获得一个独立的 offset</li>
+<li>dup 时，两个文件描述符共享 offset</li>
+<li>fork 时，父子进程共享 offset (UNIX)</li>
+</ul>
+<h3 id="文件syscall-API"><a href="#文件syscall-API" class="headerlink" title="文件syscall API"></a>文件syscall API</h3><ol>
+<li>创建文件：open()<ul>
+<li>构建一个数据结构（inode）</li>
+<li>将人类可读的名称链接到该文件</li>
+<li>将该链接放入目录中</li>
+</ul>
+</li>
+<li>读写文件<ul>
+<li>read() &amp; write()</li>
+<li>修改偏移量：lseek()</li>
+<li>强制立即写入fsync()<br>出于性能的原因，write()在内存中会缓冲一段时间再写入</li>
+</ul>
+</li>
+<li>文件重命名：rename()<br> 属于原子（atomic）调用</li>
+<li>获取文件信息：stat() &amp; fstat()</li>
+<li>删除文件：unlink()<br> 删除人类可读名字与inode之间的引用关系，引用计数-&#x3D;1<br> 引用计数 &#x3D;&#x3D; 0时，才会释放inode 和相关数据块</li>
+</ol>
+<h2 id="目录（directory）"><a href="#目录（directory）" class="headerlink" title="目录（directory）"></a>目录（directory）</h2><p>低级名称：inode 号（inode number）</p>
+<h3 id="内容-均为元数据-metadata-，可以指向其他目录或文件"><a href="#内容-均为元数据-metadata-，可以指向其他目录或文件" class="headerlink" title="内容: 均为元数据(metadata)，可以指向其他目录或文件"></a>内容: 均为元数据(metadata)，可以指向其他目录或文件</h3><p>内容：<code>std::map&lt;filename, inumber&gt;</code> </p>
+<h3 id="目录syscall-API"><a href="#目录syscall-API" class="headerlink" title="目录syscall API"></a>目录syscall API</h3><ol>
+<li>创建目录：mkdir()</li>
+<li>读取目录<ul>
+<li>readdir()：每调用一次读取一个dirent</li>
+<li>getdents()：返回 count 个目录项</li>
+</ul>
+</li>
+<li>删除目录：rmdir()</li>
+</ol>
+<h2 id="链接-link"><a href="#链接-link" class="headerlink" title="链接 (link)"></a>链接 (link)</h2><h3 id="硬链接"><a href="#硬链接" class="headerlink" title="硬链接"></a>硬链接</h3><p>对同一个 inode 号创建了新的引用 (不以任何方式复制)</p>
+<p>允许一个文件被多个目录引用</p>
+<p>局限性：  </p>
+<ul>
+<li>不能创建目录的硬链接（会在目录树中创建一个环）</li>
+<li>不能硬链接到其他磁盘分区中的文件<br>（因为 inode 号在特定文件系统中是唯一的，而不能跨文件系统）</li>
+</ul>
+<h3 id="符号链接（symbolic-link）-软链接（softlink）"><a href="#符号链接（symbolic-link）-软链接（softlink）" class="headerlink" title="符号链接（symbolic link）&#x2F;软链接（softlink）"></a>符号链接（symbolic link）&#x2F;软链接（softlink）</h3><p>与硬链接完全不同 </p>
+<p>本身实际上是一个不同类型的文件</p>
+<p>可能造成悬空引用（dangling reference）</p>
+<h4 id="链接-syscall-API"><a href="#链接-syscall-API" class="headerlink" title="链接 syscall API"></a>链接 syscall API</h4><ol>
+<li>创建链接：link()</li>
+<li>删除链接：unlink()</li>
+</ol>
+<h2 id="文件系统"><a href="#文件系统" class="headerlink" title="文件系统"></a>文件系统</h2><ol>
+<li>创建文件系统：mkfs</li>
+<li>挂载文件系统：mount()</li>
+</ol>
+<h1 id="文件系统的组织"><a href="#文件系统的组织" class="headerlink" title="文件系统的组织"></a>文件系统的组织</h1><h2 id="Windows设计"><a href="#Windows设计" class="headerlink" title="Windows设计"></a>Windows设计</h2><ul>
+<li>一个驱动器一棵树：A:, B:, C:, …</li>
+<li>其他命名空间：Windows Driver Model, Registry</li>
+</ul>
+<h2 id="UNIX-的设计"><a href="#UNIX-的设计" class="headerlink" title="UNIX 的设计"></a>UNIX 的设计</h2><p><strong>目录树的拼接(挂载)</strong>: 将一个目录解析为另一个文件系统的根<br>好处：将所有文件系统统一到一棵树中，而不是拥有多个独立的文件系统</p>
+<p><strong>镜像文件的挂载</strong>: loopback (回环) 设备  </p>
+<ol>
+<li>文件 &#x3D; 磁盘上的虚拟磁盘</li>
+<li>挂载文件 &#x3D; 在虚拟磁盘上虚拟出的虚拟磁盘</li>
+</ol>
+<p><strong>目录结构</strong>: Filesystem Hierarchy Standard (FHS)</p>
+<h1 id="文件系统实现"><a href="#文件系统实现" class="headerlink" title="文件系统实现"></a>文件系统实现</h1><h2 id="数据结构（data-structure）"><a href="#数据结构（data-structure）" class="headerlink" title="数据结构（data structure）"></a>数据结构（data structure）</h2><h3 id="磁盘映像整体结构"><a href="#磁盘映像整体结构" class="headerlink" title="磁盘映像整体结构"></a>磁盘映像整体结构</h3><p><img src="/images/os/generic/fs/file_system/disk_img_model.png" alt="磁盘映像整体结构"></p>
+<ul>
+<li>元数据(metadata)<ul>
+<li>I: <a href="#inode">inode</a>：记录每个文件的信息</li>
+<li>分配结构（allocation structure）：记录 inode 或数据块是空闲还是已分配<ul>
+<li>i: inode 位图</li>
+<li>d: 数据位图</li>
+</ul>
+</li>
+<li>S: 超级块（superblock）：包含关于该特定文件系统的信息<br>inode数量，数据块、inode 表的开始位置，magic number(标识文件系统类型)</li>
+</ul>
+</li>
+<li>数据区域(data region)</li>
+</ul>
+<h3 id="文件组织：inode-index-node"><a href="#文件组织：inode-index-node" class="headerlink" title="文件组织：inode (index node)"></a>文件组织：inode (index node)</h3><p><a id="inode"></a></p>
+<p><strong>如何计算inode在磁盘上的位置？</strong>  </p>
+<p>  文件的低级名称（low-level name）：每个 inode 都由一个数字（称为 inumber）隐式引用<br>给定一个 inumber，能够直接计算磁盘上相应inode节点的位置:<br>$$<br>    blk &#x3D; (inumber * sizeof(inode_t)) &#x2F; blockSize;\<br>    sector &#x3D; ((blk * blockSize) + inodeStartAddr) &#x2F; sectorSize;<br>$$</p>
+<p><strong>设计 inode 时，如何引用数据块的位置？</strong>  </p>
+<ul>
+<li>一种简单的方法：在inode 中有一个或多个直接指针（磁盘地址）（对大文件不友好）</li>
+<li>使用<strong>链表（linked list）</strong>: 一个 inode 中，只有一个指针，指向文件的第一个块<br>  用链表存储数据：两种设计的权衡<ol>
+<li>在每个数据块后放置指针<ul>
+<li>实现简单、无须单独开辟存储空间 </li>
+<li>数据的大小不是 $2^k$; 单纯的 lseek 需要读整块数据</li>
+<li>对于某些工作负载表现不佳：读取文件的最后一个块&#x2F;随机访问</li>
+</ul>
+</li>
+<li>将指针集中存放在文件系统的某个区域 <ul>
+<li>局部性好；lseek 更快</li>
+<li>集中存放的数据损坏将导致数据丢失</li>
+</ul>
+</li>
+</ol>
+<ul>
+<li>例子：文件分配表（File Allocation Table，FAT）文件系统</li>
+</ul>
+</li>
+<li><strong>多级索引（multi-level index）：间接指针（indirect pointer）</strong>    <ul>
+<li>指向包含更多指针的块，每个指针指向用户数据</li>
+<li>支持更大的文件：双重间接指针（double indirect pointer），三重间接指针（triple indirect pointer）<br>  (最灵活的，但是每个文件使用大量元数据)</li>
+<li>例子：Linux ext2 和 ext3，NetApp 的 WAFL，以及原始的 UNIX 文件系统</li>
+</ul>
+</li>
+<li>使用<strong>范围（extent）</strong>：一个磁盘指针加一个长度   <ul>
+<li>通常允许多个范围（分配文件时可能无法找到连续的磁盘可用空间块）<br>  (不够灵活但更紧凑) </li>
+<li>例子：SGI XFS 和 Linux ext4</li>
+</ul>
+</li>
+</ul>
+<h3 id="目录组织"><a href="#目录组织" class="headerlink" title="目录组织"></a>目录组织</h3><p><strong>目录存储</strong>: 特殊的目录文件</p>
+<p>目录有一个 inode，位于 inode 表中的某处，具有由 inode 指向的数据块</p>
+<p>内容均为元数据(metadata)，可以指向其他目录或文件</p>
+<p>最基本：<code>std::map &lt;filename, inumber&gt;</code>  </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">dirent</span> &#123;</span></span><br><span class="line">  <span class="type">char</span>           d_name[<span class="number">256</span>]; <span class="comment">/* filename */</span></span><br><span class="line">  <span class="type">ino_t</span>          d_ino;       <span class="comment">/* inode number */</span></span><br><span class="line">  <span class="type">off_t</span>          d_off;       <span class="comment">/* offset to the next dirent */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">short</span> d_reclen;    <span class="comment">/* length of this record */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span>  d_type;      <span class="comment">/* type of file */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>删除一个文件(调用 unlink())：将对应条目的inumber置0</p>
+<p><strong>目录的组织</strong>:  </p>
+<ul>
+<li>线性目录列表</li>
+<li>B-tree：文件创建操作更快<ul>
+<li>例子：XFS</li>
+</ul>
+</li>
+</ul>
+<h2 id="访问方法（access-method）"><a href="#访问方法（access-method）" class="headerlink" title="访问方法（access method）"></a>访问方法（access method）</h2><h3 id="从磁盘读取文件"><a href="#从磁盘读取文件" class="headerlink" title="从磁盘读取文件"></a>从磁盘读取文件</h3><ol>
+<li>使用open()系统调用打开文件<ol>
+<li>首先需要找到文件的 inode：遍历（traverse）路径名<ol>
+<li>读入根目录inode：根的 inumber 固定，UNIX 中为2</li>
+<li>查找指向根目录数据块的指针</li>
+<li>读取根目录，寻找相应的条目<br>   一旦找到，也会找到下一个需要的 目录 的 inode 号</li>
+<li>递归遍历路径名，直到找到所需的 inode</li>
+</ol>
+</li>
+<li>将找到的 inode读入内存</li>
+<li>文件系统进行最后的权限检查</li>
+<li>在每个进程的打开文件表中，为此进程分配一个文件描述符，并将它返回给用户</li>
+</ol>
+</li>
+<li>发出read()系统调用，从文件中读取<ol>
+<li>查阅 inode 以查找这个块的位置，同时用新的最后访问时间更新 inode</li>
+<li>读取的过程中更新此文件描述符在内存中的打开文件表，更新文件偏移量</li>
+</ol>
+</li>
+</ol>
+<p>open 导致的 I&#x2F;O 量与路径名的长度成正比</p>
+<h3 id="写入磁盘"><a href="#写入磁盘" class="headerlink" title="写入磁盘"></a>写入磁盘</h3><h4 id="写入文件"><a href="#写入文件" class="headerlink" title="写入文件"></a>写入文件</h4><ol>
+<li>使用open()系统调用打开文件</li>
+<li>发出 write()调用以用新内容更新文件<ul>
+<li>将数据写入磁盘</li>
+<li>可能会分配一个块：<br>决定将哪个块分配给文件，从而相应地更新磁盘的其他结构</li>
+</ul>
+</li>
+</ol>
+<p>在逻辑上会导致 5 个 I&#x2F;O 操作：</p>
+<ul>
+<li>一次读取数据位图（然后更新以标记新分配的块被使用） </li>
+<li>一个写入位图（将它的新状态存入磁盘）</li>
+<li>两次读取</li>
+<li>写入 inode（用新块的位置更新）</li>
+<li>写入真正的数据块本身</li>
+</ul>
+<h4 id="创建文件"><a href="#创建文件" class="headerlink" title="创建文件"></a>创建文件</h4><ol>
+<li>分配一个 inode</li>
+<li>在包含新文件的目录中分配空间</li>
+</ol>
+<p>I&#x2F;O 工作总量非常大：</p>
+<ul>
+<li>一个读取 inode 位图（查找空闲 inode）</li>
+<li>一个写入 inode 位图（将其标记为已分配）</li>
+<li>一个写入新的 inode 本身（初始化）</li>
+<li>一个写入目录的数据（将文件的高级名称链接到它的 inode 号）</li>
+<li>一个读写目录 inode 以便更新它</li>
+</ul>
+<p>如果目录需要增长以容纳新条目，则还需要额外的 I&#x2F;O（即数据位图和新目录块）</p>
+<h3 id="降低文件系统-I-O-成本"><a href="#降低文件系统-I-O-成本" class="headerlink" title="降低文件系统 I&#x2F;O 成本"></a>降低文件系统 I&#x2F;O 成本</h3><p>使用系统内存（DRAM）来缓存重要的块</p>
+<h4 id="静态的内存划分（static-partitioning）"><a href="#静态的内存划分（static-partitioning）" class="headerlink" title="静态的内存划分（static partitioning）"></a>静态的内存划分（static partitioning）</h4><p>引入了一个固定大小的缓存（fixed-size cache）来保存常用的块</p>
+<p>优劣：</p>
+<ul>
+<li>可确保共享资源，提供更可预测的性能，也更易于实现</li>
+<li>文件高速缓存中的未使用页面不能被重新用于其他一些用途，可能导致浪费</li>
+</ul>
+<h4 id="动态划分（dynamic-partitioning）"><a href="#动态划分（dynamic-partitioning）" class="headerlink" title="动态划分（dynamic partitioning）"></a>动态划分（dynamic partitioning）</h4><p>将虚拟内存页面和文件系统页面集成到统一页面缓存中（unified page cache）</p>
+<p>优劣：</p>
+<ul>
+<li>可以在虚拟内存和文件系统之间更灵活地分配内存，实现更好的利用率</li>
+<li>实现起来可能会更复杂，并且可能导致空闲资源被其他用户占用</li>
+</ul>
+<blockquote>
+<p>关于写入：</p>
+<ul>
+<li>高速缓存不能减少写入流量（写入流量必须进入磁盘，才能实现持久）</li>
+<li>写缓冲（write buffering）还是有许多优点：<ul>
+<li>可以合并写入IO，减少IO数量</li>
+<li>可以调度（schedule）后续的 I&#x2F;O，从而提高性能</li>
+<li>一些写入可以通过拖延来完全避免</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<h1 id="文件系统的崩溃一致性"><a href="#文件系统的崩溃一致性" class="headerlink" title="文件系统的崩溃一致性"></a>文件系统的崩溃一致性</h1><p>崩溃一致性问题（crash-consistency problem，也可以称为一致性更新问题，consistent-update problem）<br>：由于崩溃而导致磁盘文件系统映像可能出现的许多问题：在文件系统数据结构中可能存在不一致性</p>
+<p>理想的做法：将文件系统从一个一致状态原子地（atomically）移动到另一个状态</p>
+<p><strong>解决方法</strong>:  </p>
+<ol>
+<li><a href="#fsck">FSCK，文件系统检查程序</a></li>
+<li><a href="#logging">采用日志文件系统</a></li>
+<li><a href="#soft_update">采用软更新</a></li>
+<li><a href="#cow">Copy-On-Write</a></li>
+<li><a href="#bbc">实现基于反向指针一致性</a></li>
+<li><a href="#occ">实现乐观崩溃一致性</a></li>
+</ol>
+<h2 id="FSCK，文件系统检查程序（file-system-checker）"><a href="#FSCK，文件系统检查程序（file-system-checker）" class="headerlink" title="FSCK，文件系统检查程序（file system checker）"></a>FSCK，文件系统检查程序（file system checker）</h2><p><a id="fsck"></a><br>让不一致的事情发生，然后再修复它们（重启时）</p>
+<p><strong>任务</strong>:  </p>
+<ul>
+<li>检查超级块：fsck 首先检查超级块是否合理，主要是进行健全性检查<ul>
+<li>目的：找到一个可疑的（冲突的）超级块</li>
+<li>发现后可以决定使用超级块的备用副本</li>
+</ul>
+</li>
+<li>扫描空闲块：fsck 扫描 inode、间接块、双重间接块 <ul>
+<li>目的：了解当前在文件系统中分配的块，生成正确版本的分配位图</li>
+<li>如果位图和 inode之间存在任何不一致，则通过信任 inode 内的信息来解决</li>
+</ul>
+</li>
+<li>检查 inode 状态：检查每个 inode 是否存在损坏或其他问题<ul>
+<li>如果 inode 字段存在问题，不易修复，则 inode 被认为是可疑的，并被 fsck 清除，inode 位图相应地更新。</li>
+</ul>
+</li>
+<li>检查 inode 链接：fsck 验证每个已分配的 inode 的链接数<ul>
+<li>如果新计算的计数与 inode 中找到的计数不匹配，则必须采取纠正措施（通常是修复 inode 中的计数）</li>
+<li>如果发现已分配的 inode 但没有目录引用它，则会将其移动到 lost + found 目录</li>
+</ul>
+</li>
+<li>检查重复指针：fsck 还检查重复指针，即两个不同的 inode 引用同一个块的情况<ul>
+<li>如果一个inode 明显不好，可能会被清除或复制指向的块，从而根据需要为每个inode 提供其自己的副本</li>
+</ul>
+</li>
+<li>检查坏块：检查坏块指针<ul>
+<li>如果指针显然指向超出其有效范围的某个指针，则被认为是“坏的”</li>
+<li>发现后从 inode 或间接块中删除（清除）该指针</li>
+</ul>
+</li>
+<li>目录检查：fsck 对每个目录的内容执行额外的完整性检查<ul>
+<li>确保“.”和“..”是前面的条目，目录条目中引用的每个 inode 都已分配，并确保整个层次结构中没有目录的引用超过一次</li>
+</ul>
+</li>
+</ul>
+<p><strong>问题</strong>: 性能很差，无法解决所有问题</p>
+<h2 id="日志记录（journaling，预写日志，write-ahead-logging）"><a href="#日志记录（journaling，预写日志，write-ahead-logging）" class="headerlink" title="日志记录（journaling，预写日志，write-ahead logging）"></a>日志记录（journaling，预写日志，write-ahead logging）</h2><p><a id="logging"></a></p>
+<p>采用日志的文件系统：Cedar, Linux ext3 和 ext4, reiserfs, IBM 的 JFS, SGI 的 XFS 和 Windows NTFS</p>
+<p><strong>思路</strong>: 更新磁盘时，在覆写结构之前，首先写下一点小注记，把它写入一个结构，并组织成“日志”。<br>保证在更新（覆写）正在更新的结构期间发生崩溃时，能够返回并查看你所做的注记，然后重试</p>
+<p>增加了更新时的工作量，但大大减少了恢复期间的工作量</p>
+<p><strong>细节参考: <a href="#ext3">Linux ext3</a></strong></p>
+<h2 id="软更新"><a href="#软更新" class="headerlink" title="软更新"></a>软更新</h2><p><a id="soft_update"></a><br>仔细地对文件系统的所有写入排序，以确保磁盘上的结构永远不会处于不一致的状态。</p>
+<h2 id="写时复制（Copy-On-Write，COW）"><a href="#写时复制（Copy-On-Write，COW）" class="headerlink" title="写时复制（Copy-On-Write，COW）"></a>写时复制（Copy-On-Write，COW）</h2><p><a id="cow"></a><br>永远不会覆写文件或目录。相反，它会对磁盘上以前未使用的位置进行新的更新。<br>在完成许多更新后，COW 文件系统会翻转文件系统的根结构，以包含指向刚更新结构的指针。</p>
+<p><strong>细节参考: <a href="#lfs">日志结构文件系统 LFS</a></strong></p>
+<h2 id="基于反向指针的一致性（Backpointer-Based-Consistency，BBC）"><a href="#基于反向指针的一致性（Backpointer-Based-Consistency，BBC）" class="headerlink" title="基于反向指针的一致性（Backpointer-Based Consistency，BBC）"></a>基于反向指针的一致性（Backpointer-Based Consistency，BBC）</h2><p><a id="bbc"></a><br>在写入之间不强制执行排序。<br>为了实现一致性，系统中的每个块都会添加一个额外的反向指针。<br>例如，每个数据块都引用它所属的inode。<br>访问文件时，文件系统可以检查正向指针（inode 或直接块中的地址）是否指向引用它的块，<br>从而确定文件是否一致。如果是这样，一切都肯定安全地到达磁盘，因此文件是<br>一致的。如果不是，则文件不一致，并返回错误。</p>
+<h2 id="乐观崩溃一致性（optimistic-crash-consistency）"><a href="#乐观崩溃一致性（optimistic-crash-consistency）" class="headerlink" title="乐观崩溃一致性（optimistic crash consistency）"></a>乐观崩溃一致性（optimistic crash consistency）</h2><p><a id="occ"></a><br>尽可能多地向磁盘发出写入，并利用事务校验和（transaction checksum）的一般形式，<br>以及其他一些技术来检测不一致。<br>对于某些工作负载，这些乐观技术可以将性能提高一个数量级。但是对磁盘有特殊要求。</p>
+<h1 id="文件系统实例"><a href="#文件系统实例" class="headerlink" title="文件系统实例"></a>文件系统实例</h1><h2 id="第一个-UNIX-文件系统"><a href="#第一个-UNIX-文件系统" class="headerlink" title="第一个 UNIX 文件系统"></a>第一个 UNIX 文件系统</h2><p><strong>磁盘数据结构</strong>:<br><img src="/images/os/generic/fs/file_system/first_fs.png" alt="第一个 UNIX 文件系统"></p>
+<ul>
+<li>超级块（S）：包含有关整个文件系统的信息：卷的大小、有多少 inode、指向空闲列表块的头部的指针等等</li>
+<li>inode 区域：包含文件系统的所有 inode</li>
+</ul>
+<p><strong>问题：性能不佳</strong></p>
+<ul>
+<li>昂贵的定位成本：数据块与inode距离很远</li>
+<li>碎片化（fragmented）严重：大文件分散存储，访问时影响性能</li>
+</ul>
+<h2 id="快速文件系统（Fast-File-System，FFS）"><a href="#快速文件系统（Fast-File-System，FFS）" class="headerlink" title="快速文件系统（Fast File System，FFS）"></a>快速文件系统（Fast File System，FFS）</h2><p><strong>思路</strong>: 让文件系统的结构和分配策略具有“磁盘意识”，从而提高性能</p>
+<ul>
+<li>将磁盘划分为一些分组，称为柱面组</li>
+<li>在同一组中放置多个文件，以确保先后访问这些文件不会导致穿越磁盘的长时间寻道</li>
+</ul>
+<p><strong>组织结构</strong>: 柱面组（cylinder group，或块组block group)</p>
+<p>每个柱面组的结构：<br><img src="/images/os/generic/fs/file_system/ffs_block_group.png" alt="FFS 柱面组的结构"></p>
+<ul>
+<li>超级块（super block）的一个副本：提高可靠性</li>
+<li>inode 位图（inode bitmap，ib）和数据位图（data bitmap，db）：记录分配</li>
+</ul>
+<p><strong>文件和目录在磁盘上的放置</strong>: 利用局部性</p>
+<ul>
+<li>目录的放置: 找到分配数量少的柱面组（希望跨组平衡目录）和大量的自由 inode（希望随后能够分配一堆文件），并将目录数据和 inode 放在该分组中</li>
+<li>文件的放置<ul>
+<li>确保（在一般情况下）将文件的数据块分配到与其 inode 相同的组中 <ul>
+<li>防止 inode 和数据之间的长时间寻道</li>
+</ul>
+</li>
+<li>将位于同一目录中的所有文件，放在它们所在目录的柱面组中</li>
+</ul>
+</li>
+<li>例外：大文件的放置（摊销寻道时间）<ul>
+<li>将一定数量的块分配到第一个块组(前 12 个直接块)</li>
+<li>文件的下一个块放在另一个不同的块组中，依此类推<br>(每个后续的间接块，以及它指向的所有块)</li>
+</ul>
+</li>
+</ul>
+<p><strong>trade-off</strong>：大块大小<br>大块越大，可利用的局部性越差，但磁盘访问性能更好</p>
+<p><strong>优化创新</strong>:  </p>
+<ul>
+<li>子块（sub-block）：容纳小文件时不会浪费整个 4KB 块</li>
+<li>针对性能进行优化的磁盘布局：参数化<br>找出磁盘的特定性能参数，并利用它们来确定准确的交错布局方案</li>
+<li>允许长文件名</li>
+<li>引入符号链接</li>
+<li>引入原子rename()操作，用于重命名文件</li>
+</ul>
+<h2 id="FAT-File-Allocation-Table-文件系统"><a href="#FAT-File-Allocation-Table-文件系统" class="headerlink" title="FAT (File Allocation Table)文件系统"></a>FAT (File Allocation Table)文件系统</h2><p><strong>需求分析</strong>: 相当小的文件系统</p>
+<ul>
+<li>目录中一般只有几个、十几个文件</li>
+<li>文件以小文件为主 (几个 block 以内)</li>
+</ul>
+<h3 id="文件的实现"><a href="#文件的实现" class="headerlink" title="文件的实现"></a>文件的实现</h3><p><strong><code>struct block*</code> 的链表</strong>: 集中保存所有指针</p>
+<p>FAT-12&#x2F;16&#x2F;32(FAT entry，即“next指针”的大小)</p>
+<p>本身没有 inode，而是存储关于文件的元数据的目录条目<br>，并且直接指向所述文件的第一个块，这导致不可能创建硬链接</p>
+<h3 id="目录的实现"><a href="#目录的实现" class="headerlink" title="目录的实现"></a>目录的实现</h3><p><strong>目录文件</strong>: 32-byte 定长目录项的集合</p>
+<h3 id="优劣"><a href="#优劣" class="headerlink" title="优劣"></a>优劣</h3><ul>
+<li>适合小文件</li>
+<li>不适合大文件的随机访问：大量的next操作</li>
+<li>使用时间久会产生碎片 (fragmentation)</li>
+<li>维护若干个 FAT 的副本防止元数据损坏 (额外的开销)</li>
+</ul>
+<h2 id="ext2-UNIX-文件系统"><a href="#ext2-UNIX-文件系统" class="headerlink" title="ext2 &#x2F; UNIX 文件系统"></a>ext2 &#x2F; UNIX 文件系统</h2><p><strong>改进思路</strong>:  </p>
+<ol>
+<li>按对象方式集中存储文件&#x2F;目录元数据<ul>
+<li>增强局部性 (更易于缓存)</li>
+<li>支持链接</li>
+</ul>
+</li>
+<li>为大小文件区分 fast&#x2F;slow path<ul>
+<li>小的时候应该用数组</li>
+<li>大的时候应该用树：快速的随机访问</li>
+</ul>
+</li>
+</ol>
+<p><strong>ext2: 磁盘镜像格式</strong>: in <code>ext2.h</code><br>磁盘被分成块组，每个块组都有一个 inode和数据位图以及 inode 和数据块<br><img src="/images/os/generic/fs/file_system/fs_ext2.png" alt="ext2 磁盘镜像格式"></p>
+<p><strong>ext2 inode</strong>:<br><img src="/images/os/generic/fs/file_system/ext2_inode.png" alt="ext2 inode 结构"></p>
+<p><strong>ext2 目录</strong>:<br>目录文件：与 FAT 本质相同，在文件上建立目录的数据结构</p>
+<h3 id="优劣-1"><a href="#优劣-1" class="headerlink" title="优劣"></a>优劣</h3><ul>
+<li>局部性与缓存：通过内存缓存减少读&#x2F;写放大，inode 在磁盘上连续存储，便于缓存&#x2F;预取</li>
+<li>大文件的随机读写性能提升明显 (O(1)O(1))</li>
+<li>支持链接 (一定程度减少空间浪费)</li>
+<li>依然有碎片的问题</li>
+<li>存储 inode 的数据块损坏是很严重的</li>
+</ul>
+<h2 id="Linux-ext3-文件系统"><a href="#Linux-ext3-文件系统" class="headerlink" title="Linux ext3 文件系统"></a>Linux ext3 文件系统</h2><p><a id="ext3"></a></p>
+<p>一种流行的日志文件系统，大多数磁盘上的结构与 Linux ext2 相同，区别只是日志的存在</p>
+<p><img src="/images/os/generic/fs/file_system/ext3.png" alt="ext3 磁盘镜像结构"></p>
+<h3 id="基础协议：数据日志（data-journaling）"><a href="#基础协议：数据日志（data-journaling）" class="headerlink" title="基础协议：数据日志（data journaling）"></a>基础协议：数据日志（data journaling）</h3><p><img src="/images/os/generic/fs/file_system/data_journaling.png" alt="ext3 数据日志"></p>
+<p><strong>日志内容</strong>:  </p>
+<ul>
+<li>事务开始块（TxB）：有关此更新的信息<br>包括对文件系统即将进行的更新的相关信息以及某种事务标识符（transaction identifier，TID）</li>
+<li>中间的 3 个块：包含块本身的确切内容，属于物理日志</li>
+<li>事务结束块（TxE）：也会包含 TID</li>
+</ul>
+<blockquote>
+<p><strong>日志类型</strong>:  </p>
+<ul>
+<li>物理日志（physical logging）：将更新的确切物理内容放在日志中</li>
+<li>逻辑日志（logical logging）：在日志中放置更紧凑的更新逻辑表示   <ul>
+<li>例如，“这次更新希望将数据块 Db 追加到文件 X” </li>
+<li>有点复杂，但可以节省日志中的空间，并可能提高性能</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<p><strong>更新过程</strong>:  </p>
+<ol>
+<li>日志写入：将事务的内容（包括 TxB、元数据和数据）写入日志，等待这些写入完成。</li>
+<li>日志提交：将事务提交块（包括 TxE）写入日志，等待写完成，事务被认为已提交（committed）<br>  将TxE单独写入的原因：日志的各个块的写入可能不是顺序的（磁盘调度导致）</li>
+<li>加检查点：将更新内容（元数据和数据）写入其最终的磁盘位置。</li>
+</ol>
+<p><strong>崩溃恢复（recover）</strong>: 重新执行日志（redo logging）  </p>
+<ol>
+<li>系统引导时，文件系统将扫描日志，并查找已提交到磁盘的事务</li>
+<li>重放（replayed，按顺序）这些已提交的事务</li>
+</ol>
+<p><strong>优化</strong>:  </p>
+<ol>
+<li>批处理日志更新  <ul>
+<li>解决的问题：避免对磁盘的过多的写入流量  </li>
+<li>将所有更新缓冲到全局事务中：将需要修改的块标记为脏，并将它们添加到块列表中，形成当前的事务</li>
+<li>当最后应该将这些块写入磁盘时，写入单个全局事务</li>
+</ul>
+</li>
+<li>循环日志（circular log）   <ul>
+<li>解决的问题：<br>(1) 日志越大，恢复时间越长；<br>(2) 当日志已满（或接近满）时，不能向磁盘提交进一步的事务</li>
+<li>一旦事务被加检查点，文件系统应释放它在日志中占用的空间，允许重用日志空间。</li>
+</ul>
+</li>
+<li><a href="#metadata_journaling">有序日志（ordered journaling，或称为元数据日志，metadata journaling）</a><ul>
+<li>解决的问题：每次写入都要写入数据2次（1次日志，1次实际位置），带宽降低一半</li>
+</ul>
+</li>
+</ol>
+<h3 id="优化：有序日志（ordered-journaling，或称为元数据日志，metadata-journaling）"><a href="#优化：有序日志（ordered-journaling，或称为元数据日志，metadata-journaling）" class="headerlink" title="优化：有序日志（ordered journaling，或称为元数据日志，metadata journaling）"></a>优化：有序日志（ordered journaling，或称为元数据日志，metadata journaling）</h3><p><a id="metadata_journaling"></a></p>
+<p><img src="/images/os/generic/fs/file_system/metadata_journaling.png" alt="ext3 元数据日志"></p>
+<p>强制先写入数据，文件系统可以保证指针永远不会指向垃圾</p>
+<blockquote>
+<p><strong>崩溃一致性的核心</strong>：“先写入被指对象，再写入指针对象”</p>
+</blockquote>
+<p><strong>写入协议</strong>:  </p>
+<ol>
+<li>数据写入：将数据写入最终位置，等待完成（与步骤2顺序可换）</li>
+<li>日志元数据写入：将开始块和元数据写入日志，等待写入完成</li>
+<li>日志提交：将事务提交块（包括 TxE）写入日志，等待写完成，认为事务（包括数据）已提交（committed）</li>
+<li>加检查点元数据：将元数据更新的内容写入文件系统中的最终位置</li>
+<li>释放：稍后，在日志超级块中将事务标记为空闲</li>
+</ol>
+<p><strong>块重复使用的问题</strong>: 有块先被删除后被重用，导致元数据日志在崩溃恢复时会先删除重用时写的数据</p>
+<p><strong>解决方案</strong>：删除时使用撤销（revoke）记录，重放日志时任何撤销类的记录不会被重放</p>
+<h2 id="Linux-ext4"><a href="#Linux-ext4" class="headerlink" title="Linux ext4"></a>Linux ext4</h2><p><strong>对ext3的优化</strong>: 日志写入<br>将事务写入日志时，在开始和结束块中包含日志内容的校验和。</p>
+<p>如果在恢复期间，文件系统发现计算的校验和与事务中存储的校验和不匹配，则可以断定<br>在写入事务期间发生了崩溃，从而丢弃了文件系统更新。</p>
+<p><strong>优点</strong>：  </p>
+<ul>
+<li>可以实现更快的通用情况性能</li>
+<li>系统的可靠性提高了<br>  因为来自日志的任何读取都受到校验和的保护</li>
+</ul>
+<h2 id="日志结构文件系统（Log-structured-File-System，LFS）"><a href="#日志结构文件系统（Log-structured-File-System，LFS）" class="headerlink" title="日志结构文件系统（Log-structured File System，LFS）"></a>日志结构文件系统（Log-structured File System，LFS）</h2><p><a id="lfs"></a></p>
+<ul>
+<li>专注于写入性能，并尝试利用磁盘的顺序带宽。</li>
+<li>在常见工作负载上表现良好（不仅写出数据，还经常更新磁盘上的元数据结构）</li>
+<li>可以在 RAID 和单个磁盘上运行良好</li>
+</ul>
+<p><strong>写入磁盘时</strong>:  </p>
+<ol>
+<li>将所有更新（包括元数据）缓冲在内存段中</li>
+<li>当段已满时，它会在一次长时间的顺序传输中写入磁盘，并传输到磁盘的未使用部分。 <ul>
+<li>永远不会覆写现有数据，而是始终将段写入空闲位置</li>
+</ul>
+</li>
+</ol>
+<h3 id="如何顺序而高效地写入？写入缓冲（write-buffering）"><a href="#如何顺序而高效地写入？写入缓冲（write-buffering）" class="headerlink" title="如何顺序而高效地写入？写入缓冲（write buffering）"></a>如何顺序而高效地写入？写入缓冲（write buffering）</h3><p>目的：向驱动器发出大量连续写入（或一次大写入），防止两次写入之间的其他操作导致额外的磁盘旋转时间</p>
+<p>思路：在写入磁盘之前，LFS 会跟踪内存中的更新。收到足够数量的更新时，会立即将它们写入磁盘，<br>从而确保有效使用磁盘。</p>
+<blockquote>
+<p><strong>段（segment）</strong>：一次写入的大块更新，用来对写入进行分组的大块。<br>段的大小选择：取决于磁盘本身<br>$$ D &#x3D; \dfrac{F}{1-F} \times R_{peak} \times T_{position} $$<br>（定位时间 $T_{position}$，峰值带宽 $R_{peak}$，有效带宽百分比 $F$，传输数据大小 $D$）</p>
+</blockquote>
+<h3 id="如何查找-inode？inode-映射（inode-map，imap）"><a href="#如何查找-inode？inode-映射（inode-map，imap）" class="headerlink" title="如何查找 inode？inode 映射（inode map，imap）"></a>如何查找 inode？inode 映射（inode map，imap）</h3><p>问题：由于LFS永远不会覆盖，因此最新版本的 inode会不断移动</p>
+<p>思路：在 inode 号和 inode 之间引入了一个间接层（level of indirection）</p>
+<p><strong>imap 数据结构</strong>:  </p>
+<ul>
+<li>将 inode号作为输入，并生成最新版本的 inode 的磁盘地址</li>
+<li>每次将 inode 写入磁盘时，imap 都会使用其新位置进行更新</li>
+</ul>
+<p><img src="/images/os/generic/fs/file_system/lfs_imap.png" alt="lfs imap"></p>
+<p>imap的驻留位置：放在它写入所有其他新信息的位置旁边</p>
+<p><strong>如何找到 inode 映射块？</strong> LFS 在磁盘上只有一个固定的位置，称为<strong>检查点区域（checkpoint region，CR）</strong>  </p>
+<ul>
+<li>包含指向最新的 inode 映射片段的指针（即地址） <ul>
+<li>因此可以通过首先读取 CR 来找到 inode 映射片段</li>
+</ul>
+</li>
+<li>仅定期更新（例如每 30s 左右），因此性能不会受到影响</li>
+<li>始终位于磁盘的开头，地址为 0</li>
+</ul>
+<p>inode 映射还解决了 LFS 中存在的另一个严重问题：<strong>递归更新问题（recursive update problem）</strong></p>
+<blockquote>
+<p><strong>递归更新问题（recursive update problem）</strong>:<br>  任何永远不会原地更新的文件系统（例如 LFS）都会遇到该问题<br>  每当更新 inode 时可能导致对指向该文件的目录的更新，然后必须更改该目录的父目录，依此类推，一路沿文件系统树向上。</p>
+<p>  imap可以使文件更新时，对应的inumber在imap中保持不变，即imap改变的是inumber到inode的映射</p>
+</blockquote>
+<h3 id="旧数据清理"><a href="#旧数据清理" class="headerlink" title="旧数据清理"></a>旧数据清理</h3><blockquote>
+<p><strong>版本控制文件系统（versioning file system）</strong>:<br>可以保留那些旧版本并允许用户恢复旧文件版本。<br>这样的文件系统称为版本控制文件系统（versioning file system），因为它跟踪文件的不同版本。</p>
+</blockquote>
+<p><strong>LFS 清理程序</strong>: 按段工作，从而为后续写入清理出大块空间</p>
+<ol>
+<li>定期读入许多旧的（部分使用的）段，确定哪些块在这些段中存在</li>
+<li>写出一组新的段，只包含其中活着的块，从而释放旧块用于写入</li>
+</ol>
+<p>预期清理程序读取 M 个现有段，将其内容打包（compact）到 N 个新段（其中 N &lt; M），<br>然后将 N 段写入磁盘的新位置。然后释放旧的 M 段，文件系统可以使用它们进行后续写入。</p>
+<p><strong>机制</strong>：如何确定块的死活?<br>为描述每个块的每个部分添加一些额外信息，包括其 inode 号及其偏移量，<br>该信息记录在一个数据结构中，位于段头部，称为<strong>段摘要块（segment summary block）</strong></p>
+<p>对于位于地址 A 的磁盘上的块 D</p>
+<ol>
+<li>查看段摘要块并找到其 inode 号 N 和偏移量 T</li>
+<li>查看最新 imap 以找到 N 所在的位置，并从磁盘读取 N</li>
+<li>利用偏移量 T，查看 inode，读取此文件的第 T 个块在磁盘上的位置</li>
+<li>如果它指向磁盘地址 A，则块 D 是活的</li>
+</ol>
+<blockquote>
+<p>更快的办法：修改文件后，LFS 会增加其版本号（version number），并在 imap 中记录新版本号。通过在磁盘上的段中记录版本号，LFS 可以简单地通过将磁盘版本号与 imap 中的版本号进行比较，跳过上述较长的检查，从而避免额外的读取。</p>
+</blockquote>
+<p><strong>策略</strong>：要清理哪些块，何时清理?<br>确定何时清理比较容易：</p>
+<ul>
+<li>周期性</li>
+<li>空闲时间</li>
+<li>磁盘已满时</li>
+</ul>
+<p>确定清理哪些块更具挑战性：<br>分离冷热段（一种方法）：尽快清理冷段，延迟清理热段</p>
+<h3 id="崩溃恢复"><a href="#崩溃恢复" class="headerlink" title="崩溃恢复"></a>崩溃恢复</h3><p><strong>写入CR</strong>： 如何确保 CR 更新以原子方式发生?<br>保留了两个CR，每个位于磁盘的一端，并交替写入它们。</p>
+<ol>
+<li>首先写出一个头（带有时间戳）</li>
+<li>然后写出 CR 的主体</li>
+<li>最后写出最后一部分（带有时间戳）</li>
+</ol>
+<p>如果系统在 CR 更新期间崩溃，可以通过查看一对不一致的时间戳来检测到这一点。<br>LFS 将始终选择使用具有一致时间戳的最新 CR，从而实现 CR 的一致更新。</p>
+<p><strong>写入段</strong>: 前滚（roll forward）技术<br>在日志（log）中组织写入，即指向头部段和尾部段的检查点区域，并且每个段指向要写入的下一个段</p>
+<ol>
+<li>从最后一个检查点区域开始，找到日志的结尾（包含在 CR 中）</li>
+<li>使用它来读取下一个段，并查看其中是否有任何有效更新</li>
+<li>如果有，LFS 会相应地更新文件系统，从而恢复自上一个检查点以来写入的大部分数据和元数据。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/14/Arch/cache/prefetch/overview/" rel="prev" title="Hardware Cache Prefetcher">
+      <i class="fa fa-chevron-left"></i> Hardware Cache Prefetcher
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/28/os/linux/0.11/boot/" rel="next" title="Linux 0.11: Boot">
+      Linux 0.11: Boot <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9FAPI"><span class="nav-number">1.</span> <span class="nav-text">文件系统API</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%EF%BC%88file%EF%BC%89"><span class="nav-number">1.1.</span> <span class="nav-text">文件（file）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6%EF%BC%88file-descriptor%EF%BC%89-%E6%8C%87%E5%90%91%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%8C%87%E9%92%88"><span class="nav-number">1.1.1.</span> <span class="nav-text">文件描述符（file descriptor）: 指向操作系统对象的指针</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E5%81%8F%E7%A7%BB%EF%BC%88offset%EF%BC%89-%E6%96%87%E4%BB%B6%E7%9A%84%E8%AF%BB%E5%86%99%E8%87%AA%E5%B8%A6-%E2%80%9C%E6%B8%B8%E6%A0%87%E2%80%9D"><span class="nav-number">1.1.2.</span> <span class="nav-text">文件偏移（offset）: 文件的读写自带 “游标”</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E4%BB%B6syscall-API"><span class="nav-number">1.1.3.</span> <span class="nav-text">文件syscall API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%AE%E5%BD%95%EF%BC%88directory%EF%BC%89"><span class="nav-number">1.2.</span> <span class="nav-text">目录（directory）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E5%AE%B9-%E5%9D%87%E4%B8%BA%E5%85%83%E6%95%B0%E6%8D%AE-metadata-%EF%BC%8C%E5%8F%AF%E4%BB%A5%E6%8C%87%E5%90%91%E5%85%B6%E4%BB%96%E7%9B%AE%E5%BD%95%E6%88%96%E6%96%87%E4%BB%B6"><span class="nav-number">1.2.1.</span> <span class="nav-text">内容: 均为元数据(metadata)，可以指向其他目录或文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%AE%E5%BD%95syscall-API"><span class="nav-number">1.2.2.</span> <span class="nav-text">目录syscall API</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%93%BE%E6%8E%A5-link"><span class="nav-number">1.3.</span> <span class="nav-text">链接 (link)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A1%AC%E9%93%BE%E6%8E%A5"><span class="nav-number">1.3.1.</span> <span class="nav-text">硬链接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%A6%E5%8F%B7%E9%93%BE%E6%8E%A5%EF%BC%88symbolic-link%EF%BC%89-%E8%BD%AF%E9%93%BE%E6%8E%A5%EF%BC%88softlink%EF%BC%89"><span class="nav-number">1.3.2.</span> <span class="nav-text">符号链接（symbolic link）&#x2F;软链接（softlink）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%93%BE%E6%8E%A5-syscall-API"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">链接 syscall API</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">1.4.</span> <span class="nav-text">文件系统</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%BB%84%E7%BB%87"><span class="nav-number">2.</span> <span class="nav-text">文件系统的组织</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Windows%E8%AE%BE%E8%AE%A1"><span class="nav-number">2.1.</span> <span class="nav-text">Windows设计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UNIX-%E7%9A%84%E8%AE%BE%E8%AE%A1"><span class="nav-number">2.2.</span> <span class="nav-text">UNIX 的设计</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.</span> <span class="nav-text">文件系统实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%EF%BC%88data-structure%EF%BC%89"><span class="nav-number">3.1.</span> <span class="nav-text">数据结构（data structure）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A3%81%E7%9B%98%E6%98%A0%E5%83%8F%E6%95%B4%E4%BD%93%E7%BB%93%E6%9E%84"><span class="nav-number">3.1.1.</span> <span class="nav-text">磁盘映像整体结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%BB%84%E7%BB%87%EF%BC%9Ainode-index-node"><span class="nav-number">3.1.2.</span> <span class="nav-text">文件组织：inode (index node)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%AE%E5%BD%95%E7%BB%84%E7%BB%87"><span class="nav-number">3.1.3.</span> <span class="nav-text">目录组织</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BF%E9%97%AE%E6%96%B9%E6%B3%95%EF%BC%88access-method%EF%BC%89"><span class="nav-number">3.2.</span> <span class="nav-text">访问方法（access method）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%8E%E7%A3%81%E7%9B%98%E8%AF%BB%E5%8F%96%E6%96%87%E4%BB%B6"><span class="nav-number">3.2.1.</span> <span class="nav-text">从磁盘读取文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%99%E5%85%A5%E7%A3%81%E7%9B%98"><span class="nav-number">3.2.2.</span> <span class="nav-text">写入磁盘</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%99%E5%85%A5%E6%96%87%E4%BB%B6"><span class="nav-number">3.2.2.1.</span> <span class="nav-text">写入文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E6%96%87%E4%BB%B6"><span class="nav-number">3.2.2.2.</span> <span class="nav-text">创建文件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%99%8D%E4%BD%8E%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F-I-O-%E6%88%90%E6%9C%AC"><span class="nav-number">3.2.3.</span> <span class="nav-text">降低文件系统 I&#x2F;O 成本</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9D%99%E6%80%81%E7%9A%84%E5%86%85%E5%AD%98%E5%88%92%E5%88%86%EF%BC%88static-partitioning%EF%BC%89"><span class="nav-number">3.2.3.1.</span> <span class="nav-text">静态的内存划分（static partitioning）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E5%88%92%E5%88%86%EF%BC%88dynamic-partitioning%EF%BC%89"><span class="nav-number">3.2.3.2.</span> <span class="nav-text">动态划分（dynamic partitioning）</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%B4%A9%E6%BA%83%E4%B8%80%E8%87%B4%E6%80%A7"><span class="nav-number">4.</span> <span class="nav-text">文件系统的崩溃一致性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#FSCK%EF%BC%8C%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%A3%80%E6%9F%A5%E7%A8%8B%E5%BA%8F%EF%BC%88file-system-checker%EF%BC%89"><span class="nav-number">4.1.</span> <span class="nav-text">FSCK，文件系统检查程序（file system checker）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E8%AE%B0%E5%BD%95%EF%BC%88journaling%EF%BC%8C%E9%A2%84%E5%86%99%E6%97%A5%E5%BF%97%EF%BC%8Cwrite-ahead-logging%EF%BC%89"><span class="nav-number">4.2.</span> <span class="nav-text">日志记录（journaling，预写日志，write-ahead logging）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BD%AF%E6%9B%B4%E6%96%B0"><span class="nav-number">4.3.</span> <span class="nav-text">软更新</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E6%97%B6%E5%A4%8D%E5%88%B6%EF%BC%88Copy-On-Write%EF%BC%8CCOW%EF%BC%89"><span class="nav-number">4.4.</span> <span class="nav-text">写时复制（Copy-On-Write，COW）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E5%8F%8D%E5%90%91%E6%8C%87%E9%92%88%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7%EF%BC%88Backpointer-Based-Consistency%EF%BC%8CBBC%EF%BC%89"><span class="nav-number">4.5.</span> <span class="nav-text">基于反向指针的一致性（Backpointer-Based Consistency，BBC）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B9%90%E8%A7%82%E5%B4%A9%E6%BA%83%E4%B8%80%E8%87%B4%E6%80%A7%EF%BC%88optimistic-crash-consistency%EF%BC%89"><span class="nav-number">4.6.</span> <span class="nav-text">乐观崩溃一致性（optimistic crash consistency）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%AE%9E%E4%BE%8B"><span class="nav-number">5.</span> <span class="nav-text">文件系统实例</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E4%B8%AA-UNIX-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">5.1.</span> <span class="nav-text">第一个 UNIX 文件系统</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BF%AB%E9%80%9F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%88Fast-File-System%EF%BC%8CFFS%EF%BC%89"><span class="nav-number">5.2.</span> <span class="nav-text">快速文件系统（Fast File System，FFS）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FAT-File-Allocation-Table-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">5.3.</span> <span class="nav-text">FAT (File Allocation Table)文件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">5.3.1.</span> <span class="nav-text">文件的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%AE%E5%BD%95%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">5.3.2.</span> <span class="nav-text">目录的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E5%8A%A3"><span class="nav-number">5.3.3.</span> <span class="nav-text">优劣</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ext2-UNIX-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">5.4.</span> <span class="nav-text">ext2 &#x2F; UNIX 文件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E5%8A%A3-1"><span class="nav-number">5.4.1.</span> <span class="nav-text">优劣</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux-ext3-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">5.5.</span> <span class="nav-text">Linux ext3 文件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E5%8D%8F%E8%AE%AE%EF%BC%9A%E6%95%B0%E6%8D%AE%E6%97%A5%E5%BF%97%EF%BC%88data-journaling%EF%BC%89"><span class="nav-number">5.5.1.</span> <span class="nav-text">基础协议：数据日志（data journaling）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E5%8C%96%EF%BC%9A%E6%9C%89%E5%BA%8F%E6%97%A5%E5%BF%97%EF%BC%88ordered-journaling%EF%BC%8C%E6%88%96%E7%A7%B0%E4%B8%BA%E5%85%83%E6%95%B0%E6%8D%AE%E6%97%A5%E5%BF%97%EF%BC%8Cmetadata-journaling%EF%BC%89"><span class="nav-number">5.5.2.</span> <span class="nav-text">优化：有序日志（ordered journaling，或称为元数据日志，metadata journaling）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux-ext4"><span class="nav-number">5.6.</span> <span class="nav-text">Linux ext4</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%88Log-structured-File-System%EF%BC%8CLFS%EF%BC%89"><span class="nav-number">5.7.</span> <span class="nav-text">日志结构文件系统（Log-structured File System，LFS）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E9%A1%BA%E5%BA%8F%E8%80%8C%E9%AB%98%E6%95%88%E5%9C%B0%E5%86%99%E5%85%A5%EF%BC%9F%E5%86%99%E5%85%A5%E7%BC%93%E5%86%B2%EF%BC%88write-buffering%EF%BC%89"><span class="nav-number">5.7.1.</span> <span class="nav-text">如何顺序而高效地写入？写入缓冲（write buffering）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E6%9F%A5%E6%89%BE-inode%EF%BC%9Finode-%E6%98%A0%E5%B0%84%EF%BC%88inode-map%EF%BC%8Cimap%EF%BC%89"><span class="nav-number">5.7.2.</span> <span class="nav-text">如何查找 inode？inode 映射（inode map，imap）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A7%E6%95%B0%E6%8D%AE%E6%B8%85%E7%90%86"><span class="nav-number">5.7.3.</span> <span class="nav-text">旧数据清理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B4%A9%E6%BA%83%E6%81%A2%E5%A4%8D"><span class="nav-number">5.7.4.</span> <span class="nav-text">崩溃恢复</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

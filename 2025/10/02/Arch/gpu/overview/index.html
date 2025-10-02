@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="GPU 架构简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GPU Overview">
+<meta property="og:url" content="http://example.com/2025/10/02/Arch/gpu/overview/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="GPU 架构简介">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/Arch/gpu/overview/analytical_performance.png">
+<meta property="og:image" content="http://example.com/images/Arch/gpu/overview/discrete_gpu.svg">
+<meta property="og:image" content="http://example.com/images/Arch/gpu/overview/integrated_gpu.svg">
+<meta property="og:image" content="http://example.com/images/Arch/gpu/overview/general_gpu_arch.svg">
+<meta property="article:published_time" content="2025-10-02T08:25:31.000Z">
+<meta property="article:modified_time" content="2025-10-02T14:13:32.991Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/Arch/gpu/overview/analytical_performance.png">
+
+<link rel="canonical" href="http://example.com/2025/10/02/Arch/gpu/overview/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>GPU Overview | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/10/02/Arch/gpu/overview/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          GPU Overview
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2025-10-02 16:25:31 / Modified: 22:13:32" itemprop="dateCreated datePublished" datetime="2025-10-02T16:25:31+08:00">2025-10-02</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/" itemprop="url" rel="index"><span itemprop="name">Arch</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/gpu/" itemprop="url" rel="index"><span itemprop="name">gpu</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">GPU 架构简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="硬件架构"><a href="#硬件架构" class="headerlink" title="硬件架构"></a>硬件架构</h1><p>在现代系统中，GPU 不是单独的计算设备，需要和 CPU 一起在一个系统中工作，有 2 种协同工作方式: </p>
+<ol>
+<li>集成到单个芯片当中</li>
+<li>将 GPU 视为一张卡插入到含有 CPU 的系统中</li>
+</ol>
+<p>在这个系统中，CPU 的任务是：<u>初始化 GPU 的计算任务，和 GPU 之间进行数据交互</u></p>
+<p>将 CPU 和 GPU 的功能分离开来，是因为：</p>
+<ol>
+<li>在计算的开始和结束通常需要访问 IO 设备<ul>
+<li>现在的一些工作致力于直接为 GPU 提供 IO 访问的 API, 但仍基于一个前提：GPU 存在于 CPU 的附近</li>
+<li>这些 API 隐藏了 CPU 和 GPU 之间通信管理的复杂性，而不是为了完全替代 CPU</li>
+</ul>
+</li>
+<li>CPU 可以提供 IO 设备的访问和对操作系统服务的请求</li>
+</ol>
+<p>不同线程数下的计算架构的性能建模图：<br><img src="/images/Arch/gpu/overview/analytical_performance.png" alt="不同线程数下的计算架构的性能建模图">  </p>
+<ul>
+<li>MC(multicore) Region: 当较少的线程数共享一个大的 cache 时，随着线程数上升，性能显著提升</li>
+<li>Valley: 之后随着线程数增加，cache 无法容纳整个工作负载，性能下降</li>
+<li>MT(multithreading) Region: 当线程数足够多时，高吞吐率可以掩盖片外访存延时，性能上升</li>
+</ul>
+<h2 id="GPU-与-CPU-系统架构"><a href="#GPU-与-CPU-系统架构" class="headerlink" title="GPU 与 CPU 系统架构"></a>GPU 与 CPU 系统架构</h2><ol>
+<li>System with discrete GPU<br> <img src="/images/Arch/gpu/overview/discrete_gpu.svg" alt="System with discrete gpu"><ul>
+<li>CPU 和 GPU 之间通过总线连接</li>
+<li>CPU 和 GPU 有分离的DRAM 存储空间<ul>
+<li>CPU 中称为 system memory 系统内存，通常使用 DDR 实现，主要优化目标是降低访问时延</li>
+<li>GPU 中称为 graphics memory 显存，通常使用 GDDR 实现，主要优化目标是提高吞吐量</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Integrated CPU and GPU<br> <img src="/images/Arch/gpu/overview/integrated_gpu.svg" alt="Integrated CPU and GPU"><ul>
+<li>一般用于低功耗设备</li>
+<li>共享一个 DRAM 存储空间，通常使用 LPDDR 实现</li>
+</ul>
+</li>
+</ol>
+<h2 id="CPU-和-GPU-的交互-CPU-初始化计算"><a href="#CPU-和-GPU-的交互-CPU-初始化计算" class="headerlink" title="CPU 和 GPU 的交互: CPU 初始化计算"></a>CPU 和 GPU 的交互: CPU 初始化计算</h2><p>GPU 计算程序中的 CPU 部分首先运行，负责分配和初始化数据结构</p>
+<ul>
+<li>NVIDIA 和 AMD 一些古老的 discrete GPU <ul>
+<li>需要在 CPU 和 GPU 的内存中均分配数据结构</li>
+<li>CPU 需要协调从 CPU 内存到 GPU 显存的数据搬运</li>
+</ul>
+</li>
+<li>最新的 discrete GPU<ul>
+<li>软硬件支持数据自动从 CPU 内存到 GPU 显存搬运 (需要 CPU 和 GPU 均支持虚拟内存, unified memory)</li>
+</ul>
+</li>
+<li>Integrated GPU 由于共享内存不需要考虑内存搬移<ul>
+<li>但 CPU 和 GPU 的私有 cache 之间需要考虑 Cache Coherence 问题</li>
+</ul>
+</li>
+</ul>
+<p>初始化过程通过运行在 CPU 上的驱动程序完成，在执行 GPU 计算之前，需要指定以下内容，并通过驱动程序传递给 GPU 中：</p>
+<ol>
+<li>kernel to run: 哪些代码应该在 GPU 上运行</li>
+<li>number of threads: 运行多少个线程</li>
+<li>data location: 线程在哪里查找输入数据</li>
+</ol>
+<p>初始化完成，驱动程序会向 GPU 发送信号，表明可以开始进行计算。</p>
+<h2 id="GPU-架构"><a href="#GPU-架构" class="headerlink" title="GPU 架构"></a>GPU 架构</h2><p><img src="/images/Arch/gpu/overview/general_gpu_arch.svg" alt="通用现代 GPU 架构"></p>
+<h3 id="SIMT-Core"><a href="#SIMT-Core" class="headerlink" title="SIMT Core"></a>SIMT Core</h3><p>现代 GPU 中存在大量的 SIMT Core (NVIDIA 称为 SM, Streaming Multiprocessors; AMD 称为 Compute Units)  </p>
+<ul>
+<li>每个 SIMT Core 执行 kernel 中的一个 SIMT 程序  </li>
+<li>每个 SIMT Core 中的线程可以通过 SPM (scratchpad memory) 通信并使用快速 barrier 操作实现同步</li>
+<li>每个 SIMT Core 一般还包括 L1 Instruction&#x2F;Data Cache</li>
+</ul>
+<h3 id="Memory-Channel"><a href="#Memory-Channel" class="headerlink" title="Memory Channel"></a>Memory Channel</h3><p>为匹配 SIMT Core 中的极高的计算吞吐率，也需要极高的访存带宽（访存并行度），这通过提供大量的 memory channels 实现</p>
+<ul>
+<li>每个 memory channel 和 LLC 中的一个 Partition 相连 (类似于 CPU Memory Hierarchy 中的 Shared Distributed LLC Banks)</li>
+<li>LLC Memory Partitions 和 SIMT Cores 通过片上网络互联通信</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/29/os/xv6/boot/" rel="prev" title="xv6 boot 启动过程">
+      <i class="fa fa-chevron-left"></i> xv6 boot 启动过程
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E6%9E%B6%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">硬件架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#GPU-%E4%B8%8E-CPU-%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84"><span class="nav-number">1.1.</span> <span class="nav-text">GPU 与 CPU 系统架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU-%E5%92%8C-GPU-%E7%9A%84%E4%BA%A4%E4%BA%92-CPU-%E5%88%9D%E5%A7%8B%E5%8C%96%E8%AE%A1%E7%AE%97"><span class="nav-number">1.2.</span> <span class="nav-text">CPU 和 GPU 的交互: CPU 初始化计算</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GPU-%E6%9E%B6%E6%9E%84"><span class="nav-number">1.3.</span> <span class="nav-text">GPU 架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SIMT-Core"><span class="nav-number">1.3.1.</span> <span class="nav-text">SIMT Core</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Memory-Channel"><span class="nav-number">1.3.2.</span> <span class="nav-text">Memory Channel</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

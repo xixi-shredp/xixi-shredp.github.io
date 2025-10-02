@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="SOSP 2024 论文简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SOSP 2024 论文简介">
+<meta property="og:url" content="http://example.com/2025/09/29/os/sosp/2024/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="SOSP 2024 论文简介">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-09-29T01:32:51.000Z">
+<meta property="article:modified_time" content="2025-09-29T02:21:11.141Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/29/os/sosp/2024/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>SOSP 2024 论文简介 | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/29/os/sosp/2024/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SOSP 2024 论文简介
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2025-09-29 09:32:51 / Modified: 10:21:11" itemprop="dateCreated datePublished" datetime="2025-09-29T09:32:51+08:00">2025-09-29</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/" itemprop="url" rel="index"><span itemprop="name">os</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/sosp/" itemprop="url" rel="index"><span itemprop="name">sosp</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">SOSP 2024 论文简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Tiered-Memory-Management-Access-Latency-is-the-Key"><a href="#Tiered-Memory-Management-Access-Latency-is-the-Key" class="headerlink" title="Tiered Memory Management: Access Latency is the Key!"></a>Tiered Memory Management: Access Latency is the Key!</h2><p>Author: Midhul Vuppalapati (Cornell University), Rachit Agarwal (Cornell University)</p>
+<p>Abstruct:  </p>
+<ul>
+<li>分层内存架构的出现引发了人们对内存管理的新兴趣。近期关于分层内存管理的研究在访问跟踪机制、页面迁移和动态页面大小确定方面进行了创新；<br>然而，它们都使用相同的页面放置算法——将最热的页面打包到默认层级（具有最低硬件指定内存访问延迟的层级）。<br>这隐含地假设了即使服务于最热的页面，默认层级的访问延迟仍低于其他层级。<br>这一假设与实际情况相去甚远：在计算机体系结构领域，众所周知，在存在多个同时进行的请求情况下，内存访问延迟可能显著大于硬件指定的延迟。<br>我们表明，即使在中等负载下，默认层级的访问延迟也可能膨胀至其他层级延迟的 2.5 倍；<br>并且在这一模式下，现有最先进的分层内存系统性能可能比最优情况差 2.3 倍。   </li>
+<li><strong>Colloid 是一种内存管理机制，其体现了平衡访问延迟的原则——页面在不同层级之间的放置应使得它们的平均（负载）访问延迟趋于平衡。</strong><br>为了实现这一原则，Colloid 在每个层级的内存访问延迟测量机制以及决定每个层级应放置哪些页面的页面放置算法方面进行了创新。</li>
+<li>我们将 Colloid 集成到三种最先进的分层内存系统 HeMem, TPP 和 MEMTIS 中。</li>
+<li>在各种工作负载上的评估表明，Colloid 能够持续使底层系统达到接近最优的性能。</li>
+</ul>
+<h2 id="Fast-Flexible-and-Practical-Kernel-Extensions"><a href="#Fast-Flexible-and-Practical-Kernel-Extensions" class="headerlink" title="Fast, Flexible, and Practical Kernel Extensions"></a>Fast, Flexible, and Practical Kernel Extensions</h2><p>Author: Kumar Kartikeya Dwivedi, Rishabh Iyer, Sanidhya Kashyap† ,EPFL ∗UC Berkeley</p>
+<p>Abstruct:  </p>
+<ul>
+<li>在操作系统设计中，安全地扩展内核功能是一个长期目标，Linux 和 Windows 中广泛使用 eBPF 框架证明了这种可扩展性的优势。然而，<strong>现有的内核可扩展性解决方案（包括 eBPF ）存在局限性，限制了用户在能够卸载到内核的功能范围或其扩展所导致的性能开销方面的能力。</strong></li>
+<li>我们提出了 <strong>KFlex ：一种新的内核可扩展性方法，在内核扩展能力和性能之间实现了更好的平衡</strong>。<ul>
+<li>KFlex 将内核资源（如内核内存）的安全性与扩展特定资源（如扩展内存）的安全性分离开来<ul>
+<li>这种分离使 KFlex 能够分别使用定制的机制来强制执行每种安全性属性——自动化验证和轻量级运行时检查</li>
+<li>从而在带来低运行时开销的同时，实现多样化功能的卸载</li>
+</ul>
+</li>
+<li>它依赖于静态字节码验证，以确保扩展符合内核的接口</li>
+<li>并利用与验证协同设计的运行时机制，以确保它们安全地访问自己的内存并可证明地终止</li>
+<li>KFlex 的关键技术贡献包括与 eBPF 静态验证协同设计的运行时技术，从而确保扩展具有极低的开销</li>
+</ul>
+</li>
+<li>我们在 Linux 的基础上实现了 KFlex ，并基于eBPF框架进行构建<ul>
+<li>我们证明，KFlex 使用户能够卸载目前无法卸载的功能，并为应用程序提供了显著的端到端性能提升。</li>
+<li>KFlex 的一些机制已经合并到 Linux 内核主线中，全面集成的工作正在进行中。</li>
+</ul>
+</li>
+</ul>
+<h2 id="Fast-Safe-IO-Memory-Protection"><a href="#Fast-Safe-IO-Memory-Protection" class="headerlink" title="Fast &amp; Safe IO Memory Protection"></a>Fast &amp; Safe IO Memory Protection</h2><p>Author: Benny Rubin (Cornell University), Saksham Agarwal (UIUC), Qizhe Cai (Cornell University), Rachit Agarwal (Cornell University)</p>
+<p>Abstruct:  </p>
+<ul>
+<li>IO 内存保护机制可以防止恶意或存在缺陷的IO设备将错误的数据传输到内存中。<ul>
+<li>现代服务器通过使用 IOMMU（IO内存管理单元）来实现这一点——IO设备在虚拟地址上操作，IOMMU 在执行内存传输之前将虚拟地址转换为物理地址（可能通过一个称为IOTLB的缓存来加速转换）。</li>
+<li>尽管这些机制非常重要，但设计出既能提供强大安全特性又能保持高性能的内存保护机制一直是个难题。</li>
+<li>事实上，最近对生产数据中心的研究表明，现有内存保护机制中的低效率导致了显著的吞吐量下降、尾部延迟成数量级的增加以及隔离保证的违反。</li>
+</ul>
+</li>
+<li>我们提出了<strong>Fast &amp; Safe（F&amp;S）,这是对现有内存保护机制的一种简单修改，使它们能够提供最强的安全性，同时几乎完全消除了其开销。</strong><ul>
+<li>现代内存保护硬件具有 I&#x2F;O 页表缓存，这些缓存存储了每个 I&#x2F;O 页表层级中最常访问的条目，而这些缓存可以用来减少 I&#x2F;O 内存保护的开销。</li>
+<li>F&amp;S 设计的关键思路是，与其仅仅关注最小化 IOTLB 缺失率，不如关注降低每次 IOTLB 缺失的成本。</li>
+</ul>
+</li>
+<li>我们证明，这种视角的转变使得 F&amp;S 设计变得简单，无需对主机硬件进行任何修改，并且只需要对操作系统进行最少的修改。</li>
+</ul>
+<h2 id="VPRI-Efficient-I-O-Page-Fault-Handling-via-Software-Hardware-Co-Design-for-IaaS-Clouds"><a href="#VPRI-Efficient-I-O-Page-Fault-Handling-via-Software-Hardware-Co-Design-for-IaaS-Clouds" class="headerlink" title="VPRI: Efficient I&#x2F;O Page Fault Handling via  Software-Hardware Co-Design for IaaS Clouds"></a>VPRI: Efficient I&#x2F;O Page Fault Handling via  Software-Hardware Co-Design for IaaS Clouds</h2><p>Author: Kaijie Guo, Dingji Li, Ben Luo, Yibin Shen, Kaihuan Peng, Ning Luo, Shengdong Dai, Chen Liang, Jianming Song, Hang Yang, Xiantao Zhang, Zeyu Mi  (Alibaba Group; Institute of Parallel and Distributed Systems, Shanghai Jiao Tong University;  Engineering Research Center for Domain-specific Operating Systems, Ministry of Education, China)</p>
+<p>Abstruct:  </p>
+<ul>
+<li>设备直通已被云服务提供商广泛采用，以在虚拟机（VM）中实现接近裸机的 I&#x2F;O 性能。然而，这种方法需要对 VM 内存进行静态绑定，从而无法实现按需分页。硬件设备 I&#x2F;O page fault （IOPF）功能为解决这一限制提供了最优方案。</li>
+<li>目前使用的 IOPF 方法，无论是基于标准 IOMMU 功能（ATS+PRI）还是具备独立 IOMMU 实现的设备，尚未在 Infrastructure-as-a-Service（IaaS）云中得到广泛应用。这是由于成本高昂、平台依赖性以及对性能和服务等级目标（SLO）有较大影响。</li>
+<li>我们提出了<strong>虚拟化页面请求接口（VPRI），这是一种通过软硬件协作开发的新颖 IOPF 系统</strong>。<ul>
+<li>VPRI 不仅具有平台独立性，免除了地址转换的复杂性</li>
+<li>而且成本低廉，并设计用于最小化对 SLO 的影响。</li>
+</ul>
+</li>
+<li>我们的工作使得在阿里云中大规模部署 IOPF 功能成为可能，且对 SLO 的影响可以忽略不计。当与内存管理软件集成时，它显著提高了公共 IaaS 云中的内存利用率，有效克服了直通设备相关的静态内存绑定限制。<ul>
+<li>我们在现有 DPU 中不到六个月内实现了 VPRI，无需额外的硬件升级，有效解决了CSPs的成本问题。</li>
+<li>此外，它使之前发布的缺乏 ATS 和 PRI 功能的 Intel 和 AMD x86 系统具备了硬件 IOPF 能力，有效解决了兼容性问题。</li>
+<li>同时，VPRI 有效缓解了硬件 IOPF 对 SLO（服务级别目标）的影响，在数据中心启用内存承诺时，确保 SLO 保持在可接受范围内。</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/28/os/linux/0.11/boot/" rel="prev" title="Linux 0.11: Boot">
+      <i class="fa fa-chevron-left"></i> Linux 0.11: Boot
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/29/os/xv6/boot/" rel="next" title="xv6 boot 启动过程">
+      xv6 boot 启动过程 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Tiered-Memory-Management-Access-Latency-is-the-Key"><span class="nav-number">1.</span> <span class="nav-text">Tiered Memory Management: Access Latency is the Key!</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fast-Flexible-and-Practical-Kernel-Extensions"><span class="nav-number">2.</span> <span class="nav-text">Fast, Flexible, and Practical Kernel Extensions</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fast-Safe-IO-Memory-Protection"><span class="nav-number">3.</span> <span class="nav-text">Fast &amp; Safe IO Memory Protection</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VPRI-Efficient-I-O-Page-Fault-Handling-via-Software-Hardware-Co-Design-for-IaaS-Clouds"><span class="nav-number">4.</span> <span class="nav-text">VPRI: Efficient I&#x2F;O Page Fault Handling via  Software-Hardware Co-Design for IaaS Clouds</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>
