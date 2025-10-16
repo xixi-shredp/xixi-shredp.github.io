@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="GPU 编程模型简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GPU Programming Model">
+<meta property="og:url" content="http://example.com/2025/10/08/Arch/gpu/programming_model/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="GPU 编程模型简介">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-10-08T04:53:12.000Z">
+<meta property="article:modified_time" content="2025-10-10T16:26:56.411Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/10/08/Arch/gpu/programming_model/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>GPU Programming Model | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/10/08/Arch/gpu/programming_model/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          GPU Programming Model
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2025-10-08 12:53:12" itemprop="dateCreated datePublished" datetime="2025-10-08T12:53:12+08:00">2025-10-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-11 00:26:56" itemprop="dateModified" datetime="2025-10-11T00:26:56+08:00">2025-10-11</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/" itemprop="url" rel="index"><span itemprop="name">Arch</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/gpu/" itemprop="url" rel="index"><span itemprop="name">gpu</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">GPU 编程模型简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>GPU 硬件通过很宽的 SIMD 硬件挖掘 GPU 程序中的数据级并行。但其 SIMD 硬件并不直接暴露给程序员，程序员使用 SIMT 执行模型：准备好大量的标量线程组给 GPU ，每个线程有自己独立的执行路径，这些标量线程组被 NVIDIA 称为 warps (AMD 称为 wavefronts), 在 GPU 上通过 SIMD 硬件实现，每个线程内部是带锁的</p>
+<h1 id="执行模型"><a href="#执行模型" class="headerlink" title="执行模型"></a>执行模型</h1><p>对于 discrete GPU ，程序首先执行 CPU 部分代码：</p>
+<ol>
+<li>分配 GPU 计算需要的显存空间 (cudaMalloc)</li>
+<li>将输入数据初始化到 GPU 显存中 (cudaMemcpy)</li>
+<li>进入 GPU 计算 kernel<br> 通过（&lt;&lt;&lt;nblock, thread_per_block&gt;&gt;&gt;）配置线程数</li>
+</ol>
+<p>NVIDIA 引入 Unified Memory 之后，可以透明地进行 CPU 和 GPU 之间的数据传输，其他架构需要程序员手动管理 GPU 显存的分配和传输</p>
+<h1 id="GPU-计算-kernel"><a href="#GPU-计算-kernel" class="headerlink" title="GPU 计算 kernel"></a>GPU 计算 kernel</h1><p>GPU 计算 kernel 一般由数千个线程组成，这些线程在 kernel 中的组织结构:  </p>
+<ul>
+<li>1 个 grid 由 <u>thread blocks (in NVIDIA) &#x2F; cooperative thread array, CTA (in AMD)</u> 组成</li>
+<li>thread blocks &#x2F; CTA 由 wraps &#x2F; wavefronts 组成</li>
+</ul>
+<p>在程序中 kernel 由一个函数指定( CUDA 中通过 <code>__global__</code> 关键字指定)</p>
+<p>NVIDIA 每个 wrap 由 32 个线程组成 (AMD 每个 wavefront 由 64 个线程组成)</p>
+<h2 id="thread-blocks-CTA"><a href="#thread-blocks-CTA" class="headerlink" title="thread blocks &#x2F; CTA"></a>thread blocks &#x2F; CTA</h2><ul>
+<li>每个 thread blocks &#x2F; CTA 内的线程之间可以通过计算核的 SPM 高效通信<ul>
+<li>每个计算核有一个SPM, 供计算核上的所有的 thread block&#x2F;CTA 使用</li>
+<li>SPM 一般很小， 每个计算核的 SPM 一般在 16-64 KB，并作为不同的内存空间提供给程序员</li>
+<li>在 CUDA 中通过 <code>__shared__</code> 指定将内存分配到 SPM</li>
+<li>SPM 功能类似于软件管理的 cache, 但计算核中还有硬件管理的 cache</li>
+<li>NVIDIA 称为 shared memory</li>
+<li>AMD GCN 架构将该 SPM 称为 <u>local data store, LDS</u><br>除此之外，所有 compute core 还会共享一个 <u>global data store, GDS</u></li>
+</ul>
+</li>
+<li>每个 thread blocks &#x2F; CTA 内的线程可以使用硬件支持的 barrier 指令进行高效同步<ul>
+<li>不同 CTA 之间的线程可以进行通信，但需要通过全局地址空间同步，代价更高</li>
+</ul>
+</li>
+</ul>
+<h2 id="线程-thread"><a href="#线程-thread" class="headerlink" title="线程 thread"></a>线程 thread</h2><ul>
+<li>每个线程执行相同的代码<ul>
+<li>这些指令的操作数均为标量操作数</li>
+<li>但是遵循不同的控制流。</li>
+</ul>
+</li>
+<li>每个线程有自己的 id<ul>
+<li>CUDA 中 grid, block, thread 这三个层级都有相应的 id</li>
+<li>每个线程在其所属的 grid, block 中有唯一的非负坐标 (x,y,z)<ul>
+<li>thread in block: <code>threadIdx.x</code>, <code>threadIdx.y</code>, <code>threadIdx.z</code></li>
+<li>max thread id in block: <code>blockDim.x</code>, <code>blockDim.y</code>, <code>blockDim.z</code></li>
+<li>block in grid: <code>blockIdx.x</code>, <code>blockIdx.y</code>, <code>blockIdx.z</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="GPU-ISA"><a href="#GPU-ISA" class="headerlink" title="GPU ISA"></a>GPU ISA</h1><h2 id="NVIDIA"><a href="#NVIDIA" class="headerlink" title="NVIDIA"></a>NVIDIA</h2><p>GPU 程序编译过程：  </p>
+<ol>
+<li>编译： CUDA C 代码 → PTX 汇编代码<br>(nvcc 编译器)</li>
+<li>汇编:  PTX 汇编代码 → SASS 二进制代码<br>(ptxas 汇编器)</li>
+</ol>
+<h3 id="Parallel-Thread-Execution-ISA-PTX"><a href="#Parallel-Thread-Execution-ISA-PTX" class="headerlink" title="Parallel Thread Execution ISA, PTX"></a>Parallel Thread Execution ISA, PTX</h3><ul>
+<li>类似于 RISC ISA, NVIDIA 有完整的文档公开<ul>
+<li>GPGPU-sim 基于 PTX 开发</li>
+</ul>
+</li>
+<li>与 RISC ISA 不同的地方在于：<ol>
+<li>PTX 可以使用无限的寄存器号，但其编译出的 SASS 只能使用有限的寄存器号</li>
+<li>kernel 参数通过存储常量内存传递，SASS中的非访存指令可以访问这些常量内存，而PTX中的参数则被分配到各自独立的“参数”地址空间中</li>
+</ol>
+</li>
+</ul>
+<h3 id="Streaming-ASSembler-SASS"><a href="#Streaming-ASSembler-SASS" class="headerlink" title="Streaming ASSembler, SASS"></a>Streaming ASSembler, SASS</h3><p>NVIDIA 未提供完整的文档，只提供了指令 opcode，未提到操作数域和指令语义</p>
+<ul>
+<li>无法进行自定义修改</li>
+<li>不具有后向兼容性<br>例: NVIDIA 从 Kepler 架构开始不再需要使用计分板进行显式的依赖检查</li>
+</ul>
+<p>有一些工作是针对 SASS 的反汇编: decuda<br>NVIDIA 也提供反汇编工具: cuobjdump</p>
+<h2 id="AMD-GCN"><a href="#AMD-GCN" class="headerlink" title="AMD GCN"></a>AMD GCN</h2><p>有完整的硬件级 ISA spec</p>
+<p>GPU 程序编译过程：  </p>
+<ol>
+<li>编译： OpenCL 代码 → HSAIL 汇编代码  </li>
+<li>汇编:  PTX 汇编代码 → SASS 二进制代码<br>(ptxas 汇编器)</li>
+</ol>
+<p>与 NVIDIA 的区别：<strong>AMD GCN 的标量和向量指令是分离的, 标量指令前缀 <code>s_</code>, 向量指令前缀 <code>v_</code></strong><br>AMD GCN 架构中每个 SIMT Core 包含一个标量计算单元和 4 个向量计算单元</p>
+<ul>
+<li>向量指令<ul>
+<li>在向量计算单元上执行，每个 wavefront 中的每个独立的线程计算不同的 32-bit 值</li>
+<li>使用 exec 寄存器进行向量指令的谓词执行</li>
+</ul>
+</li>
+<li>标量指令：在标量计算单元上执行，每个 wavefront 中的所有线程计算共享的一个 32-bit 值<ul>
+<li>和控制流处理相关</li>
+<li>潜在好处：<strong>frequently certain portions of a computation in a SIMT program will compute the same result independent of thread ID (不是很理解？)</strong></li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>为了实现长延迟操作的数据依赖性解析，AMD GCN 架构包含了 <code>S_WAITCNT</code> 指令:<br>每个 wavefront 有三个计数器：vector memory count, local&#x2F;global data store count, register export count<br>这些计数器分别表示特定类型未完成操作的数量。编译器或程序员会插入 <code>S_WAITCNT</code> 指令，使 wavefront 等待直到未完成操作的数量降至指定阈值以下</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/10/02/Arch/gpu/overview/" rel="prev" title="GPU Overview">
+      <i class="fa fa-chevron-left"></i> GPU Overview
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/10/10/os/generic/os/" rel="next" title="OS overview">
+      OS overview <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">执行模型</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GPU-%E8%AE%A1%E7%AE%97-kernel"><span class="nav-number">2.</span> <span class="nav-text">GPU 计算 kernel</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#thread-blocks-CTA"><span class="nav-number">2.1.</span> <span class="nav-text">thread blocks &#x2F; CTA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B-thread"><span class="nav-number">2.2.</span> <span class="nav-text">线程 thread</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GPU-ISA"><span class="nav-number">3.</span> <span class="nav-text">GPU ISA</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#NVIDIA"><span class="nav-number">3.1.</span> <span class="nav-text">NVIDIA</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Parallel-Thread-Execution-ISA-PTX"><span class="nav-number">3.1.1.</span> <span class="nav-text">Parallel Thread Execution ISA, PTX</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Streaming-ASSembler-SASS"><span class="nav-number">3.1.2.</span> <span class="nav-text">Streaming ASSembler, SASS</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AMD-GCN"><span class="nav-number">3.2.</span> <span class="nav-text">AMD GCN</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

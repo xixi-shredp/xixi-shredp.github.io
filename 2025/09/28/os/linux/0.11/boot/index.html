@@ -28,7 +28,7 @@
 <meta property="og:description" content="Linux 0.11 源码简介：Boot 启动过程">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-09-28T03:52:08.000Z">
-<meta property="article:modified_time" content="2025-09-30T05:12:24.255Z">
+<meta property="article:modified_time" content="2025-10-16T03:56:26.482Z">
 <meta property="article:author" content="xixi">
 <meta name="twitter:card" content="summary">
 
@@ -198,7 +198,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2025-09-30 13:12:24" itemprop="dateModified" datetime="2025-09-30T13:12:24+08:00">2025-09-30</time>
+                <time title="Modified: 2025-10-16 11:56:26" itemprop="dateModified" datetime="2025-10-16T11:56:26+08:00">2025-10-16</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -232,10 +232,10 @@
       
         <p>平台要求：80x86 CPU</p>
 <ol>
-<li>CPU 复位后处于实地址模式(寻址空间 1MB)，PC: <strong>0xFFFF0 (CS: 0xFFFF, IP:0x0000)</strong>  </li>
+<li>CPU 复位</li>
 <li>BIOS 代码的入口应当在 <code>0xFFFF0</code> <ol>
 <li>调用 0x19 中断：将 <code>0x07c00 - 0x07E00</code> 代码从磁盘中复制到内存中</li>
-<li>跳转到 <code>0x07c00</code></li>
+<li>跳转到 <code>0x07c00</code>: <a href="#bootsect_s"><code>boot/bootsect.s</code></a></li>
 </ol>
 <ul>
 <li>引导硬盘将操作系统代码加载到内存中</li>
@@ -243,10 +243,19 @@
 </ul>
 </li>
 </ol>
-<h2 id="实地址模式下的内存布局"><a href="#实地址模式下的内存布局" class="headerlink" title="实地址模式下的内存布局"></a>实地址模式下的内存布局</h2><ul>
+<blockquote>
+<p><strong>x86 CPU 复位</strong>:  </p>
+<ul>
+<li>实地址模式(寻址空间 1MB)</li>
+<li>PC: <strong>0xFFFF0 (CS: 0xFFFF, IP:0x0000)</strong></li>
+</ul>
+</blockquote>
+<p>实地址模式下的内存布局:  </p>
+<ul>
 <li><code>0x00000 - 0x003FF</code>: 存放中断向量表<ul>
 <li>最多存放 256 个中断向量 (1KB * 16b)</li>
 <li>16 位实模式地址规定，便于中断处理查找中断向量</li>
+<li>由 BIOS 建立</li>
 </ul>
 </li>
 <li><code>0x00400 - 0x004FF</code>: 存放 BIOS 数据<ul>
@@ -268,7 +277,8 @@
 </ul>
 </li>
 </ul>
-<h3 id="boot-bootsect-s-：-Boot-扇区-每个扇区-512B-存放在-0-盘面-0-磁道-1-扇区"><a href="#boot-bootsect-s-：-Boot-扇区-每个扇区-512B-存放在-0-盘面-0-磁道-1-扇区" class="headerlink" title="boot/bootsect.s ： Boot 扇区(每个扇区 512B), 存放在 0 盘面 0 磁道 1 扇区"></a><code>boot/bootsect.s</code> ： Boot 扇区(每个扇区 512B), 存放在 0 盘面 0 磁道 1 扇区</h3><ol>
+<h1 id="boot-bootsect-s-：-Boot-扇区-每个扇区-512B-存放在-0-盘面-0-磁道-1-扇区"><a href="#boot-bootsect-s-：-Boot-扇区-每个扇区-512B-存放在-0-盘面-0-磁道-1-扇区" class="headerlink" title="boot/bootsect.s ： Boot 扇区(每个扇区 512B), 存放在 0 盘面 0 磁道 1 扇区"></a><code>boot/bootsect.s</code> ： Boot 扇区(每个扇区 512B), 存放在 0 盘面 0 磁道 1 扇区</h1><p><a id="bootsect_s"></a></p>
+<ol>
 <li><code>entry: start</code>: 将 boot segment 复制到 init segment<ol>
 <li>设置段寄存器 ds, es</li>
 <li>偏移置0 si, di</li>
@@ -277,37 +287,186 @@
 </ol>
 </li>
 <li><code>go</code>: 设置栈的段寄存器</li>
-<li><code>load_setup</code>: 将 setup.s 从磁盘中复制到内存中<ol>
+<li><code>load_setup</code>: 将 setup.s 从磁盘中复制到内存中的 <code>0x90200</code> 后 4 个扇区<ol>
 <li>调用 0x13 中断实现拷贝</li>
 <li>拷贝结束后跳转到 <code>ok_load_setup</code></li>
 </ol>
 </li>
 <li><code>ok_load_setup</code><ol>
-<li>调用 <code>read_it</code> 和 <code>kill_motor</code> 将 system 从磁盘中复制到内存中</li>
+<li>调用 0x13 中断：将 head.s 和 kernel 从磁盘中复制到内存中 <code>0x10000</code> 后大约 240 个扇区<ul>
+<li>调用 <code>read_it</code> 和 <code>kill_motor</code></li>
+</ul>
+</li>
 <li>检查 root_dev</li>
-<li>跳转到 setup.s 的 <code>entry: start</code></li>
+<li>跳转到 <a href="#setup_s">setup.s</a> 的 <code>entry: start</code></li>
 </ol>
 </li>
 </ol>
-<h3 id="boot-setup-s"><a href="#boot-setup-s" class="headerlink" title="boot/setup.s"></a><code>boot/setup.s</code></h3><ol>
-<li><p>设置机器系统数据</p>
-</li>
-<li><p>检查磁盘设备等</p>
-</li>
-<li><p>关闭中断：<code>cli</code></p>
-</li>
-<li><p>将操作系统从磁盘拷贝到内存中: <code>do_move</code> 循环</p>
-<ul>
-<li>将 <code>0x10000 - 0x90000</code> 拷贝到 &#96;&#96;</li>
+<h1 id="boot-setup-s-打开保护模式"><a href="#boot-setup-s-打开保护模式" class="headerlink" title="boot/setup.s : 打开保护模式"></a><code>boot/setup.s</code> : 打开保护模式</h1><p><a id="setup_s"></a></p>
+<ol>
+<li>获取机器系统数据<ul>
+<li>0x10 中断：读机器系统数据，写到 <code>0x90000 - 0x901FD</code> 的位置(还有 2 字节未覆盖)</li>
+<li>INITSEG 的位置，此时 bootsect 执行完毕，不再使用</li>
 </ul>
 </li>
-<li><p>调用 0x13 中断：将 head.s 和 kernel 从磁盘中复制到内存中</p>
+<li>检查磁盘设备等</li>
+<li>关闭中断：<code>cli</code><ul>
+<li>EFLAGS 标志寄存器的 IF 位(interrupt flag)置 0</li>
+<li>不再响应中断</li>
+<li>目的：之后要移动 kernel 到 <code>0x00000</code>，会覆盖实地址模式的中断向量表，无法正确响应中断</li>
+<li>下一次打开中断将在 <code>main()</code> 中</li>
+</ul>
 </li>
 </ol>
-<p>80x86:</p>
-<ul>
-<li>段寄存器不能直接赋值</li>
+<blockquote>
+<p><strong>x86 EFLAGS Register</strong>:  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">                 System Flags of EFLAGS Register</span><br><span class="line">31              23                15                7           0</span><br><span class="line">+---------------+-----------+-+-+++-+----+-+-+-+-+++-+-+-+-+-+-+-+</span><br><span class="line">|###########################|V|R|#|N|ID  |O|D|I|T|S|Z|#|A|#|P|#|C|</span><br><span class="line">|0 0 0 0 0 0 0 0 0 0 0 0 0 0| | |0| |    |#|#| |#|#|#|0|#|0|#|1|#|</span><br><span class="line">|###########################|M|F|#|T|  PL|F|F|F|F|F|F|#|F|#|F|#|F|</span><br><span class="line">+---------------+-----------+++++++++-+--+-+-+++-+++-+-+-+-+-+-+-+</span><br><span class="line">                             | |   |  |       |</span><br><span class="line">        Virtual 8086 Mode----+ |   |  |       |</span><br><span class="line">              Resume Flag------+   |  |       |</span><br><span class="line">         Nested Task Flag----------+  |       |</span><br><span class="line">      I/O Privilege Level-------------+       |</span><br><span class="line">         Interrupt Enable---------------------+</span><br><span class="line">----------------------------------------------------------------------------</span><br><span class="line">NOTE</span><br><span class="line">      0 or 1 Indicates Intel Reserved. DO NOT DEFINE.</span><br><span class="line">----------------------------------------------------------------------------</span><br></pre></td></tr></table></figure><ol start="4">
+<li>将系统（head.s + kernel）从 <code>0x10000</code> 处移位到 <code>0x00000</code> 处 : <code>do_move</code> 循环<ul>
+<li>覆盖实地址模式的中断向量表: 实地址模式下的中断机制将不再被使用</li>
 </ul>
+</li>
+<li>建立描述符表<ul>
+<li><code>lidt idt_48</code> 指令：赋值 IDTR 寄存器, 指定中断描述符表(目标是取代实地址模式下的中断向量表)</li>
+<li><code>lgdt gdt_48</code> 指令：赋值 GDTR 寄存器, 指定全局描述符表(目标是取代实地址模式下的段寄存器)<ul>
+<li><code>gdt_48</code> 设置 GDT 地址在 <code>gdt</code>, gdt limit 设置为 256 个 entry</li>
+<li><code>gdt</code> 中第 0 项是空; 第 1 项是 0 特权级的代码段; 第 2 项是 0 特权级的数据段; …</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</blockquote>
+<blockquote>
+<p><strong>Segement Descriptor Format</strong>:  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">        DESCRIPTORS USED FOR APPLICATIONS CODE AND DATA SEGMENTS</span><br><span class="line"></span><br><span class="line"> 31                23                15                7               0</span><br><span class="line">+-----------------+-+-+-+-+---------+-+-----+-+-----+-+-----------------+</span><br><span class="line">|                 | | | |A|         | |     | |     | |                 |</span><br><span class="line">|   BASE 31..24   |G|X|O|V| LIMIT   |P| DPL |1| TYPE|A|  BASE 23..16    | 4</span><br><span class="line">|                 | | | |L| 19..16  | |     | |     | |                 |</span><br><span class="line">|-----------------+-+-+-+-+---------+-+-----+-+-----+-+-----------------|</span><br><span class="line">|                                   |                                   |</span><br><span class="line">|        SEGMENT BASE 15..0         |       SEGMENT LIMIT 15..0         | 0</span><br><span class="line">|                                   |                                   |</span><br><span class="line">+-----------------+-----------------+-----------------+-----------------+</span><br><span class="line"></span><br><span class="line">               DESCRIPTORS USED FOR SPECIAL SYSTEM SEGMENTS</span><br><span class="line"></span><br><span class="line"> 31                23                15                7               0</span><br><span class="line">+-----------------+-+-+-+-+---------+-+-----+-+-------+-----------------+</span><br><span class="line">|                 | | | |A|         | |     | |       |                 |</span><br><span class="line">|   BASE 31..24   |G|X|O|V| LIMIT   |P| DPL |0|  TYPE |  BASE 23..16    | 4</span><br><span class="line">|                 | | | |L| 19..16  | |     | |       |                 |</span><br><span class="line">|-----------------+-+-+-+-+---------+-+-----+-+-------+-----------------|</span><br><span class="line">|                                   |                                   |</span><br><span class="line">|        SEGMENT BASE 15..0         |       SEGMENT LIMIT 15..0         | 0</span><br><span class="line">|                                   |                                   |</span><br><span class="line">+-----------------+-----------------+-----------------+-----------------+</span><br><span class="line"></span><br><span class="line">                          Not-Present Descriptor</span><br><span class="line"> 31                23                15                7               0</span><br><span class="line">+-----------------+-----------------+-+-----+-+-------+-----------------+</span><br><span class="line">|                                   | |     | |       |                 |</span><br><span class="line">|            AVAILABLE              |O| DPL |S| TYPE  |   AVAILABLE     | 4</span><br><span class="line">|                                   | |     | |       |                 |</span><br><span class="line">|-----------------------------------+-+-----+-+-------+-----------------|</span><br><span class="line">|                                                                       |</span><br><span class="line">|                               AVAILABLE                               | 0</span><br><span class="line">|                                                                       |</span><br><span class="line">+-----------------+-----------------+-----------------+-----------------+</span><br><span class="line"></span><br><span class="line">          A      - Accessed</span><br><span class="line">          AVL    - Available For Use By Systems Programmers</span><br><span class="line">          DPL    - Descriptor Privilege Level</span><br><span class="line">          G      - Granularity</span><br><span class="line">          P      - Segment Present</span><br></pre></td></tr></table></figure>
+<ul>
+<li>GDT 中第 0 项永远是空</li>
+<li>GDT 中每个 entry 为 64 bits</li>
+</ul>
+</blockquote>
+<ol start="6">
+<li>扩展地址范围为 32 位<ul>
+<li>北桥 打开 A20: <code>out</code> + <code>empty_8042</code>, 总线 32 位已打开</li>
+<li>重新编程 8259A 中断控制器：建立新的中断映射</li>
+<li>CPU 打开 PE: Protection mode (控制寄存器 CR0 中的 PE bit)<ul>
+<li><code>lmsw</code> 指令：将 CRO 的 PE bit 置 1</li>
+<li>CPU 开始 32 位寻址</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>跳转到 <a href="#head_s">head.s</a> : <code>jmpi 0,8</code><ul>
+<li>0: offset</li>
+<li><code>8(0b1000)</code>: selector<ul>
+<li>低 2 位:  表示特权级为 0</li>
+<li>第 3 位： 0 表示 GDT</li>
+<li>其余位 ： 指向 GDT 的第 2 项 内核代码段</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p><strong>保护模式下的 selector</strong>:  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">15                        3 2   0</span><br><span class="line">+-------------------------+-+---+</span><br><span class="line">|                         |T|   |</span><br><span class="line">|           INDEX         | |RPL|</span><br><span class="line">|                         |I|   |</span><br><span class="line">+-------------------------+-+---+</span><br></pre></td></tr></table></figure>
+<ul>
+<li>RPL - Requestor’s Privilege Level</li>
+<li>TI  - Table Indicator (0 表示 GDT, 1 表示 LDT)</li>
+<li>其余位 ： 描述符表的索引</li>
+</ul>
+</blockquote>
+<h1 id="boot-head-s-建立分页"><a href="#boot-head-s-建立分页" class="headerlink" title="boot/head.s: 建立分页"></a><code>boot/head.s</code>: 建立分页</h1><p><a id="head_s"></a></p>
+<p><strong><code>__pg_dir</code>: 页目录表未来将存放在 head.s 的头部 (<code>0x0</code> 地址处)</strong></p>
+<ol>
+<li><code>startup_32</code>:  <ul>
+<li>赋值 ds 寄存器：selctor <code>0x10</code> 指向 GDT 的第 2 项: 内核数据段</li>
+<li>es, fs, gs 对齐到 ds</li>
+<li><code>lss</code>: 加载 _stack_start 到 ss (<code>stack_start</code> 定义于 <code>sched.c</code>)</li>
+</ul>
+</li>
+<li>设置 IDT : <code>setup_idt</code><ul>
+<li>构建一个 IDT Gate Descriptor: 存放在 eax(低 32 位) 和 edx(高 32 位)<ul>
+<li>31-16 bits       (selector): 0x0008 &#x3D; cs</li>
+<li>63-48, 15-0 bits (offset)  : <code>ignore_init</code> 的地址<ul>
+<li><code>ignore_init</code> 是一个中断服务程序: 哑中断，通过 printk 打印 “Unknown interrupt” 后 iret</li>
+</ul>
+</li>
+<li>32-47 bits       (0x8E00)  : interrupt gate, dpl&#x3D;0, present</li>
+</ul>
+</li>
+<li>将该 IDT Gate Descriptors 加载到 IDT 的 256 个 entry (所有 entry 都相同): <code>rp_sidt</code> 循环</li>
+<li>将 <code>idt_descr</code> 设置到 IDTR: <code>lidt idt_descr</code></li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p><strong>80306 IDT Gate Descriptors</strong>:  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">                              80386 TASK GATE</span><br><span class="line"> 31                23                15                7                0</span><br><span class="line">+-----------------+-----------------+---+---+---------+-----------------+</span><br><span class="line">|#############(NOT USED)############| P |DPL|0 0 1 0 1|###(NOT USED)####|4</span><br><span class="line">|-----------------------------------+---+---+---------+-----------------|</span><br><span class="line">|             SELECTOR              |#############(NOT USED)############|0</span><br><span class="line">+-----------------+-----------------+-----------------+-----------------+</span><br><span class="line"></span><br><span class="line">                              80386 INTERRUPT GATE</span><br><span class="line"> 31                23                15                7                0</span><br><span class="line">+-----------------+-----------------+---+---+---------+-----+-----------+</span><br><span class="line">|           OFFSET 31..16           | P |DPL|0 1 1 1 0|0 0 0|(NOT USED) |4</span><br><span class="line">|-----------------------------------+---+---+---------+-----+-----------|</span><br><span class="line">|             SELECTOR              |           OFFSET 15..0            |0</span><br><span class="line">+-----------------+-----------------+-----------------+-----------------+</span><br><span class="line"></span><br><span class="line">                              80386 TRAP GATE</span><br><span class="line"> 31                23                15                7                0</span><br><span class="line">+-----------------+-----------------+---+---+---------+-----+-----------+</span><br><span class="line">|          OFFSET 31..16            | P |DPL|0 1 1 1 1|0 0 0|(NOT USED) |4</span><br><span class="line">|-----------------------------------+---+---+---------+-----+-----------|</span><br><span class="line">|             SELECTOR              |           OFFSET 15..0            |0</span><br><span class="line">+-----------------+-----------------+-----------------+-----------------+</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>IDT 每个 entry 为 64 bits</li>
+<li>IDT 中存有中断向量表的历史包袱(低 32 位)</li>
+<li>IDT 中的 Selector 关联着 GDT entry</li>
+</ul>
+</blockquote>
+<ol start="3">
+<li>设置 GDT : <code>setup_gdt</code>: <code>lgdt gdt_descr</code> <ul>
+<li><code>gdt_descr</code>: GDT 地址设置为 <code>_gdt</code>，gdt limit 设置为 256 个 entry</li>
+<li><code>_gdt</code> 是 GDT 地址，存放 256 项: <ul>
+<li>第 0 项：空</li>
+<li>第 1 项：0 特权代码段</li>
+<li>第 2 项：0 特权数据段</li>
+<li>第 3 项：空: Temporary</li>
+<li>第 4 项 - 第 255 项：目前填充为空，提供给用户进程</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>重新设置所有的 ds,es,fs,gs 寄存器到 cs 段, 重新设置栈<br> 因为重新设置过 GDT (GDT 地址变化，段限长从 8M 变为 16M) ,所以需要重新装载</li>
+<li>检查 A20 是否打开<br> 未打开则进入死循环: <code>1</code> 是一个死循环: eax 不可能等于 <code>0x100000</code> </li>
+<li>检查数学协处理器 x87 是否存在</li>
+<li>跳转到 <code>after_page_tables</code> <ul>
+<li>把 <code>main()</code> 函数的参数压栈 </li>
+<li>把 <code>main()</code> 函数的返回地址(<code>L6</code>)压栈<ul>
+<li>L6 是死循环(<code>main()</code> 函数死机后返回到此)</li>
+</ul>
+</li>
+<li>把 <code>main()</code> 函数的地址压栈<ul>
+<li>实际上在后续 <code>setup_paging</code> 的 <code>ret</code> 处会跳转(返回)到 <code>main()</code> 函数</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>跳转到 <code>setup_paging</code><ul>
+<li>清空 5 个页 (1 个用作页目录，4 个用作一级页表)</li>
+<li>将 pg0 到 pg3 的 4 个页的 PTE 写入 <code>__pg_dir</code><ul>
+<li>内核中这些页的虚拟地址和物理地址实际上是一样的，以便于管理</li>
+</ul>
+</li>
+<li>将这 4 个页面对应的物理页全部填充 <code>0x00fff007</code></li>
+<li>设置 CR3 寄存器到 <code>0x0</code> (<code>__pg_dir</code>)</li>
+<li>设置分页标志： CR0 寄存器的 PG 位置 1</li>
+<li><code>ret</code> 指令：刷新指令预取队列并跳转到 <code>main()</code> 函数</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p><strong>x86 Paging</strong>:  </p>
+<ul>
+<li>CR3 寄存器：保存页目录基地址</li>
+<li>两级页表</li>
+<li>支持页大小：2MB, 4KB</li>
+</ul>
+</blockquote>
+<blockquote>
+<p><strong>x86 Page Table Entry</strong>:  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">31                                  12 11     9 8 7 6 5 4 3 2 1 0</span><br><span class="line">+--------------------------------------+-------+---+-+-+---+-+-+-+</span><br><span class="line">|                                      |       |   | | |   |U|R| |</span><br><span class="line">|      PAGE FRAME ADDRESS 31..12       | AVAIL |0 0|D|A|0 0|/|/|P|</span><br><span class="line">|                                      |       |   | | |   |S|W| |</span><br><span class="line">+--------------------------------------+-------+---+-+-+---+-+-+-+</span><br><span class="line"></span><br><span class="line">          P      - Present</span><br><span class="line">          R/W    - Read/Write</span><br><span class="line">          U/S    - User/Supervisor</span><br><span class="line">          D      - Dirty</span><br><span class="line">          AVAIL  - Available For Systems Programmer Use</span><br><span class="line"></span><br><span class="line">          NOTE: 0 Indicates Intel Reserved. Do Not Define.</span><br></pre></td></tr></table></figure></blockquote>
+<blockquote>
+<p><strong>x86 Controll Register</strong>:  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"> 31                23                15                7               0</span><br><span class="line">+-----------------+-----------------+--------+--------+-----------------+</span><br><span class="line">|                                            |                          |</span><br><span class="line">|    PAGE DIRECTORY BASE REGISTER (PDBR)     |         RESERVED         | CR3</span><br><span class="line">|--------------------------------------------+--------------------------|</span><br><span class="line">|                                                                       |</span><br><span class="line">|                       PAGE FAULT LINEAR ADDRESS                       | CR2</span><br><span class="line">|-----------------------------------------------------------------------|</span><br><span class="line">|                                                                       |</span><br><span class="line">|                                RESERVED                               | CR1</span><br><span class="line">|-+-----------------------------------------------------------+-+-+-+-+-|</span><br><span class="line">|P|                                                           |E|T|E|M|P|</span><br><span class="line">|G|                              RESERVED                     |T|S|M|P|E| CR0</span><br><span class="line">+-+---------------+-----------------+-----------------+-------+-+-+-+-+-+</span><br><span class="line"></span><br><span class="line">               PG - Paging</span><br><span class="line">               ET - Extension Type (80x87 Present)</span><br><span class="line">               TS - Task Switching</span><br><span class="line">               EM - Emulation (80x87 Emulation)</span><br><span class="line">               MP - Math Present (Controll WAIT Instruction)</span><br><span class="line">               PE - Protection Enable</span><br></pre></td></tr></table></figure></blockquote>
+<blockquote>
+<p><strong>x86 Address Translation:</strong>  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">        15           0      31                           0</span><br><span class="line">Logical +---------------+   +------------------------------+</span><br><span class="line">Address |    SELECTOR   |   |            OFFSET            |</span><br><span class="line">        +---------------+   +---+--------------------------+</span><br><span class="line">                                !</span><br><span class="line">                 +------------------------------+</span><br><span class="line">                 |     SEGMENT TRANSLATION      |</span><br><span class="line">                 +--------------+---------------+</span><br><span class="line">                             +--+-+      PAGING DISABLED</span><br><span class="line">                             |PG ?|--------------------+</span><br><span class="line">                             +--+-+                    |</span><br><span class="line">               31        PAGING ! ENABLED        0     |</span><br><span class="line">      Linear  +-----------+-----------+-----------+    |</span><br><span class="line">      Address |    DIR    |   PAGE    |  OFFSET   |    |</span><br><span class="line">              +-----------+-----+-----+-----------+    |</span><br><span class="line">                                !                      |</span><br><span class="line">                 +------------------------------+      |</span><br><span class="line">                 |       PAGE TRANSLATION       |      |</span><br><span class="line">                 +--------------+---------------+      |</span><br><span class="line">                                |&lt;---------------------+</span><br><span class="line">                  31            !              0</span><br><span class="line">        Physical +------------------------------+</span><br><span class="line">        Address  |                              |</span><br><span class="line">                 +------------------------------+</span><br></pre></td></tr></table></figure></blockquote>
 
     </div>
 
@@ -388,7 +547,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E5%9C%B0%E5%9D%80%E6%A8%A1%E5%BC%8F%E4%B8%8B%E7%9A%84%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80"><span class="nav-number">1.</span> <span class="nav-text">实地址模式下的内存布局</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#boot-bootsect-s-%EF%BC%9A-Boot-%E6%89%87%E5%8C%BA-%E6%AF%8F%E4%B8%AA%E6%89%87%E5%8C%BA-512B-%E5%AD%98%E6%94%BE%E5%9C%A8-0-%E7%9B%98%E9%9D%A2-0-%E7%A3%81%E9%81%93-1-%E6%89%87%E5%8C%BA"><span class="nav-number">1.1.</span> <span class="nav-text">boot&#x2F;bootsect.s ： Boot 扇区(每个扇区 512B), 存放在 0 盘面 0 磁道 1 扇区</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#boot-setup-s"><span class="nav-number">1.2.</span> <span class="nav-text">boot&#x2F;setup.s</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#boot-bootsect-s-%EF%BC%9A-Boot-%E6%89%87%E5%8C%BA-%E6%AF%8F%E4%B8%AA%E6%89%87%E5%8C%BA-512B-%E5%AD%98%E6%94%BE%E5%9C%A8-0-%E7%9B%98%E9%9D%A2-0-%E7%A3%81%E9%81%93-1-%E6%89%87%E5%8C%BA"><span class="nav-number">1.</span> <span class="nav-text">boot&#x2F;bootsect.s ： Boot 扇区(每个扇区 512B), 存放在 0 盘面 0 磁道 1 扇区</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#boot-setup-s-%E6%89%93%E5%BC%80%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">boot&#x2F;setup.s : 打开保护模式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#boot-head-s-%E5%BB%BA%E7%AB%8B%E5%88%86%E9%A1%B5"><span class="nav-number">3.</span> <span class="nav-text">boot&#x2F;head.s: 建立分页</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -404,7 +563,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-count">31</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

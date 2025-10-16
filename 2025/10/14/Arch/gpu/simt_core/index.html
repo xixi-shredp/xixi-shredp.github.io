@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="SIMT Core 简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SIMT Core">
+<meta property="og:url" content="http://example.com/2025/10/14/Arch/gpu/simt_core/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="SIMT Core 简介">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/Arch/gpu/simt_core/pipeline.svg">
+<meta property="og:image" content="http://example.com/images/Arch/gpu/simt_core/branch_program.svg">
+<meta property="og:image" content="http://example.com/images/Arch/gpu/simt_core/re-convergence.svg">
+<meta property="og:image" content="http://example.com/images/Arch/gpu/simt_core/SIMTStackExample.svg">
+<meta property="og:image" content="http://example.com/images/Arch/gpu/simt_core/stack_based_reconverge.svg">
+<meta property="og:image" content="http://example.com/images/Arch/gpu/simt_core/volta_reconverge.svg">
+<meta property="article:published_time" content="2025-10-14T05:11:42.000Z">
+<meta property="article:modified_time" content="2025-10-16T02:25:22.063Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/Arch/gpu/simt_core/pipeline.svg">
+
+<link rel="canonical" href="http://example.com/2025/10/14/Arch/gpu/simt_core/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>SIMT Core | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/10/14/Arch/gpu/simt_core/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SIMT Core
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2025-10-14 13:11:42" itemprop="dateCreated datePublished" datetime="2025-10-14T13:11:42+08:00">2025-10-14</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-16 10:25:22" itemprop="dateModified" datetime="2025-10-16T10:25:22+08:00">2025-10-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/" itemprop="url" rel="index"><span itemprop="name">Arch</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/gpu/" itemprop="url" rel="index"><span itemprop="name">gpu</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">SIMT Core 简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>传统的图像渲染应用中，GPU 需要访问的数据集太大，很难在片上 cache 中被完全缓存，为提高性能，就需要足够大的片外带宽。<br>尽管每个线程的片上存储很小，但 cache 依旧可以通过空间局部性有效减少片外访存的数量(比如相邻像素之间的操作)</p>
+<h1 id="GPGPU-Pipeline"><a href="#GPGPU-Pipeline" class="headerlink" title="GPGPU Pipeline"></a>GPGPU Pipeline</h1><p><img src="/images/Arch/gpu/simt_core/pipeline.svg" alt="gpgpu_pipeline"></p>
+<p>单个 SIMT Core 的前端是 SIMT ，后端是 SIMD。而且每条流水线包含3个调度循环：</p>
+<ol>
+<li>instruction fetch loop<br>  Fetch, I-Cache, Decode, I-Buffer</li>
+<li>instruction issue loop<br>  I-Buffer, Scoreboard, Issue, SIMT Stack</li>
+<li>register access scheduling loop<br>  Operand Collector, ALU, Memory</li>
+</ol>
+<h2 id="SIMT-前端"><a href="#SIMT-前端" class="headerlink" title="SIMT 前端"></a>SIMT 前端</h2><ol>
+<li>Fetch<ul>
+<li>使用 warp 的 pc 访问 I-Cache</li>
+</ul>
+</li>
+<li>Decode<ul>
+<li>从 regfile 中取出源寄存器值</li>
+<li>获得 SIMT execution mask</li>
+</ul>
+</li>
+</ol>
+<h3 id="I-Buffer"><a href="#I-Buffer" class="headerlink" title="I-Buffer"></a>I-Buffer</h3><p>在 I-Cache 访问完成之后将指令放入 I-Buffer<br>I-Buffer 使用一个独立的调度器用于决定哪条指令应被下一个流水级执行</p>
+<p>依赖检测：</p>
+<ol>
+<li>检测同一 warp 内指令之间的数据依赖性: <a href="#in-order-scoreboard">in-order scoreboard</a></li>
+</ol>
+<h3 id="In-order-Scoreboard"><a href="#In-order-Scoreboard" class="headerlink" title="In-order Scoreboard"></a>In-order Scoreboard</h3><p><a id="in_order_scoreboard"></a><br>在 GPU 上存在的问题：  </p>
+<ol>
+<li>现代 GPU 中包含的寄存器数量非常庞大。每个 warp 最多有 128 个寄存器，每个核心最多包含 64 个 warp，因此每个核心的 scoreboard 需要 8192 位</li>
+<li>遇到存在依赖关系的指令必须反复在 scoreboard 中查找其操作数，直到它所依赖的先前指令将结果写入寄存器文件<br> 在单线程设计中，这不会引入太多复杂性<br> 在有序发射多线程处理器中，来自多个线程的指令可能都在等待早期指令完成。如果所有这些指令都必须查询 scoreboard ，则需要较多的读端口  <ul>
+<li>每个 warp 最多有 4 个操作数，若所有 warp 每周期都查询 scoreboard ，则需要 256 个读端口</li>
+<li>替代方法: 限制每周期可以查询 scoreboard 的 warp 数量<br> 也会限制可调度的 warp 数量<br> 如果所有检查的指令都存在依赖关系，即使其他未被检查的指令恰好没有依赖关系，也可能无法发出任何指令</li>
+</ul>
+</li>
+</ol>
+<h3 id="SIMT-Execution-Masking-SIMT-Stack"><a href="#SIMT-Execution-Masking-SIMT-Stack" class="headerlink" title="SIMT Execution Masking (SIMT Stack)"></a>SIMT Execution Masking (SIMT Stack)</h3><p>执行模型：在 GPGPU 中，各个线程完全独立执行</p>
+<p>实现:  </p>
+<ol>
+<li>仅通过预测机制(传统 CPU)</li>
+<li>通过传统预测机制与 SIMT Stack 的预测掩码堆栈相结合(当前 GPU)</li>
+</ol>
+<p>SIMT Stack 有助于高效处理两个关键问题:  </p>
+<ol>
+<li>嵌套控制流: 在嵌套控制流中，一个分支的执行依赖于另一个分支<ul>
+<li>传统支持预测的 CPU 通过使用多个预测寄存器来处理嵌套控制流</li>
+</ul>
+</li>
+<li>当一个 warp 中的所有线程都避开某个控制流路径时，可以完全跳过计算<ul>
+<li>对于复杂的控制流来说，这可能带来显著的效率提升</li>
+</ul>
+</li>
+</ol>
+<p>示例程序基本块：(以每个 warp 4 个线程为例)<br><img src="/images/Arch/gpu/simt_core/branch_program.svg" alt="branch_program"></p>
+<p>问题：由于 GPU 后端是 SIMD 执行，所以需要所有线程同时进入后端。</p>
+<p>处理方式：<strong>对同一 warp 中沿着不同路径执行的线程进行序列化处理</strong><br><img src="/images/Arch/gpu/simt_core/re-convergence.svg" alt="re-convergence"></p>
+<ol>
+<li>Initial State: 最初，每个线程都在执行基本块 B 。</li>
+<li><strong>Divergent Branch</strong>: 在分支之后，前三个线程继续执行基本块 B 中的代码。此时，第四个线程被屏蔽</li>
+<li><strong>Reconvergence</strong>: 为了保持 SIMD 执行，第四个线程在几个周期之后被调度执行基本块 F ，然后和前 3 个线程聚合一起执行基本块 G</li>
+</ol>
+<p>序列化的实现: 使用 SIMT Stack<br><img src="/images/Arch/gpu/simt_core/SIMTStackExample.svg" alt="SIMT Stack 示例"></p>
+<p>SIMT Stack 在专利和指令集手册中存在多种实现方式（但都至少<strong>部分由特殊指令进行管理</strong>）</p>
+<h4 id="缺点：死锁"><a href="#缺点：死锁" class="headerlink" title="缺点：死锁"></a>缺点：死锁</h4><p>基于 SIMT Stack 的 SIMT 实现可能导致 “SIMT Deadlock”</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">A: *mutex = 0</span><br><span class="line">B: while(!atomicCAS(mutex, 0, 1));</span><br><span class="line">C: // critical section</span><br><span class="line">   atomicExch(mutex, 0, 1);</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><code>atomicCAS</code>: 对包含 mutex 的内存位置执行 compare-and-swap<br>  编译器内建函数，会被转换为 atom.global.cas PTX 指令</p>
+</blockquote>
+<ol>
+<li>所有线程都访问 mutex，只有一条线程可以离开 while 循环，而其他线程则留在循环中。</li>
+<li>退出循环的线程将达到 Reconvergence Point ，因此将不存在于 SIMT Stack 中，而其他线程仍停在循环中未到达 Reconvergence Point, 从而无法执行 C 的 atomicExch 释放锁</li>
+</ol>
+<h3 id="Stackless-SIMT-Architectures-Independent-Thread-Scheduling"><a href="#Stackless-SIMT-Architectures-Independent-Thread-Scheduling" class="headerlink" title="Stackless SIMT Architectures: Independent Thread Scheduling"></a>Stackless SIMT Architectures: Independent Thread Scheduling</h3><p>为避免 SIMT Stack 带来的死锁问题, Independent Thread Scheduling 被提出并采用。<br>(NVIDIA Volta GPU 架构)</p>
+<p><strong>Key Idea: 用每个 warp 的 convergence barrier 替代 SIMT Stack</strong></p>
+<p>新增硬件寄存器(由硬件 warp 调度器使用, 由软件管理，因为可能嵌套很深)：</p>
+<ul>
+<li><strong>Barrier Participation Mask</strong>: 跟踪给定 warp 中哪些线程参与了特定的 convergence barrier<ul>
+<li>其位宽同 warp 中包含的线程数, 如果某一位被设置，则表示该 warp 中的对应线程参与此次收敛屏障</li>
+<li>对于一个给定的 warp ，可能有多个 Barrier Participation Mask (以支持嵌套控制流结构)</li>
+<li>在通常情况下，由某个 Barrier Participation Mask 跟踪的线程会在经历一个 divergent branch 后，等待其他线程到达程序中的共同点(WAIT 指令设定)，从而重新汇聚在一起 (功能同 SIMT Execution Mask)</li>
+</ul>
+</li>
+<li><strong>Barrier State</strong>: 跟踪哪些线程已经到达了特定的 convergence barrier</li>
+<li><strong>Thread State</strong>: 记录 warp 中的每个线程的状态 <ul>
+<li>ready  : 是否准备好执行</li>
+<li>block  : 是否阻塞于 convergence barrier (如果是，阻塞到哪一个 barrier)</li>
+<li>yielded: 是否已让出执行权。(用于在 SIMT 死锁的时候使能其他线程通过 barrier)</li>
+</ul>
+</li>
+<li><strong>Thread Active</strong>: 表明该 warp 中的当前线程是否被屏蔽</li>
+<li><strong>Thread rPC</strong>: 对于 warp 中未被屏蔽的线程，记录 next PC</li>
+</ul>
+<p>实现机制：</p>
+<ol>
+<li>Initial: 采用特殊的 ADD 指令<br>当 warp 执行该 ADD 指令时，所有 active 的线程在由 ADD 指令指示的 Barrier Participation Mask 中被置位</li>
+<li>Divergent Branch: 调度器会选择一组具有相同 PC 的线程，并更新 Thread Active 以允许这些线程执行该 warp (这些线程子集称为“warp split”)</li>
+<li>Reconvergence: 采用特殊的 WAIT 指令  <ul>
+<li>WAIT 指令用于在一个 warp split 达到 convergence barrier 时使其停止<br>将 warp split 中的线程添加到该 barrier 的 Barrier State 寄存器中，并将线程的状态改为 blocked</li>
+<li>WAIT 指令包含一个操作数，标识哪个 convergence barrier</li>
+<li>一旦所有参与该 barrier 的线程都执行了相应的 WAIT 指令，调度器就可以将原 warp 的所有线程切换为 active 继续执行(保持 SIMD 效率)</li>
+</ul>
+</li>
+</ol>
+<p>与基于栈的 SIMT 实现不同，使用 convergence barrier 实现时，调度器可以在分支发散后的线程组之间自由切换，使得当某些线程已获取锁而其他线程尚未获取时，能够实现 warp 内线程可以走出 barrier</p>
+<p>基于栈的实现：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">if (threadIdx.x &lt; 4) &#123; </span><br><span class="line">  A; </span><br><span class="line">  B; </span><br><span class="line">&#125; else &#123; </span><br><span class="line">  X; </span><br><span class="line">  Y; </span><br><span class="line">&#125;  </span><br><span class="line">Z;</span><br></pre></td></tr></table></figure>
+<p><img src="/images/Arch/gpu/simt_core/stack_based_reconverge.svg" alt="基于栈实现 Reconvergence"></p>
+<p>基于 convergence barrier 的实现：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">if (threadIdx.x &lt; 4) &#123; </span><br><span class="line">  A; </span><br><span class="line">  B; </span><br><span class="line">&#125; else &#123; </span><br><span class="line">  X; </span><br><span class="line">  Y; </span><br><span class="line">&#125;  </span><br><span class="line">Z;</span><br><span class="line">__syncwarp();</span><br></pre></td></tr></table></figure>
+<p><img src="/../../../images/Arch/gpu/simt_core/volta_reconverge.svg" alt="Volta GPU 实现 Reconvergence"></p>
+<h3 id="Issue"><a href="#Issue" class="headerlink" title="Issue"></a>Issue</h3><p>warp 调度策略：  </p>
+<ol>
+<li>轮询调度 (round robin)<ul>
+<li>能让每个发出的指令大致获得相等的时间来完成执行</li>
+<li>局部性特性可能有利于或阻碍轮询调度<ul>
+<li>有利于：当不同线程在其执行过程中于相似的阶段共享数据时，让线程均匀地推进是有益的(可以增加 cache hit)</li>
+<li>有利于：当地址空间中相邻的位置在时间上也相邻被访问时，访问 DRAM 会更高效</li>
+<li>阻碍：当线程主要访问互不重叠的数据时，让某个线程反复被调度以最大化局部性可能是有益的</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p>trade-off:  </p>
+<ul>
+<li>如果核心中 warp 的数量乘以每个 warp 的发射时间超过内存延迟，那么核心中的执行单元将始终处于忙碌状态。从理论上讲，增加线程块数量直到这一临界点可以提升每个核心的吞吐量。</li>
+<li>每个核心中增加 warp 的数量会提高芯片面积中用于寄存器文件存储的比例  <ul>
+<li>为了使不同的warp在每个周期内都能发出指令，必须让每个线程拥有自己的寄存器（这避免了在寄存器和内存之间复制和恢复寄存器状态的需要）</li>
+<li>对于固定的芯片面积，增加每个核心的warp数量将减少每片芯片中的核心总数</li>
+</ul>
+</li>
+</ul>
+<h2 id="SIMD-后端"><a href="#SIMD-后端" class="headerlink" title="SIMD 后端"></a>SIMD 后端</h2><ol>
+<li>Fu nction Units<ul>
+<li>每个线程在与某条 lane 相关联的功能单元上执行( SIMT 执行掩码已被设置) </li>
+<li>功能单元通常是异构的，即每个功能单元仅支持部分指令<br>例如，NVIDIA GPU 包含 SFU, LSU, FPU, ALU，Tensor Core (Volta 架构引入)</li>
+</ul>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/10/10/os/generic/os/" rel="prev" title="OS overview">
+      <i class="fa fa-chevron-left"></i> OS overview
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/10/16/os/linux/0.11/init/" rel="next" title="Linux 0.11: Init">
+      Linux 0.11: Init <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#GPGPU-Pipeline"><span class="nav-number">1.</span> <span class="nav-text">GPGPU Pipeline</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#SIMT-%E5%89%8D%E7%AB%AF"><span class="nav-number">1.1.</span> <span class="nav-text">SIMT 前端</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#I-Buffer"><span class="nav-number">1.1.1.</span> <span class="nav-text">I-Buffer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#In-order-Scoreboard"><span class="nav-number">1.1.2.</span> <span class="nav-text">In-order Scoreboard</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SIMT-Execution-Masking-SIMT-Stack"><span class="nav-number">1.1.3.</span> <span class="nav-text">SIMT Execution Masking (SIMT Stack)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9%EF%BC%9A%E6%AD%BB%E9%94%81"><span class="nav-number">1.1.3.1.</span> <span class="nav-text">缺点：死锁</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Stackless-SIMT-Architectures-Independent-Thread-Scheduling"><span class="nav-number">1.1.4.</span> <span class="nav-text">Stackless SIMT Architectures: Independent Thread Scheduling</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Issue"><span class="nav-number">1.1.5.</span> <span class="nav-text">Issue</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SIMD-%E5%90%8E%E7%AB%AF"><span class="nav-number">1.2.</span> <span class="nav-text">SIMD 后端</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>
