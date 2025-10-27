@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="操作系统架构分类简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="操作系统结构">
+<meta property="og:url" content="http://example.com/2025/10/28/os/generic/structure/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="操作系统架构分类简介">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/os/generic/structure/monolithic.svg">
+<meta property="og:image" content="http://example.com/images/os/generic/structure/microkernel.svg">
+<meta property="og:image" content="http://example.com/images/os/generic/structure/Libra.png">
+<meta property="og:image" content="http://example.com/images/os/generic/structure/Drawbridge.png">
+<meta property="og:image" content="http://example.com/images/os/generic/structure/MultiLibOS.png">
+<meta property="og:image" content="http://example.com/images/os/generic/structure/multikernel.svg">
+<meta property="og:image" content="http://example.com/images/os/generic/structure/Barrelfish.png">
+<meta property="og:image" content="http://example.com/images/os/generic/structure/PopcornLinux.png">
+<meta property="og:image" content="http://example.com/images/os/generic/structure/Tessellation.png">
+<meta property="og:image" content="http://example.com/images/os/generic/structure/TessellationSchedule.png">
+<meta property="og:image" content="http://example.com/images/os/generic/structure/FOS.png">
+<meta property="og:image" content="http://example.com/images/os/generic/structure/HeilOS.png">
+<meta property="og:image" content="http://example.com/images/os/generic/structure/K2.png">
+<meta property="article:published_time" content="2025-10-27T16:05:02.000Z">
+<meta property="article:modified_time" content="2025-10-27T16:05:02.518Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/os/generic/structure/monolithic.svg">
+
+<link rel="canonical" href="http://example.com/2025/10/28/os/generic/structure/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>操作系统结构 | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/10/28/os/generic/structure/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          操作系统结构
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2025-10-28 00:05:02" itemprop="dateCreated datePublished" datetime="2025-10-28T00:05:02+08:00">2025-10-28</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/" itemprop="url" rel="index"><span itemprop="name">os</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/generic/" itemprop="url" rel="index"><span itemprop="name">generic</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">操作系统架构分类简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>参考: 中国科学院大学 2025年秋《高级操作系统教程》课件 </p>
+</blockquote>
+<p><strong>重要设计原则：策略与机制的分离</strong></p>
+<ul>
+<li>策略（Policy）：要做什么 – 相对动态</li>
+<li>机制（Mechanism）：该怎么做 – 相对静态</li>
+<li>操作系统可仅通过调整策略来适应不同应用的需求</li>
+</ul>
+<p>操作系统架构分类：</p>
+<ol>
+<li><a href="#monolithic">Monolithic-Kernel, 宏内核</a></li>
+<li><a href="#microkernel">Microkernel, 微内核</a></li>
+<li><a href="#exokernel">Exokernel, 外核</a></li>
+<li><a href="#multikernel">Multikernel, 多内核</a></li>
+</ol>
+<p>操作系统结构的演进与生态:</p>
+<ul>
+<li>系统软件需要一条演进之路<ul>
+<li>尽可能集成现有的POSIX API&#x2F;Linux ABI</li>
+<li>避免棘手的系统调用（如fork）</li>
+<li>避免不可扩展的POSIX API</li>
+</ul>
+</li>
+<li>系统软件一直在不断演化<ul>
+<li>例：Linux Userspace I&#x2F;O (UIO)，向微内核近了一步</li>
+<li>单节点下也存在更多的分布式、低时延的可编程设备</li>
+<li>非易失性内存的出现可能推动存储层次在OS中的完全改革</li>
+</ul>
+</li>
+</ul>
+<h1 id="Monolithic-Kernel-宏内核"><a href="#Monolithic-Kernel-宏内核" class="headerlink" title="Monolithic-Kernel, 宏内核"></a>Monolithic-Kernel, 宏内核</h1><p><a id="monolithic"></a></p>
+<p><img src="/images/os/generic/structure/monolithic.svg" alt="monolithic"></p>
+<p>整个系统分为内核与应用两层</p>
+<ul>
+<li>内核：运行在特权级，集中控制所有计算资源</li>
+<li>应用：运行在非特权级，受内核管理，使用内核服务</li>
+</ul>
+<p>实例：Windows, Linux, Unix, BSD, xv6</p>
+<p>优点：</p>
+<ul>
+<li>宏内核拥有丰富的沉淀和积累<ul>
+<li>拥有巨大的统一的社区和生态</li>
+<li>针对不同场景优化了30年</li>
+</ul>
+</li>
+<li>内核设计者不需要决定哪一部分运行于完整特权之下</li>
+</ul>
+<ul>
+<li>操作系统各组件之间更容易交互(但更复杂)</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>结构性缺陷<ul>
+<li>安全性与可靠性问题：模块之间没有很强的隔离机制</li>
+<li>实时性支持：系统太复杂导致无法做最坏情况时延分析</li>
+<li>系统过于庞大而阻碍了创新：Linux代码行数已经过2千万</li>
+</ul>
+</li>
+<li>难以满足很多场景<ul>
+<li>向上向下的扩展<ul>
+<li>很难去剪裁&#x2F;扩展一个宏内核系统支持从KB级别到TB级别的场景</li>
+</ul>
+</li>
+<li>硬件异构性<ul>
+<li>很难长期支持一些定制化的方式去解决一些特定问题</li>
+</ul>
+</li>
+<li>功能安全<ul>
+<li>一个广泛共识：Linux无法通过汽车安全完整性认证（ASIL-D）</li>
+</ul>
+</li>
+<li>信息安全<ul>
+<li>单点错误会导致整个系统出错，而现在有数百个安全问题（CVE）</li>
+</ul>
+</li>
+<li>确定性时延<ul>
+<li>Linux花费10+年合并实时补丁，目前依然不确定是否能支持确定性时延</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="Microkernel-微内核"><a href="#Microkernel-微内核" class="headerlink" title="Microkernel, 微内核"></a>Microkernel, 微内核</h1><p><a id="microkernel"></a></p>
+<p><img src="/images/os/generic/structure/microkernel.svg" alt="microkernel"></p>
+<p><strong>设计原则：最小化内核功能</strong></p>
+<ul>
+<li>将操作系统功能移到用户态，称为”服务”（Server）</li>
+<li>在用户模块之间，使用消息传递机制通信: IPC</li>
+</ul>
+<p>优点：</p>
+<ul>
+<li>易于扩展：直接添加一个用户进程即可为操作系统增加服务</li>
+<li>易于移植：大部分模块与底层硬件无关</li>
+<li>更加可靠：在内核模式运行的代码量大大减少</li>
+<li>更加安全：即使存在漏洞，服务与服务之间存在进程粒度隔离</li>
+<li>更加健壮：单个模块出现问题不会影响到系统整体</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>性能较差：内核中的模块交互由函数调用变成了进程间通信</li>
+<li>生态欠缺：尚未形成像Linux一样具有广泛开发者的社区</li>
+<li>重用问题：重用宏内核操作系统提供兼容性，带来新问题</li>
+</ul>
+<h2 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h2><h3 id="Mach-微内核"><a href="#Mach-微内核" class="headerlink" title="Mach 微内核"></a>Mach 微内核</h3><p>第一代微内核，CMU 开发</p>
+<p>实现功能：</p>
+<ul>
+<li>任务和线程管理<ul>
+<li>任务，是资源分配的基本单位；线程，是执行的基本单位</li>
+<li>对应用提供调度接口，应用程序可实现其自定义的调度策略</li>
+</ul>
+</li>
+<li>进程间通信（IPC）：通过端口（port）进行通信</li>
+<li>内存对象管理：虚拟内存</li>
+<li>系统调用重定向：允许用户态处理系统调用<ul>
+<li>支持对系统调用的功能扩展，例如，二进制翻译、跟踪、调试等</li>
+</ul>
+</li>
+<li>设备支持<ul>
+<li>通过IPC实现（通过port来连接设备）</li>
+<li>支持同步设备和异步设备</li>
+</ul>
+</li>
+<li>用户态的多进程<ul>
+<li>类似用户态的线程库，支持wait()&#x2F;signal()等原语</li>
+<li>一个或多个用户态线程可映射到同一个内核线程</li>
+</ul>
+</li>
+<li>分布式支持<ul>
+<li>可透明地将任务与资源映射到集群中的不同节点</li>
+</ul>
+</li>
+<li>Mach 允许用户态代码实现 Paging<ul>
+<li>应用可自己管理自己的虚拟内存</li>
+</ul>
+</li>
+<li>重定向功能（Redirection）<ul>
+<li>允许发生中断&#x2F;异常时，直接执行用户的二进制</li>
+<li>这种连接不需要对内核做修改</li>
+</ul>
+</li>
+</ul>
+<h3 id="L3-L4"><a href="#L3-L4" class="headerlink" title="L3&#x2F;L4"></a>L3&#x2F;L4</h3><ul>
+<li>L4的IPC性能比Mach快20倍<ul>
+<li>IPC仅传递信息</li>
+<li>使用寄存器传参，限制消息长度</li>
+<li>内核去掉了IPC的权限检查等功能，交给用户态判断</li>
+<li>系统服务的接口直接暴露给用户态，可能导致DoS攻击</li>
+</ul>
+</li>
+</ul>
+<p>启发了大量相关系统: Pistachio, L4&#x2F;MIPS, Fiasco 等</p>
+<h3 id="seL4"><a href="#seL4" class="headerlink" title="seL4"></a>seL4</h3><ul>
+<li>基于L4的微内核</li>
+<li>IPC机制：端点（endpoint）<ul>
+<li>通过Capability进行IPC的权限判断</li>
+<li>Capability可被复制和传输</li>
+</ul>
+</li>
+<li>第一个完成形式化验证的内核</li>
+</ul>
+<h3 id="QNX-Neutrino"><a href="#QNX-Neutrino" class="headerlink" title="QNX Neutrino"></a>QNX Neutrino</h3><p>满足实时要求: 广泛用于交通、能源、医疗、航天航空领域，如波音</p>
+<h3 id="Google-Fuchsia"><a href="#Google-Fuchsia" class="headerlink" title="Google Fuchsia"></a>Google Fuchsia</h3><ul>
+<li>Google 开发的全新 OS<ul>
+<li>试图覆盖多个领域，用途尚未完全宣布</li>
+</ul>
+</li>
+<li>使用 Zircon 微内核<ul>
+<li>仅提供IPC, 进程管理, 地址空间管理等功能</li>
+</ul>
+</li>
+</ul>
+<h2 id="主要优化目标：优化-IPC-开销"><a href="#主要优化目标：优化-IPC-开销" class="headerlink" title="主要优化目标：优化 IPC 开销"></a>主要优化目标：优化 IPC 开销</h2><blockquote>
+<p><strong>IPC 开销来源</strong>：</p>
+<ol>
+<li>特权级的频繁转换</li>
+<li>IPC 调用本身在进程间的数据拷贝</li>
+</ol>
+</blockquote>
+<ol>
+<li>减少 IPC 数量<ol>
+<li>将部分对性能要求高的 server 重新放回内核(混合内核架构)</li>
+<li>合并部分 server (将 server 之间的 IPC 调用改为函数调用)</li>
+</ol>
+</li>
+<li>减少单次 IPC 延时<ol>
+<li>DMA 传输数据</li>
+<li>零拷贝（server 进程间共享部分内存）</li>
+</ol>
+</li>
+</ol>
+<h1 id="Exokernel-外核"><a href="#Exokernel-外核" class="headerlink" title="Exokernel, 外核"></a>Exokernel, 外核</h1><p><a id="exokernel"></a></p>
+<ul>
+<li>不提供硬件抽象<ul>
+<li>“只要内核提供抽象，就不能实现性能最大化”</li>
+<li>只有应用才知道最适合的抽象（end-to-end原则）</li>
+</ul>
+</li>
+<li>不管理资源，只管理应用<ul>
+<li>负责将计算资源与应用的绑定，以及资源的回收</li>
+<li>保证多个应用之间的隔离</li>
+</ul>
+</li>
+</ul>
+<p>设计原则：<strong>“将管理与保护分离”, 整个操作系统分为 Exokernel(内核态) + Libos(用户态)</strong></p>
+<p>优点:</p>
+<ul>
+<li>OS无抽象，能在理论上提供最优性能<ul>
+<li>未修改应用性能最多提升4x，定制化应用性能最多提升8x</li>
+</ul>
+</li>
+<li>应用对计算有更精确的实时等控制</li>
+<li>LibOS在用户态更易调试，调试周期更短</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>计算资源的利用效率主要由应用决定</li>
+<li>定制化过多，导致维护难度增加</li>
+</ul>
+<p>生态问题：Linux as a LibOS?</p>
+<ul>
+<li>将Linux作为LibOS或Unikernel<ul>
+<li>例：LKL - Linux kernel library (<a target="_blank" rel="noopener" href="https://github.com/lkl">https://github.com/lkl</a>)</li>
+<li>将系统调用变为普通函数调用</li>
+<li>可提供一定的兼容性，有效避免重复开发</li>
+</ul>
+</li>
+<li>许多新问题<ul>
+<li>Linux是否适合作为LibOS&#x2F;unikernel？</li>
+<li>fork()如何处理？</li>
+<li>尚在探索阶段</li>
+</ul>
+</li>
+</ul>
+<h2 id="LibOS"><a href="#LibOS" class="headerlink" title="LibOS"></a>LibOS</h2><ul>
+<li>策略与机制分离：将对硬件的抽象以库的形式提供</li>
+<li>高度定制化：不同应用可使用不同的LibOS，或完全自定义</li>
+<li>更高性能：LibOS与应用其他代码之间通过函数调用直接交互</li>
+</ul>
+<h2 id="Exokernel-外核设计"><a href="#Exokernel-外核设计" class="headerlink" title="Exokernel 外核设计"></a>Exokernel 外核设计</h2><p>功能：</p>
+<ul>
+<li>追踪计算资源的拥有权 -&gt; <a href="#secure_binding">安全绑定（Secure binding）</a></li>
+<li>保证资源的保护 -&gt; <a href="#visible_revocation">显式回收（Visible revocation）</a></li>
+<li>回收对资源的访问权 -&gt; <a href="#abort_protocol">中止协议（Abort protocol）</a></li>
+</ul>
+<h3 id="安全绑定（Secure-binding）"><a href="#安全绑定（Secure-binding）" class="headerlink" title="安全绑定（Secure binding）"></a>安全绑定（Secure binding）</h3><p><a id="secure_binging"></a></p>
+<p>将 LibOS 与计算资源绑定</p>
+<ul>
+<li>可用性：允许某个 LibOS 访问某些计算资源（如物理内存）</li>
+<li>隔离性：防止这些计算资源被其他 LibOS 访问</li>
+</ul>
+<blockquote>
+<p>例：利用software TLB保证LibOS只使用了自己的物理内存  </p>
+<ul>
+<li>LibOS 可直接修改页表，因此可能会将自己的页表指向其他 LibOS 物理页</li>
+<li>Software TLB 是软件可控的 TLB，MIPS 等处理器支持</li>
+<li>每次发生 TLB miss 时，由 Exokernel 负责遍历页表并填写对应的 TLB 项</li>
+<li>Exokernel 可在填写 TLB 项时检查 LibOS 对内存的使用是否合法</li>
+</ul>
+</blockquote>
+<h3 id="显式回收（Visible-revocation）"><a href="#显式回收（Visible-revocation）" class="headerlink" title="显式回收（Visible revocation）"></a>显式回收（Visible revocation）</h3><p><a id="visible_revocation"></a></p>
+<ul>
+<li>Exokernel 与应用之间的协议<ul>
+<li>Exokernel 显式告知应用资源的分配情况</li>
+<li>应用在租期结束之前主动归还资源</li>
+</ul>
+</li>
+</ul>
+<h3 id="中止协议（Abort-protocol）"><a href="#中止协议（Abort-protocol）" class="headerlink" title="中止协议（Abort protocol）"></a>中止协议（Abort protocol）</h3><p><a id="abort_protocol"></a></p>
+<ul>
+<li>若应用不归还资源，则强制中止<ul>
+<li>Exokernel 拥有对资源的控制权</li>
+<li>主动解除资源与应用间的绑定关系</li>
+</ul>
+</li>
+</ul>
+<h2 id="实例-1"><a href="#实例-1" class="headerlink" title="实例"></a>实例</h2><h3 id="Unikernel（单内核）"><a href="#Unikernel（单内核）" class="headerlink" title="Unikernel（单内核）"></a>Unikernel（单内核）</h3><ul>
+<li>可以看做虚拟化环境下的LibOS<ul>
+<li>每个虚拟机只使用内核态</li>
+<li>内核态中只运行一个应用+LibOS</li>
+<li>通过虚拟化层实现不同实例间的隔离</li>
+</ul>
+</li>
+<li>适合容器应用场景<ul>
+<li>每个容器就是一个虚拟机</li>
+<li>每个容器运行定制的LibOS以提高性能</li>
+</ul>
+</li>
+</ul>
+<p>部分开源项目:</p>
+<ul>
+<li>Rumprun<ul>
+<li>POSIX接口，BSD兼容的运行时环境</li>
+<li>运行在Xen虚拟化平台之上</li>
+</ul>
+</li>
+<li>Drawbridge<ul>
+<li>来自微软，兼容Win32接口的运行时环境</li>
+</ul>
+</li>
+<li>OSv<ul>
+<li>与Linux兼容的应用环境，单地址空间</li>
+</ul>
+</li>
+</ul>
+<h3 id="Libra"><a href="#Libra" class="headerlink" title="Libra"></a>Libra</h3><p>基于虚拟机实现的JVM<br><img src="/images/os/generic/structure/Libra.png" alt="Libra" width="500"></p>
+<h3 id="Drawbridge"><a href="#Drawbridge" class="headerlink" title="Drawbridge"></a>Drawbridge</h3><img src="/images/os/generic/structure/Drawbridge.png" alt="Drawbridge" width="200">
+
+<h3 id="MultiLibOS"><a href="#MultiLibOS" class="headerlink" title="MultiLibOS"></a>MultiLibOS</h3><img src="/images/os/generic/structure/MultiLibOS.png" alt="MultiLibOS" width="500">
+
+<h1 id="Multikernel-多内核"><a href="#Multikernel-多内核" class="headerlink" title="Multikernel, 多内核"></a>Multikernel, 多内核</h1><p><a id="multikernel"></a></p>
+<p>设计动机：解决多核与异构带来的扩展性问题</p>
+<ul>
+<li>多核：OS内部维护很多共享状态<ul>
+<li>Cache一致性的保证越来越难</li>
+<li>可扩展性非常差，核数增多，性能不升反降</li>
+</ul>
+</li>
+<li>异构: GPU 等设备越来越多<ul>
+<li>设备本身越来越智能——设备有自己的CPU</li>
+<li>通过PCIe连接，主CPU与设备CPU之间通信非常慢</li>
+<li>通过系统总线连接，异构SoC</li>
+</ul>
+</li>
+</ul>
+<p>设计思路：</p>
+<ul>
+<li>默认的状态是划分而不是共享<ul>
+<li>硬件资源在操作系统启动时必须静态划分</li>
+</ul>
+</li>
+<li>维持多份状态的copy而不是共享一份状态<ul>
+<li>提供单一系统镜像</li>
+</ul>
+</li>
+<li>显式的核间通信机制</li>
+</ul>
+<img src="/images/os/generic/structure/multikernel.svg" alt="MultiKernel" width="500">
+
+<ul>
+<li>在每个core上运行一个小内核 (包括CPU、GPU等)</li>
+<li>OS整体是一个分布式系统</li>
+<li>应用程序依然运行在OS之上</li>
+</ul>
+<p>问题：</p>
+<ol>
+<li>资源调度困难</li>
+<li>安全性问题：内核 A 可以通过直接访问底层硬件(每个内核的特权级都是最高的)访问内核 B 的资源<ul>
+<li>软件无法解决</li>
+<li>硬件方案：标签化内存控制，IBM 的硬件隔离虚拟化</li>
+</ul>
+</li>
+</ol>
+<h3 id="Barrelfish"><a href="#Barrelfish" class="headerlink" title="Barrelfish"></a>Barrelfish</h3><p>第一个多内核架构 <a target="_blank" rel="noopener" href="http://www.barrelfish.org/documentation.html">http://www.barrelfish.org/documentation.html</a></p>
+<ul>
+<li>来自ETH Zurich和微软研究院</li>
+<li>支持异构CPU</li>
+<li>在CPU核与节点之间提供通用异构消息抽象</li>
+</ul>
+<p>设计结构：</p>
+<img src="/images/os/generic/structure/Barrelfish.png" alt="Barrelfish" width="500">
+
+<ul>
+<li>每个core对应一个内核<ul>
+<li>类似”CPU驱动”，适应不同CPU</li>
+<li>负责执行系统调用，处理中断&#x2F;异常</li>
+<li>事件触发，单线程，不可中断</li>
+<li>内核调度并运行”Dispatcher”</li>
+</ul>
+</li>
+<li>Dispatcher<ul>
+<li>类似线程</li>
+<li>多个Dispatcher组成一个Domain</li>
+</ul>
+</li>
+<li>Domain<ul>
+<li>类似进程</li>
+</ul>
+</li>
+</ul>
+<p>提供本地 IPC 和远程 IPC 实现对于不同资源的访问</p>
+<h3 id="Popcorn-Linux"><a href="#Popcorn-Linux" class="headerlink" title="Popcorn Linux"></a>Popcorn Linux</h3><img src="/images/os/generic/structure/PopcornLinux.png" alt="Popcorn Linux" width="400">
+
+<ul>
+<li>支持异构体系结构(ARM、x86等)</li>
+<li>多个 Linux 内核副本<ul>
+<li>一套代码编译不同副本</li>
+<li>不同 ISA 不同副本</li>
+<li>多个副本同时向上提供 OS 服务</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>将 Linux 移植为 Popcorn Linux ，需要改启动代码，虽然扫描到所有硬件，但只能使用其中一部分硬件（静态划分）</p>
+</blockquote>
+<h3 id="Tessellation"><a href="#Tessellation" class="headerlink" title="Tessellation"></a>Tessellation</h3><img src="/images/os/generic/structure/Tessellation.png" alt="Tessellation" width="400">
+
+<p>设计理念:</p>
+<ul>
+<li>时空分割（STP，Space-Time Partition）</li>
+<li>二级调度（Two-Level Scheduling）<ul>
+<li>应用先分配到内核上，再由内核分配到相应的 CPU 上</li>
+</ul>
+</li>
+</ul>
+<img src="/images/os/generic/structure/TessellationSchedule.png" alt="Tessellation Schedule" width="300">
+
+<h3 id="FOS"><a href="#FOS" class="headerlink" title="FOS"></a>FOS</h3><ul>
+<li>设计理念<ul>
+<li>空间共享取代时间共享</li>
+<li>将应用程序与系统服务区别对待，为系统服务提供专用核心</li>
+<li>消息传递机制代替共享内存机制，内核之间不共享数据</li>
+</ul>
+</li>
+<li>三层架构<ol>
+<li>微内核层</li>
+<li>系统服务层</li>
+<li>应用程序层</li>
+</ol>
+</li>
+</ul>
+<img src="/images/os/generic/structure/FOS.png" alt="FOS" width="500">
+
+<ul>
+<li>每个核上跑一个 microkernel</li>
+<li>应用程序只绑定到服务该程序的内核，减少上下文切换和 cache 切换</li>
+</ul>
+<h3 id="HeilOS"><a href="#HeilOS" class="headerlink" title="HeilOS"></a>HeilOS</h3><p>设计理念:</p>
+<ul>
+<li>多内核、单一镜像架构<ul>
+<li>一个主内核 + 其他微内核</li>
+</ul>
+</li>
+<li>亲和度（Affinity Metric）</li>
+<li>二级编译</li>
+</ul>
+<img src="/images/os/generic/structure/HeilOS.png" alt="HeilOS" width="500">
+
+<h3 id="K2"><a href="#K2" class="headerlink" title="K2"></a>K2</h3><img src="/images/os/generic/structure/K2.png" alt="K2" width="500">
+
+<ul>
+<li>双内核：适配强弱核</li>
+<li>基于同构 ISA ,调度大小核</li>
+</ul>
+<h3 id="LegoOS"><a href="#LegoOS" class="headerlink" title="LegoOS"></a>LegoOS</h3><p>SplitKernel</p>
+<ul>
+<li>分离内核功能<ul>
+<li>每个核上跑一个 microkernel</li>
+<li>把一个内核的功能拆开，每个子功能作一个 microkernel 分给其他核</li>
+</ul>
+</li>
+<li>不同的硬件上运行不同的硬件程序</li>
+<li>模块之间通过消息传递来交换</li>
+<li>全局的资源和错误管理</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/10/20/Arch/implement/Apple/uarch/" rel="prev" title="Apple MicroArchitecher">
+      <i class="fa fa-chevron-left"></i> Apple MicroArchitecher
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Monolithic-Kernel-%E5%AE%8F%E5%86%85%E6%A0%B8"><span class="nav-number">1.</span> <span class="nav-text">Monolithic-Kernel, 宏内核</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Microkernel-%E5%BE%AE%E5%86%85%E6%A0%B8"><span class="nav-number">2.</span> <span class="nav-text">Microkernel, 微内核</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B"><span class="nav-number">2.1.</span> <span class="nav-text">实例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Mach-%E5%BE%AE%E5%86%85%E6%A0%B8"><span class="nav-number">2.1.1.</span> <span class="nav-text">Mach 微内核</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#L3-L4"><span class="nav-number">2.1.2.</span> <span class="nav-text">L3&#x2F;L4</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#seL4"><span class="nav-number">2.1.3.</span> <span class="nav-text">seL4</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#QNX-Neutrino"><span class="nav-number">2.1.4.</span> <span class="nav-text">QNX Neutrino</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Google-Fuchsia"><span class="nav-number">2.1.5.</span> <span class="nav-text">Google Fuchsia</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E8%A6%81%E4%BC%98%E5%8C%96%E7%9B%AE%E6%A0%87%EF%BC%9A%E4%BC%98%E5%8C%96-IPC-%E5%BC%80%E9%94%80"><span class="nav-number">2.2.</span> <span class="nav-text">主要优化目标：优化 IPC 开销</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Exokernel-%E5%A4%96%E6%A0%B8"><span class="nav-number">3.</span> <span class="nav-text">Exokernel, 外核</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#LibOS"><span class="nav-number">3.1.</span> <span class="nav-text">LibOS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Exokernel-%E5%A4%96%E6%A0%B8%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.2.</span> <span class="nav-text">Exokernel 外核设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E7%BB%91%E5%AE%9A%EF%BC%88Secure-binding%EF%BC%89"><span class="nav-number">3.2.1.</span> <span class="nav-text">安全绑定（Secure binding）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%98%BE%E5%BC%8F%E5%9B%9E%E6%94%B6%EF%BC%88Visible-revocation%EF%BC%89"><span class="nav-number">3.2.2.</span> <span class="nav-text">显式回收（Visible revocation）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%AD%E6%AD%A2%E5%8D%8F%E8%AE%AE%EF%BC%88Abort-protocol%EF%BC%89"><span class="nav-number">3.2.3.</span> <span class="nav-text">中止协议（Abort protocol）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B-1"><span class="nav-number">3.3.</span> <span class="nav-text">实例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Unikernel%EF%BC%88%E5%8D%95%E5%86%85%E6%A0%B8%EF%BC%89"><span class="nav-number">3.3.1.</span> <span class="nav-text">Unikernel（单内核）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Libra"><span class="nav-number">3.3.2.</span> <span class="nav-text">Libra</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Drawbridge"><span class="nav-number">3.3.3.</span> <span class="nav-text">Drawbridge</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MultiLibOS"><span class="nav-number">3.3.4.</span> <span class="nav-text">MultiLibOS</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Multikernel-%E5%A4%9A%E5%86%85%E6%A0%B8"><span class="nav-number">4.</span> <span class="nav-text">Multikernel, 多内核</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Barrelfish"><span class="nav-number">4.0.1.</span> <span class="nav-text">Barrelfish</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Popcorn-Linux"><span class="nav-number">4.0.2.</span> <span class="nav-text">Popcorn Linux</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Tessellation"><span class="nav-number">4.0.3.</span> <span class="nav-text">Tessellation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FOS"><span class="nav-number">4.0.4.</span> <span class="nav-text">FOS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HeilOS"><span class="nav-number">4.0.5.</span> <span class="nav-text">HeilOS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#K2"><span class="nav-number">4.0.6.</span> <span class="nav-text">K2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#LegoOS"><span class="nav-number">4.0.7.</span> <span class="nav-text">LegoOS</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

@@ -28,7 +28,7 @@
 <meta property="og:description" content="GPU 编程模型简介">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-10-08T04:53:12.000Z">
-<meta property="article:modified_time" content="2025-10-10T16:26:56.411Z">
+<meta property="article:modified_time" content="2025-10-20T13:28:22.122Z">
 <meta property="article:author" content="xixi">
 <meta name="twitter:card" content="summary">
 
@@ -198,7 +198,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2025-10-11 00:26:56" itemprop="dateModified" datetime="2025-10-11T00:26:56+08:00">2025-10-11</time>
+                <time title="Modified: 2025-10-20 21:28:22" itemprop="dateModified" datetime="2025-10-20T21:28:22+08:00">2025-10-20</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -226,12 +226,15 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>GPU 硬件通过很宽的 SIMD 硬件挖掘 GPU 程序中的数据级并行。但其 SIMD 硬件并不直接暴露给程序员，程序员使用 SIMT 执行模型：准备好大量的标量线程组给 GPU ，每个线程有自己独立的执行路径，这些标量线程组被 NVIDIA 称为 warps (AMD 称为 wavefronts), 在 GPU 上通过 SIMD 硬件实现，每个线程内部是带锁的</p>
+        <blockquote>
+<p>内容参考自：<em>General-Purpose Graphics Processor Architecture</em></p>
+</blockquote>
+<p>GPU 硬件通过很宽的 SIMD 硬件挖掘 GPU 程序中的数据级并行。但其 SIMD 硬件并不直接暴露给程序员，程序员使用 SIMT 执行模型：准备好大量的标量线程组给 GPU ，每个线程有自己独立的执行路径，这些标量线程组被 NVIDIA 称为 warps (AMD 称为 wavefronts), 在 GPU 上通过 SIMD 硬件实现，每个线程内部是带锁的</p>
 <h1 id="执行模型"><a href="#执行模型" class="headerlink" title="执行模型"></a>执行模型</h1><p>对于 discrete GPU ，程序首先执行 CPU 部分代码：</p>
 <ol>
 <li>分配 GPU 计算需要的显存空间 (cudaMalloc)</li>
 <li>将输入数据初始化到 GPU 显存中 (cudaMemcpy)</li>
-<li>进入 GPU 计算 kernel<br> 通过（&lt;&lt;&lt;nblock, thread_per_block&gt;&gt;&gt;）配置线程数</li>
+<li>进入 GPU 计算 kernel<br> 通过（&lt;&lt;&lt;nblock, thread_per_block&gt;&gt;&gt;）配置线程数(每个 block 将在一个 SM 上运行， 因此 block 数不能超过 GPU 中的 SM 数)</li>
 </ol>
 <p>NVIDIA 引入 Unified Memory 之后，可以透明地进行 CPU 和 GPU 之间的数据传输，其他架构需要程序员手动管理 GPU 显存的分配和传输</p>
 <h1 id="GPU-计算-kernel"><a href="#GPU-计算-kernel" class="headerlink" title="GPU 计算 kernel"></a>GPU 计算 kernel</h1><p>GPU 计算 kernel 一般由数千个线程组成，这些线程在 kernel 中的组织结构:  </p>
@@ -413,14 +416,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-count">36</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-count">24</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
   </nav>

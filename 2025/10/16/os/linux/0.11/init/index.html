@@ -28,7 +28,7 @@
 <meta property="og:description" content="Linux 0.11 源码简介：Init 初始化过程">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-10-16T03:32:53.000Z">
-<meta property="article:modified_time" content="2025-10-16T03:33:35.413Z">
+<meta property="article:modified_time" content="2025-10-23T04:00:19.245Z">
 <meta property="article:author" content="xixi">
 <meta name="twitter:card" content="summary">
 
@@ -190,10 +190,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2025-10-16 11:32:53 / Modified: 11:33:35" itemprop="dateCreated datePublished" datetime="2025-10-16T11:32:53+08:00">2025-10-16</time>
+              <time title="Created: 2025-10-16 11:32:53" itemprop="dateCreated datePublished" datetime="2025-10-16T11:32:53+08:00">2025-10-16</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-23 12:00:19" itemprop="dateModified" datetime="2025-10-23T12:00:19+08:00">2025-10-23</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -224,7 +230,93 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        
+        <h1 id="main-函数"><a href="#main-函数" class="headerlink" title="main() 函数"></a>main() 函数</h1><ol>
+<li>获取机器系统数据 (<code>0x90000 - 0x90200</code>)<ul>
+<li>根设备号</li>
+<li>驱动信息</li>
+<li>扩展内存 KB 容量</li>
+</ul>
+</li>
+<li>布局内存<ol>
+<li>规定物理内存<ul>
+<li>1MB 基本内存 + 扩展内存</li>
+<li>最多管理 16 MB 内存，超过 16MB 的忽略不记</li>
+</ul>
+</li>
+<li>根据物理内存大小设置缓冲区区间 <code>buffer_memory_end</code><ul>
+<li><code>memory_end &gt; 12MB</code>: 缓冲区设置到 4MB</li>
+<li><code>6MB &lt; memory_end &lt; 12MB</code>: 缓冲区设置到 2MB</li>
+<li><code>memory_end &lt; 6MB</code>: 缓冲区设置到 1MB</li>
+</ul>
+</li>
+<li>主存起始地址 <code>main_memory_start</code> 设置为缓冲区末端</li>
+</ol>
+</li>
+<li>初始化<ul>
+<li>如果定义了 RAMDISK, 则初始化虚拟盘 <code>rd_init()</code>，主存设置到虚拟盘之后</li>
+<li>物理内存初始化：<code>mem_init()</code></li>
+<li>异常处理初始化：<code>trap_init()</code></li>
+<li>块设备初始化：<code>blk_dev_init()</code></li>
+<li>字符设备初始化：<code>chr_dev_init()</code></li>
+<li>系统时钟初始化: <code>time_init()</code></li>
+<li>进程调度初始化: <code>sched_init()</code></li>
+</ul>
+</li>
+</ol>
+<h2 id="虚拟盘初始化-rd-init"><a href="#虚拟盘初始化-rd-init" class="headerlink" title="虚拟盘初始化 rd_init()"></a>虚拟盘初始化 <code>rd_init()</code></h2><p>in <code>kernel/blk_dev/ramdisk.c</code></p>
+<ol>
+<li>设置 RAMDISK 的请求处理函数 <code>do_rd_request</code> : <code>blk_dev[MAJOR_NR].request_fn = DEVICE_REQUEST</code></li>
+</ol>
+<blockquote>
+<p><strong>块设备数组，管理所有的块设备</strong>  </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">blk_dev_struct</span> <span class="title">blk_dev</span>[<span class="title">NR_BLK_DEV</span>] =</span> &#123;</span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* no_dev */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* dev mem */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* dev fd */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* dev hd */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* dev ttyx */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* dev tty */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;		<span class="comment">/* dev lp */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>linux 中每个设备的 c 文件在定义 MAJOR_NR 之后 include <code>blk.h</code> ，<code>blk.h</code> 将根据 <code>MAJOR_NR</code> 定义相应的 <code>DEVICE_REQUEST</code></p>
+</blockquote>
+<h2 id="物理内存初始化-mem-init"><a href="#物理内存初始化-mem-init" class="headerlink" title="物理内存初始化 mem_init()"></a>物理内存初始化 <code>mem_init()</code></h2><p>in <code>mm/memory.c</code></p>
+<ol>
+<li>设置主存终点 <code>HIGH_MEMORY</code></li>
+<li>遍历 1-16MB 的页，设置每个页为 USED<ul>
+<li>0-1MB 用于内核系统，不进行初始化</li>
+<li>mem_map 每个元素管理一个页的进程引用计数，用于分配内存</li>
+<li>USED: 100 表示页面不允许被分配（linux 0.11 最多支持 64 个进程）</li>
+</ul>
+</li>
+<li>从起始地址开始，计算可以使用的页面数，从起始页面开始，将相应的 mem_map 元素置 0<ul>
+<li>此时从 <code>start_mem</code> 到 <code>end_mem</code> 之间的页面的引用计数为 0，其他页面为 USED (100).</li>
+</ul>
+</li>
+</ol>
+<h2 id="异常处理初始化：trap-init"><a href="#异常处理初始化：trap-init" class="headerlink" title="异常处理初始化：trap_init()"></a>异常处理初始化：<code>trap_init()</code></h2><p>in <code>kernel/traps.c</code></p>
+<ol>
+<li>设置 IDT 中的 trap_gate 和 system_gate: <code>set_trap_gate</code>, <code>set_system_gate</code><ul>
+<li>trap_gate 用于异常处理, dpl 为 0</li>
+<li>system_gate 用于系统调用, dpl 为 3</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> _set_gate(gate_addr,type,dpl,addr) \</span></span><br><span class="line"><span class="meta">__asm__ (<span class="string">&quot;movw %%dx,%%ax\n\t&quot;</span> \</span></span><br><span class="line"><span class="meta">	<span class="string">&quot;movw %0,%%dx\n\t&quot;</span> \</span></span><br><span class="line"><span class="meta">	<span class="string">&quot;movl %%eax,%1\n\t&quot;</span> \</span></span><br><span class="line"><span class="meta">	<span class="string">&quot;movl %%edx,%2&quot;</span> \</span></span><br><span class="line"><span class="meta">	: \</span></span><br><span class="line"><span class="meta">	: <span class="string">&quot;i&quot;</span> ((short) (0x8000+(dpl&lt;&lt;13)+(type&lt;&lt;8))), \</span></span><br><span class="line"><span class="meta">	<span class="string">&quot;o&quot;</span> (*((char *) (gate_addr))), \</span></span><br><span class="line"><span class="meta">	<span class="string">&quot;o&quot;</span> (*(4+(char *) (gate_addr))), \</span></span><br><span class="line"><span class="meta">	<span class="string">&quot;d&quot;</span> ((char *) (addr)),<span class="string">&quot;a&quot;</span> (0x00080000))</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> set_intr_gate(n,addr) \</span></span><br><span class="line"><span class="meta">	_set_gate(&amp;idt[n],14,0,addr)</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> set_trap_gate(n,addr) \</span></span><br><span class="line"><span class="meta">	_set_gate(&amp;idt[n],15,0,addr)</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> set_system_gate(n,addr) \</span></span><br><span class="line"><span class="meta">	_set_gate(&amp;idt[n],15,3,addr)</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="块设备初始化：blk-dev-init"><a href="#块设备初始化：blk-dev-init" class="headerlink" title="块设备初始化：blk_dev_init()"></a>块设备初始化：<code>blk_dev_init()</code></h2><p>初始化 <code>request</code> 数组: dev 置 <code>-1</code>, next 置空（还未组成链表）</p>
+<blockquote>
+<p>request 数组</p>
+</blockquote>
+<h2 id="字符设备初始化："><a href="#字符设备初始化：" class="headerlink" title="字符设备初始化："></a>字符设备初始化：</h2><ul>
+<li><code>chr_dev_init()</code>: 空</li>
+<li><code>tty_init()</code><ul>
+<li><code>rs_init()</code></li>
+<li><code>con_init()</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="进程调度初始化-sched-init"><a href="#进程调度初始化-sched-init" class="headerlink" title="进程调度初始化: sched_init()"></a>进程调度初始化: <code>sched_init()</code></h2><p>补充 GDT ：为初始进程 init_task 补充 TSS 和 LDT</p>
+<ul>
+<li>从 GDT 的第 4 项开始，每个进程占用一个 TSS 段和一个 LDT 段</li>
+</ul>
+<blockquote>
+<p>TSS<br>LDT</p>
+</blockquote>
+
     </div>
 
     
@@ -239,10 +331,13 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2025/10/14/Arch/gpu/simt_core/" rel="prev" title="SIMT Core">
-      <i class="fa fa-chevron-left"></i> SIMT Core
+    <a href="/2025/10/14/Arch/gpu/simt_core/" rel="prev" title="GPU SIMT Core">
+      <i class="fa fa-chevron-left"></i> GPU SIMT Core
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2025/10/20/Arch/gpu/memory/" rel="next" title="GPU Memory System">
+      GPU Memory System <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -301,6 +396,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#main-%E5%87%BD%E6%95%B0"><span class="nav-number">1.</span> <span class="nav-text">main() 函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%99%9A%E6%8B%9F%E7%9B%98%E5%88%9D%E5%A7%8B%E5%8C%96-rd-init"><span class="nav-number">1.1.</span> <span class="nav-text">虚拟盘初始化 rd_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%E5%88%9D%E5%A7%8B%E5%8C%96-mem-init"><span class="nav-number">1.2.</span> <span class="nav-text">物理内存初始化 mem_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%9Atrap-init"><span class="nav-number">1.3.</span> <span class="nav-text">异常处理初始化：trap_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9D%97%E8%AE%BE%E5%A4%87%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%9Ablk-dev-init"><span class="nav-number">1.4.</span> <span class="nav-text">块设备初始化：blk_dev_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%9A"><span class="nav-number">1.5.</span> <span class="nav-text">字符设备初始化：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E5%88%9D%E5%A7%8B%E5%8C%96-sched-init"><span class="nav-number">1.6.</span> <span class="nav-text">进程调度初始化: sched_init()</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -316,14 +412,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-count">36</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-count">24</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
   </nav>
