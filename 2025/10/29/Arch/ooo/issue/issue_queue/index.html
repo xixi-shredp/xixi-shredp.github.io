@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="发射队列 (Issue Queue) &#x2F; 保留站 (Reservation Station)  J. Abella, R. Canal, and A. González. Power- and Complexity-Aware Issue Queue Designs. IEEE Micro, 23(5):50–58, September–October 2003. doi:10.1109">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OOO CPU Issue Stage: Issue Queue">
+<meta property="og:url" content="http://example.com/2025/10/29/Arch/ooo/issue/issue_queue/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="发射队列 (Issue Queue) &#x2F; 保留站 (Reservation Station)  J. Abella, R. Canal, and A. González. Power- and Complexity-Aware Issue Queue Designs. IEEE Micro, 23(5):50–58, September–October 2003. doi:10.1109">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-10-29T12:17:14.000Z">
+<meta property="article:modified_time" content="2025-10-29T12:18:31.522Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/10/29/Arch/ooo/issue/issue_queue/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>OOO CPU Issue Stage: Issue Queue | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/10/29/Arch/ooo/issue/issue_queue/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OOO CPU Issue Stage: Issue Queue
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2025-10-29 20:17:14 / Modified: 20:18:31" itemprop="dateCreated datePublished" datetime="2025-10-29T20:17:14+08:00">2025-10-29</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/" itemprop="url" rel="index"><span itemprop="name">Arch</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/ooo/" itemprop="url" rel="index"><span itemprop="name">ooo</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/ooo/issue/" itemprop="url" rel="index"><span itemprop="name">issue</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="发射队列-Issue-Queue-保留站-Reservation-Station"><a href="#发射队列-Issue-Queue-保留站-Reservation-Station" class="headerlink" title="发射队列 (Issue Queue) &#x2F; 保留站 (Reservation Station)"></a>发射队列 (Issue Queue) &#x2F; 保留站 (Reservation Station)</h2><p><a id="issue_queue"></a></p>
+<blockquote>
+<p>J. Abella, R. Canal, and A. González. Power- and Complexity-Aware Issue Queue Designs. IEEE Micro, 23(5):50–58, September–October 2003. doi:10.1109&#x2F;MM.2003.1240212</p>
+</blockquote>
+<p>任务：<u>保存已被重命名但未被送到功能单元执行的指令</u></p>
+<h3 id="集中式-Centralized-or-分布式-Distributed"><a href="#集中式-Centralized-or-分布式-Distributed" class="headerlink" title="集中式 (Centralized) or 分布式 (Distributed)"></a>集中式 (Centralized) or 分布式 (Distributed)</h3><p>实例：</p>
+<ol>
+<li>reservation stations<ul>
+<li>IBM Power6<br><em>H.Q. Le, W.J. Starke, J.S. Fields, F.P. O’Connell, D.Q. Nguyen, B.J. Ronchetti, W.M. Sauer, E.M. Schwarz, and M.T. Vaden. IBM POWER6 Microarchitecture. IBM Journal of Research and Development, 51(6), Nov 2007.</em></li>
+</ul>
+</li>
+<li>distributed issue queues<ul>
+<li>Intel Netburst<br><em>D. Koufaty, and D. T. Marr. Hyperthreading Technology in the Netburst Microarchitecture. IEEE Micro, 23(2):56–65, March 2003.</em></li>
+<li>Alpha 21264<br><em>E.J. McLellan, and D.A. Webb. The Alpha 21264 Microprocessor Architecture. In Proceedings of the International Conference on Computer Design, p. 90, October 05-05, 1998.</em></li>
+<li>MIPS R10000<br><em>K.C. Yeager. The MIPS R10000 Superscalar Microprocessor. IEEE Micro, April 1996. doi:10.1109&#x2F;40.491460</em></li>
+</ul>
+</li>
+<li>unified issue queues<ul>
+<li>Intel Boosts Pentium Pro<br><em>M. Slater. Intel Boosts Pentium Pro to 200 MHz. Microprocessor Report, 9(15), November 13, 1995.</em></li>
+</ul>
+</li>
+</ol>
+<p><strong>集中式发射队列 (Centralized Issue Queue, CIQ)</strong>:  </p>
+<ul>
+<li>所有功能单元共用一个发射队列</li>
+<li>容量需求很大: 导致仲裁电路和唤醒电路比较复杂</li>
+<li>发射队列的利用率最高: 发射队列的每个 entry 对所有功能单元通用</li>
+</ul>
+<p><strong>分布式发射队列 (Distributed Issue Queue, DIQ)</strong>:  </p>
+<ul>
+<li>每个功能单元使用单独的一个发射队列</li>
+<li>每个发射队列的容量可以很少: 简化仲裁电路</li>
+<li>发射队列的总体利用率很低<ul>
+<li>每个发射队列的 entry 被功能单元专用化</li>
+<li>整个 CPU 可能因为某一个发射队列满而被阻塞</li>
+</ul>
+</li>
+<li>唤醒电路的设计比较复杂<ul>
+<li>指令分布比较分散，对唤醒电路的布线要求比较高</li>
+</ul>
+</li>
+</ul>
+<p><strong>折中式发射队列</strong>:  </p>
+<ul>
+<li>某几个功能单元使用一个发射队列</li>
+</ul>
+<h3 id="数据捕捉式-Data-capture-or-非数据捕捉式-Non-data-capture"><a href="#数据捕捉式-Data-capture-or-非数据捕捉式-Non-data-capture" class="headerlink" title="数据捕捉式 (Data-capture) or 非数据捕捉式 (Non-data-capture)"></a>数据捕捉式 (Data-capture) or 非数据捕捉式 (Non-data-capture)</h3><p>是否采用数据捕捉式发射队列将直接决定发射阶段的流水线结构</p>
+<h4 id="数据捕捉式"><a href="#数据捕捉式" class="headerlink" title="数据捕捉式"></a>数据捕捉式</h4><ul>
+<li>在 <strong>流水线发射阶段之前重命名之后</strong> 读取物理寄存器堆</li>
+<li>需要保存指令信息和源操作数的值以执行发射<ul>
+<li>读取的寄存器值会被写入payload RAM</li>
+<li>若读取时还未计算出来，将物理寄存器编号写入发射队列，并做标记</li>
+</ul>
+</li>
+<li>指令被仲裁电路选中时<ul>
+<li>直接从 payload RAM 中读取源操作数，并送入功能单元</li>
+<li>同时将目的寄存器编号广播，和发射队列中其他指令的源操作数对比<br>若有相同，在 payload RAM 中标记，唤醒时将结果直接写入 payload RAM</li>
+</ul>
+</li>
+<li>物理寄存器堆的读端口数： machine width x 2<ul>
+<li>machine width: 每周期实际解码和重命名指令数</li>
+</ul>
+</li>
+<li>功耗会高一点：频繁的数据搬移<ul>
+<li>数据流动：<br>寄存器堆读出 -&gt; 写入 payload RAM -&gt; payload RAM 读出 -&gt; 送入功能单元</li>
+</ul>
+</li>
+</ul>
+<p>一般，使用 ROB 进行重命名的设计会和数据捕捉式发射队列配合使用</p>
+<h4 id="非数据捕捉式"><a href="#非数据捕捉式" class="headerlink" title="非数据捕捉式"></a>非数据捕捉式</h4><ul>
+<li>在 <strong>流水线发射阶段之后</strong> 读取物理寄存器堆<ul>
+<li>将源寄存器编号写入发射队列</li>
+</ul>
+</li>
+<li>指令被仲裁电路选中时<ul>
+<li>使用源寄存器编号读取物理寄存器堆</li>
+</ul>
+</li>
+<li>物理寄存器堆的读端口数： issue width $times 2$<ul>
+<li>issue width: 每周期在功能单元中最多可以并行执行的指令数</li>
+<li>一般情况下只有 issue width &gt; machine width 的情况下，才可以尽可能挖掘并行度</li>
+</ul>
+</li>
+</ul>
+<p>数据捕捉式与非数据捕捉式对比:  </p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>数据捕捉式</th>
+<th>非数据捕捉式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>读端口</td>
+<td>少</td>
+<td>多</td>
+</tr>
+<tr>
+<td>面积</td>
+<td>多(payload RAM)</td>
+<td>少</td>
+</tr>
+<tr>
+<td>功耗</td>
+<td>高</td>
+<td>低</td>
+</tr>
+<tr>
+<td>示例</td>
+<td>Intel P6</td>
+<td>MIPS R10K, Alpha 21264</td>
+</tr>
+</tbody></table>
+<h3 id="压缩式-Compressing-or-非压缩式-Non-compressing"><a href="#压缩式-Compressing-or-非压缩式-Non-compressing" class="headerlink" title="压缩式 (Compressing) or 非压缩式 (Non-compressing)"></a>压缩式 (Compressing) or 非压缩式 (Non-compressing)</h3><h4 id="压缩式发射队列"><a href="#压缩式发射队列" class="headerlink" title="压缩式发射队列"></a>压缩式发射队列</h4><ul>
+<li><p>当一条指令被仲裁电路选中而离开发射队列时，当前指令以上的所有指令全部下移，以填充空隙</p>
+<ul>
+<li>导致空闲空间永远都是处于发射队列的上部</li>
+</ul>
+</li>
+<li><p>当一条指令被分配电路分配到发射队列时，从发射队列最上面的空闲entry开始写入</p>
+<ul>
+<li>导致发射队列中指令分布从上到下是按照“最新-最旧”的顺序排列</li>
+</ul>
+</li>
+<li><p>实现：发射队列的每个 entry 前加入多路选择器，选择上一项或当前项</p>
+<ul>
+<li>对于每周期需要压缩多个 entry 的情况来说，多路选择器需要更多入口</li>
+<li>不同 entry 的选择控制信号，设计复杂</li>
+</ul>
+</li>
+</ul>
+<p>优点：</p>
+<ul>
+<li>分配电路实现简单</li>
+<li>仲裁电路实现简单</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>设计复杂，面积代价较大</li>
+<li>功耗大：发射队列中的很多entry每个周期都要移动（类似C语言数组的删除中间元素操作）</li>
+</ul>
+<h4 id="非压缩式发射队列"><a href="#非压缩式发射队列" class="headerlink" title="非压缩式发射队列"></a>非压缩式发射队列</h4><p>当一条指令被仲裁电路选中而离开发射队列时，其他指令不会移动<br>导致发射队列中指令分布是随机的，不能根据指令位置判断指令年龄信息</p>
+<p>优点：</p>
+<ul>
+<li>功耗大大降低：指令进入发射队列后不再需要移动</li>
+<li>面积大大减少：不再需要多路选择器和布线的面积开销</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>如果实现 oldest-first 仲裁，仲裁电路设计很复杂</li>
+<li>分配电路设计也很复杂</li>
+</ul>
+<hr>
+<p>压缩式与非压缩式对比:  </p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>压缩式</th>
+<th>非压缩式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>分配电路设计</td>
+<td>简单</td>
+<td>复杂</td>
+</tr>
+<tr>
+<td>仲裁电路设计</td>
+<td>简单</td>
+<td>复杂</td>
+</tr>
+<tr>
+<td>面积</td>
+<td>多(多路选择器)</td>
+<td>少</td>
+</tr>
+<tr>
+<td>功耗</td>
+<td>高</td>
+<td>低</td>
+</tr>
+<tr>
+<td>示例</td>
+<td>Alpha 21264</td>
+<td>MIPS R10K</td>
+</tr>
+</tbody></table>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/10/29/Arch/ooo/issue/wake_up/" rel="prev" title="OOO CPU Issue Stage: Wake Up">
+      <i class="fa fa-chevron-left"></i> OOO CPU Issue Stage: Wake Up
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/11/03/os/generic/trap/" rel="next" title="操作系统：Interupt, Exception, Syscall">
+      操作系统：Interupt, Exception, Syscall <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%91%E5%B0%84%E9%98%9F%E5%88%97-Issue-Queue-%E4%BF%9D%E7%95%99%E7%AB%99-Reservation-Station"><span class="nav-number">1.</span> <span class="nav-text">发射队列 (Issue Queue) &#x2F; 保留站 (Reservation Station)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9B%86%E4%B8%AD%E5%BC%8F-Centralized-or-%E5%88%86%E5%B8%83%E5%BC%8F-Distributed"><span class="nav-number">1.1.</span> <span class="nav-text">集中式 (Centralized) or 分布式 (Distributed)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%8D%95%E6%8D%89%E5%BC%8F-Data-capture-or-%E9%9D%9E%E6%95%B0%E6%8D%AE%E6%8D%95%E6%8D%89%E5%BC%8F-Non-data-capture"><span class="nav-number">1.2.</span> <span class="nav-text">数据捕捉式 (Data-capture) or 非数据捕捉式 (Non-data-capture)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%8D%95%E6%8D%89%E5%BC%8F"><span class="nav-number">1.2.1.</span> <span class="nav-text">数据捕捉式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9D%9E%E6%95%B0%E6%8D%AE%E6%8D%95%E6%8D%89%E5%BC%8F"><span class="nav-number">1.2.2.</span> <span class="nav-text">非数据捕捉式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%8B%E7%BC%A9%E5%BC%8F-Compressing-or-%E9%9D%9E%E5%8E%8B%E7%BC%A9%E5%BC%8F-Non-compressing"><span class="nav-number">1.3.</span> <span class="nav-text">压缩式 (Compressing) or 非压缩式 (Non-compressing)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8E%8B%E7%BC%A9%E5%BC%8F%E5%8F%91%E5%B0%84%E9%98%9F%E5%88%97"><span class="nav-number">1.3.1.</span> <span class="nav-text">压缩式发射队列</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9D%9E%E5%8E%8B%E7%BC%A9%E5%BC%8F%E5%8F%91%E5%B0%84%E9%98%9F%E5%88%97"><span class="nav-number">1.3.2.</span> <span class="nav-text">非压缩式发射队列</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

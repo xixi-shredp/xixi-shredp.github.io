@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="乱序执行 CPU 发射阶段简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OOO CPU Issue Stage">
+<meta property="og:url" content="http://example.com/2025/10/29/Arch/ooo/issue/issue/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="乱序执行 CPU 发射阶段简介">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/Arch/ooo/issue/issue/non_data_capture_tomasulo.svg">
+<meta property="og:image" content="http://example.com/images/Arch/ooo/issue/issue/non_data_capture_b2b_one_stage.svg">
+<meta property="og:image" content="http://example.com/images/Arch/ooo/issue/issue/non_data_capture_b2b_two_stage.svg">
+<meta property="article:published_time" content="2025-10-29T12:05:24.000Z">
+<meta property="article:modified_time" content="2025-10-29T15:21:04.543Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/Arch/ooo/issue/issue/non_data_capture_tomasulo.svg">
+
+<link rel="canonical" href="http://example.com/2025/10/29/Arch/ooo/issue/issue/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>OOO CPU Issue Stage | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/10/29/Arch/ooo/issue/issue/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OOO CPU Issue Stage
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2025-10-29 20:05:24 / Modified: 23:21:04" itemprop="dateCreated datePublished" datetime="2025-10-29T20:05:24+08:00">2025-10-29</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/" itemprop="url" rel="index"><span itemprop="name">Arch</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/ooo/" itemprop="url" rel="index"><span itemprop="name">ooo</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/ooo/issue/" itemprop="url" rel="index"><span itemprop="name">issue</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">乱序执行 CPU 发射阶段简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <ul>
+<li>InOrder Issue Logic<ul>
+<li>指令需要等待所有先前的指令都发射后才可以发射</li>
+<li>实现简单：仅需要 scoreboarding<ul>
+<li>a data dependence table: 每个 entry 代表一个寄存器是否 available</li>
+<li>a resource table: 追踪所有功能单元的状态</li>
+</ul>
+</li>
+<li>特殊的顺序处理器： VLIW processors</li>
+</ul>
+</li>
+<li>Out-Of-Order Issue Logic<ul>
+<li>往往是处理器流水线的关键路径</li>
+</ul>
+</li>
+</ul>
+<p>发射阶段 (Issue Stage) 的任务：<u>接收来自重命名之后的指令（顺序），乱序地送到功能单元去执行</u></p>
+<p>主要电路：</p>
+<ol>
+<li>发射队列 (Issue Queue) &#x2F; 保留站 (Reservation Station)</li>
+<li>分配 (Allocation) 电路</li>
+<li>选择 (Select) 电路 &#x2F; 仲裁 (Arbiter) 电路</li>
+<li>唤醒 (Wake-up) 电路</li>
+</ol>
+<h1 id="流水线"><a href="#流水线" class="headerlink" title="流水线"></a>流水线</h1><p>发射队列中的指令被仲裁电路选中执行的条件：</p>
+<ol>
+<li>源操作数均已准备好</li>
+<li>仲裁电路允许发射</li>
+<li>可以从寄存器堆 &#x2F; payload RAM &#x2F; 旁路网络中获得源操作数的值</li>
+</ol>
+<p>发射阶段可以划分为唤醒和仲裁两个阶段</p>
+<h2 id="非数据捕捉结构的流水线"><a href="#非数据捕捉结构的流水线" class="headerlink" title="非数据捕捉结构的流水线"></a>非数据捕捉结构的流水线</h2><h3 id="方案1-指令执行完后对其他指令进行唤醒-Tomasulo-算法"><a href="#方案1-指令执行完后对其他指令进行唤醒-Tomasulo-算法" class="headerlink" title="方案1: 指令执行完后对其他指令进行唤醒 (Tomasulo 算法)"></a>方案1: 指令执行完后对其他指令进行唤醒 (Tomasulo 算法)</h3><p><img src="/../../../../images/Arch/ooo/issue/issue/non_data_capture_tomasulo.svg" alt="tomasulo 算法唤醒的非数据捕捉结构流水线"></p>
+<ul>
+<li>优势：设计简单</li>
+<li>缺陷：两条 RAW 相关的指令不能背靠背执行，中间相差 3 个周期</li>
+</ul>
+<h3 id="方案2-通过广播将唤醒阶段提前-背靠背执行"><a href="#方案2-通过广播将唤醒阶段提前-背靠背执行" class="headerlink" title="方案2: 通过广播将唤醒阶段提前 (背靠背执行)"></a>方案2: 通过广播将唤醒阶段提前 (背靠背执行)</h3><p><img src="/../../../../images/Arch/ooo/issue/issue/non_data_capture_b2b_one_stage.svg" alt="提前唤醒的非数据捕捉流水线"></p>
+<p>为保证背靠背执行，必须保证<strong>前一条指令的 Select 阶段和后一条指令的 Wake-up 阶段之间原子化串行</strong></p>
+<p>由于 Select-Wakeup 阶段的延时较高，可以将其再分成 2 个周期：</p>
+<p><img src="/../../../../images/Arch/ooo/issue/issue/non_data_capture_b2b_two_stage.svg" alt="分两周期提前唤醒的非数据捕捉流水线"><br>但这样无法保证上述的原子性，所以两条 RAW 相关的指令无法背靠背执行，会相差一个周期</p>
+<p>对于多周期指令，还需要在词基础上采用延时广播&#x2F;延时唤醒, 推测唤醒等策略保证正确性</p>
+<h2 id="数据捕捉结构的流水线"><a href="#数据捕捉结构的流水线" class="headerlink" title="数据捕捉结构的流水线"></a>数据捕捉结构的流水线</h2>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/10/28/Arch/paper/MICRO/2025/" rel="prev" title="MICRO 2025 论文简介">
+      <i class="fa fa-chevron-left"></i> MICRO 2025 论文简介
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/10/29/Arch/ooo/issue/allocation/" rel="next" title="OOO CPU Issue Stage: Allocation">
+      OOO CPU Issue Stage: Allocation <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B5%81%E6%B0%B4%E7%BA%BF"><span class="nav-number">1.</span> <span class="nav-text">流水线</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%9E%E6%95%B0%E6%8D%AE%E6%8D%95%E6%8D%89%E7%BB%93%E6%9E%84%E7%9A%84%E6%B5%81%E6%B0%B4%E7%BA%BF"><span class="nav-number">1.1.</span> <span class="nav-text">非数据捕捉结构的流水线</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%881-%E6%8C%87%E4%BB%A4%E6%89%A7%E8%A1%8C%E5%AE%8C%E5%90%8E%E5%AF%B9%E5%85%B6%E4%BB%96%E6%8C%87%E4%BB%A4%E8%BF%9B%E8%A1%8C%E5%94%A4%E9%86%92-Tomasulo-%E7%AE%97%E6%B3%95"><span class="nav-number">1.1.1.</span> <span class="nav-text">方案1: 指令执行完后对其他指令进行唤醒 (Tomasulo 算法)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%882-%E9%80%9A%E8%BF%87%E5%B9%BF%E6%92%AD%E5%B0%86%E5%94%A4%E9%86%92%E9%98%B6%E6%AE%B5%E6%8F%90%E5%89%8D-%E8%83%8C%E9%9D%A0%E8%83%8C%E6%89%A7%E8%A1%8C"><span class="nav-number">1.1.2.</span> <span class="nav-text">方案2: 通过广播将唤醒阶段提前 (背靠背执行)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%8D%95%E6%8D%89%E7%BB%93%E6%9E%84%E7%9A%84%E6%B5%81%E6%B0%B4%E7%BA%BF"><span class="nav-number">1.2.</span> <span class="nav-text">数据捕捉结构的流水线</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

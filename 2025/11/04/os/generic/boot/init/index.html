@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="操作系统初始化过程简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="操作系统初始化">
+<meta property="og:url" content="http://example.com/2025/11/04/os/generic/boot/init/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="操作系统初始化过程简介">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/os/generic/boot/init/start.png">
+<meta property="og:image" content="http://example.com/images/os/generic/boot/init/uefi.svg">
+<meta property="og:image" content="http://example.com/images/os/generic/boot/init/linuxboot.png">
+<meta property="article:published_time" content="2025-11-03T16:16:20.000Z">
+<meta property="article:modified_time" content="2025-11-05T16:23:39.999Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/os/generic/boot/init/start.png">
+
+<link rel="canonical" href="http://example.com/2025/11/04/os/generic/boot/init/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>操作系统初始化 | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/11/04/os/generic/boot/init/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          操作系统初始化
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2025-11-04 00:16:20" itemprop="dateCreated datePublished" datetime="2025-11-04T00:16:20+08:00">2025-11-04</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-11-06 00:23:39" itemprop="dateModified" datetime="2025-11-06T00:23:39+08:00">2025-11-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/" itemprop="url" rel="index"><span itemprop="name">os</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/generic/" itemprop="url" rel="index"><span itemprop="name">generic</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/generic/boot/" itemprop="url" rel="index"><span itemprop="name">boot</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">操作系统初始化过程简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>参考: 中国科学院大学 2025年秋《高级操作系统教程》课件 </p>
+</blockquote>
+<h1 id="计算机启动"><a href="#计算机启动" class="headerlink" title="计算机启动"></a>计算机启动</h1><p>启动流程：</p>
+<img src="/images/os/generic/boot/init/start.png" alt="start" width="700">
+
+<h2 id="从上电到内核的第一行代码：BIOS-bootload"><a href="#从上电到内核的第一行代码：BIOS-bootload" class="headerlink" title="从上电到内核的第一行代码：BIOS -&gt; bootload"></a>从上电到内核的第一行代码：BIOS -&gt; bootload</h2><p>任务：</p>
+<ol>
+<li>硬件初始化 (BIOS)<ul>
+<li>初始化 BIOS</li>
+<li>检查 CPU 寄存器</li>
+<li>检查 BIOS 代码的完整性</li>
+<li>检查 DMA, timer, interrupt controller</li>
+<li>检查系统内存</li>
+<li>检查系统总线和外部设备</li>
+<li>跳转到下一级 BIOS (如 VGA-BIOS ) 执行并返回</li>
+<li>识别可以启动的设备(CD-ROM? USB? HDD?)</li>
+</ul>
+</li>
+<li>加载内核代码到内存 (bootloader)</li>
+</ol>
+<h3 id="BIOS-Basic-Input-Output-System，基本输入输出系统"><a href="#BIOS-Basic-Input-Output-System，基本输入输出系统" class="headerlink" title="BIOS (Basic Input&#x2F;Output System，基本输入输出系统)"></a>BIOS (Basic Input&#x2F;Output System，基本输入输出系统)</h3><p>存放于 BIOS 芯片(ROM)中</p>
+<p>三大任务：</p>
+<ol>
+<li>初始化硬件<ul>
+<li>在计算机开机时对系统各组件进行检查</li>
+</ul>
+</li>
+<li>启动操作系统<ul>
+<li>加载引导程序(bootloader)或操作系统</li>
+</ul>
+</li>
+<li>提供硬件的软件抽象<ul>
+<li>向操作系统提供系统配置信息</li>
+<li>向操作系统提供硬件访问接口，向操作系统隐藏硬件的变化<ul>
+<li>现代操作系统会忽略 BIOS 提供的抽象层并直接访问硬件</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p>BIOS 中的主要内容：</p>
+<ol>
+<li>程序段: <ol>
+<li>自诊断程序<br> 通过读取 CMOS RAM 中的内容，识别硬件配置，并对其进行自检和初始化</li>
+<li>CMOS设置程序<br> 引导过程中，用特殊热键启动，进行设置后，存入 CMOS RAM 中</li>
+<li>系统自检装载程序<br> 在自检成功后，将磁盘 0 磁道 0 扇区上的引导程序装入内存，让其运行以装入系统</li>
+<li>主要 I&#x2F;O 设备的驱动程序和中断服务</li>
+</ol>
+</li>
+<li>数据段: 系统基本配置</li>
+</ol>
+<p>缺点：</p>
+<ul>
+<li>采用汇编语言编写，维护困难</li>
+<li>以 16 位模式的代码的形式存在，这就给运行于增强模式的操作系统访问其服务造成了困难</li>
+</ul>
+<h3 id="EFI-UEFI-Extensible-Firmware-Interface-Unified-Extensible-Firmware-Interface"><a href="#EFI-UEFI-Extensible-Firmware-Interface-Unified-Extensible-Firmware-Interface" class="headerlink" title="EFI &#x2F; UEFI (Extensible Firmware Interface &#x2F; Unified Extensible Firmware Interface)"></a>EFI &#x2F; UEFI (Extensible Firmware Interface &#x2F; Unified Extensible Firmware Interface)</h3><p>EFI&#x2F;UEFI 的优点：更易于实现，容错和纠错特性更强，缩短了研发时间</p>
+<ul>
+<li>模块化</li>
+<li>C语言</li>
+<li>动态链接较</li>
+<li>标准接口</li>
+<li>开放统一</li>
+<li>开源</li>
+<li>运行于32位或64位模式</li>
+<li>充分的向下兼容性<ul>
+<li>EFI 系统下的驱动用 EFI Byte Code 编写而成，不是直接可运行的二进制代码</li>
+<li>EFI Byte Code: 专用于 EFI 驱动的虚拟机器语言，必须在 EFI 驱动运行环境下被解释运行</li>
+<li>利用加载 EFI 驱动的形式，识别及操作硬件</li>
+</ul>
+</li>
+</ul>
+<img src="/images/os/generic/boot/init/uefi.svg" alt="UEFI" width="700">
+
+<h3 id="bootloader-引导程序"><a href="#bootloader-引导程序" class="headerlink" title="bootloader 引导程序"></a>bootloader 引导程序</h3><p>存放于磁盘的 MBR 扇区</p>
+<ul>
+<li>开机时，引导操作系统启动的程序</li>
+<li>BIOS 在完成硬件检测和资源分配后，将硬盘 MBR 中的 bootloader 读到系统的 RAM 中，然后将控制权交给 bootloader</li>
+</ul>
+<p>bootloader 的主要任务: </p>
+<ol>
+<li>将操作系统内核从硬盘加载到 RAM 中<ul>
+<li>需要为操作系统提供启动参数，以实现定制化启动</li>
+</ul>
+</li>
+<li>跳转到内核的入口点去执行，即启动操作系统</li>
+</ol>
+<p>常见的bootloader:<br>Grub, isolinux, uboot, openSBI，ntldr(用于启动Windows系统) ，Linuxboot</p>
+<blockquote>
+<p>两种磁盘分区表:</p>
+<ol>
+<li>MBR</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">+-------------+----------------------+--------------+</span><br><span class="line">| boot loader | Disk Partition Table | Magic Number |</span><br><span class="line">+-------------+---+---+---+---+------+--------------+</span><br><span class="line">|     code    | 1 | 2 | 3 | 4 | ...  |    0x55AA    |</span><br><span class="line">+-------------+---+---+---+---+------+--------------+</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>GPT</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">+------+---------------------------+---------------------+-----------+--------+</span><br><span class="line">| PMBR |      Partition Table      |      Partition      |  Table    | GPT    |</span><br><span class="line">|      |                           |                     |  Backup   | Backup |</span><br><span class="line">+------+-----+---+---+---+---+-----+---+---+---+---+-----+-----------+--------+</span><br><span class="line">|      | GPT |   |   |   |   |     |   |   |   |   |     | Partition | GPT    |</span><br><span class="line">| MBR  | HDR | 1 | 2 | 3 | 4 | ... | 1 | 2 | 3 | 4 | ... | Table     | HDR    |</span><br><span class="line">|      |     |   |   |   |   |     |   |   |   |   |     | Backup    | Backup |</span><br><span class="line">+------+-----+---+---+---+---+-----+---+---+---+---+-----+-----------+--------+</span><br><span class="line">| LBA0 | LBA1|     LBA2      |LBA3~|    LBA35 ~ LBA-35   | LBA-34~   | LBA-1  |</span><br><span class="line">|      |     |               |LBA34|                     | LBA-2     |        |</span><br><span class="line">+------+-----+---------------+-----+---------------------+-----------+--------+</span><br></pre></td></tr></table></figure></blockquote>
+<hr>
+<p>当前在 Linux 上希望统一 bootloader 的进展： LinuxBoot<br><img src="/images/os/generic/boot/init/linuxboot.png" alt="LinuxBoot" width="700"></p>
+<h2 id="从内核的第一行代码到第一个用户态程序的第一行代码：kernel-boot"><a href="#从内核的第一行代码到第一个用户态程序的第一行代码：kernel-boot" class="headerlink" title="从内核的第一行代码到第一个用户态程序的第一行代码：kernel boot"></a>从内核的第一行代码到第一个用户态程序的第一行代码：kernel boot</h2><p>任务：</p>
+<ol>
+<li>配置页表并开启虚拟内存机制，允许使用虚拟地址</li>
+<li>配置异常向量表并打开中断，允许”双循环”</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/11/03/os/generic/trap/" rel="prev" title="操作系统：Interupt, Exception, Syscall">
+      <i class="fa fa-chevron-left"></i> 操作系统：Interupt, Exception, Syscall
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/11/04/os/linux/boot/" rel="next" title="Linux Boot 过程">
+      Linux Boot 过程 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%90%AF%E5%8A%A8"><span class="nav-number">1.</span> <span class="nav-text">计算机启动</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E%E4%B8%8A%E7%94%B5%E5%88%B0%E5%86%85%E6%A0%B8%E7%9A%84%E7%AC%AC%E4%B8%80%E8%A1%8C%E4%BB%A3%E7%A0%81%EF%BC%9ABIOS-bootload"><span class="nav-number">1.1.</span> <span class="nav-text">从上电到内核的第一行代码：BIOS -&gt; bootload</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#BIOS-Basic-Input-Output-System%EF%BC%8C%E5%9F%BA%E6%9C%AC%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%B3%BB%E7%BB%9F"><span class="nav-number">1.1.1.</span> <span class="nav-text">BIOS (Basic Input&#x2F;Output System，基本输入输出系统)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#EFI-UEFI-Extensible-Firmware-Interface-Unified-Extensible-Firmware-Interface"><span class="nav-number">1.1.2.</span> <span class="nav-text">EFI &#x2F; UEFI (Extensible Firmware Interface &#x2F; Unified Extensible Firmware Interface)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bootloader-%E5%BC%95%E5%AF%BC%E7%A8%8B%E5%BA%8F"><span class="nav-number">1.1.3.</span> <span class="nav-text">bootloader 引导程序</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E%E5%86%85%E6%A0%B8%E7%9A%84%E7%AC%AC%E4%B8%80%E8%A1%8C%E4%BB%A3%E7%A0%81%E5%88%B0%E7%AC%AC%E4%B8%80%E4%B8%AA%E7%94%A8%E6%88%B7%E6%80%81%E7%A8%8B%E5%BA%8F%E7%9A%84%E7%AC%AC%E4%B8%80%E8%A1%8C%E4%BB%A3%E7%A0%81%EF%BC%9Akernel-boot"><span class="nav-number">1.2.</span> <span class="nav-text">从内核的第一行代码到第一个用户态程序的第一行代码：kernel boot</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

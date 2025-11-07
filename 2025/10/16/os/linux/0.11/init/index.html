@@ -28,7 +28,7 @@
 <meta property="og:description" content="Linux 0.11 源码简介：Init 初始化过程">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-10-16T03:32:53.000Z">
-<meta property="article:modified_time" content="2025-10-23T04:00:19.245Z">
+<meta property="article:modified_time" content="2025-11-06T03:57:08.320Z">
 <meta property="article:author" content="xixi">
 <meta name="twitter:card" content="summary">
 
@@ -198,7 +198,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2025-10-23 12:00:19" itemprop="dateModified" datetime="2025-10-23T12:00:19+08:00">2025-10-23</time>
+                <time title="Modified: 2025-11-06 11:57:08" itemprop="dateModified" datetime="2025-11-06T11:57:08+08:00">2025-11-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -243,13 +243,13 @@
 <li>最多管理 16 MB 内存，超过 16MB 的忽略不记</li>
 </ul>
 </li>
-<li>根据物理内存大小设置缓冲区区间 <code>buffer_memory_end</code><ul>
-<li><code>memory_end &gt; 12MB</code>: 缓冲区设置到 4MB</li>
-<li><code>6MB &lt; memory_end &lt; 12MB</code>: 缓冲区设置到 2MB</li>
-<li><code>memory_end &lt; 6MB</code>: 缓冲区设置到 1MB</li>
+<li>根据物理内存大小设置硬盘缓冲区区间 <code>buffer_memory_end</code><ul>
+<li><code>memory_end &gt; 12MB</code>: 硬盘缓冲区设置到 4MB</li>
+<li><code>6MB &lt; memory_end &lt; 12MB</code>: 硬盘缓冲区设置到 2MB</li>
+<li><code>memory_end &lt; 6MB</code>: 硬盘缓冲区设置到 1MB</li>
 </ul>
 </li>
-<li>主存起始地址 <code>main_memory_start</code> 设置为缓冲区末端</li>
+<li>主存起始地址 <code>main_memory_start</code> 设置为硬盘缓冲区末端</li>
 </ol>
 </li>
 <li>初始化<ul>
@@ -260,8 +260,26 @@
 <li>字符设备初始化：<code>chr_dev_init()</code></li>
 <li>系统时钟初始化: <code>time_init()</code></li>
 <li>进程调度初始化: <code>sched_init()</code></li>
+<li>硬盘缓冲区初始化: <code>buffer_init()</code></li>
 </ul>
 </li>
+<li>开中断: <code>sti()</code></li>
+<li>切换特权级到用户模式: <code>move_to_user_mode();</code><ul>
+<li>为 <code>iret</code> 出栈参数 准备压栈: <code>eip, cs, eflags, esp, ss</code><ul>
+<li>ss 为 0x17 用户数据段</li>
+<li>esp 为内核栈</li>
+<li>eflags 当前标志寄存器</li>
+<li>cs 为 Task0 的代码段</li>
+<li>eip 为 1 标号处的代码</li>
+</ul>
+</li>
+<li><code>iret</code> 中断出栈寄存器并跳转到 1 标号处的代码<ul>
+<li>将所有 ds, es, fs, gs 全部设置为当前 LDT 的数据段</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>通过 <code>fork()</code> 创建子进程</li>
 </ol>
 <h2 id="虚拟盘初始化-rd-init"><a href="#虚拟盘初始化-rd-init" class="headerlink" title="虚拟盘初始化 rd_init()"></a>虚拟盘初始化 <code>rd_init()</code></h2><p>in <code>kernel/blk_dev/ramdisk.c</code></p>
 <ol>
@@ -309,13 +327,98 @@
 </ul>
 </li>
 </ul>
-<h2 id="进程调度初始化-sched-init"><a href="#进程调度初始化-sched-init" class="headerlink" title="进程调度初始化: sched_init()"></a>进程调度初始化: <code>sched_init()</code></h2><p>补充 GDT ：为初始进程 init_task 补充 TSS 和 LDT</p>
-<ul>
-<li>从 GDT 的第 4 项开始，每个进程占用一个 TSS 段和一个 LDT 段</li>
+<h2 id="进程调度初始化-sched-init"><a href="#进程调度初始化-sched-init" class="headerlink" title="进程调度初始化: sched_init()"></a>进程调度初始化: <code>sched_init()</code></h2><ol>
+<li>补充 GDT ：为初始进程 init_task 补充 TSS 和 LDT<ul>
+<li>从 GDT 的第 4 项开始(<code>FIRST_TSS_ENTRY</code>)，每个进程占用一个 TSS 项和一个 LDT 项</li>
+<li><code>init_task</code> 属于 <code>task_union</code><ul>
+<li><code>task_union</code> 包含 <code>task_struct</code> 和 <code>stack</code>(内核栈) 的联合体, 每个进程有一个</li>
+<li><code>task_struct</code> 的 <code>ldt</code> 只包括 3 项: 第 0 项空，第 1 项进程代码段，第 2 项进程数据段</li>
 </ul>
+</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> &#123;</span></span><br><span class="line"><span class="comment">/* these are hardcoded - don&#x27;t touch */</span></span><br><span class="line">	<span class="type">long</span> state;	<span class="comment">/* -1 unrunnable, 0 runnable, &gt;0 stopped */</span></span><br><span class="line">	<span class="type">long</span> counter; <span class="comment">// 进程调度时间片</span></span><br><span class="line">	<span class="type">long</span> priority;</span><br><span class="line">	<span class="type">long</span> signal;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sigaction</span> <span class="title">sigaction</span>[32];</span></span><br><span class="line">	<span class="type">long</span> blocked;	<span class="comment">/* bitmap of masked signals */</span></span><br><span class="line"><span class="comment">/* various fields */</span></span><br><span class="line">	<span class="type">int</span> exit_code;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> start_code,end_code,end_data,brk,start_stack;</span><br><span class="line">	<span class="type">long</span> pid,father,pgrp,session,leader;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> uid,euid,suid;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> gid,egid,sgid;</span><br><span class="line">	<span class="type">long</span> alarm;</span><br><span class="line">	<span class="type">long</span> utime,stime,cutime,cstime,start_time;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> used_math;</span><br><span class="line"><span class="comment">/* file system info */</span></span><br><span class="line">	<span class="type">int</span> tty;		<span class="comment">/* -1 if no tty, so it must be signed */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> umask;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">m_inode</span> * <span class="title">pwd</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">m_inode</span> * <span class="title">root</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">m_inode</span> * <span class="title">executable</span>;</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> close_on_exec;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">file</span> * <span class="title">filp</span>[<span class="title">NR_OPEN</span>];</span> <span class="comment">// 每个进程最多打开 NR_OPEN 个文件（20 in linux 0.11）</span></span><br><span class="line"><span class="comment">/* ldt for this task 0 - zero 1 - cs 2 - ds&amp;ss */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">desc_struct</span> <span class="title">ldt</span>[3];</span></span><br><span class="line"><span class="comment">/* tss for this task */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">tss_struct</span> <span class="title">tss</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
 <blockquote>
-<p>TSS<br>LDT</p>
-</blockquote>
+<p><strong>TSS (Task State Segment)</strong>: 指向一个段，保存进程的上下文</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">                    TSS Descriptor for 32-bit TSS</span><br><span class="line">31                23                15                7                 0</span><br><span class="line">+-----------------+-+-+-+-+---------+-+-----+---------+-----------------+</span><br><span class="line">|                 | | | |A|  LIMIT  | |     |  TYPE   |                 |</span><br><span class="line">|   BASE 31..24   |G|0|0|V|         |P| DPL |         |   BASE 23..16   | 4</span><br><span class="line">|                 | | | |L|  19..16 | |     |0|1|0|B|1|                 |</span><br><span class="line">|-----------------+-+-+-+-+---------+-+-----+-+-+-+-+-+-----------------|</span><br><span class="line">|                                   |                                   |</span><br><span class="line">|             BASE 15..0            |             LIMIT 15..0           | 0</span><br><span class="line">|                                   |                                   |</span><br><span class="line">+-----------------+-----------------+-----------------+-----------------+</span><br></pre></td></tr></table></figure></blockquote>
+<p>init_task task_struct 初始化结构：  </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> *  INIT_TASK is used to set up the first task table, touch at</span></span><br><span class="line"><span class="comment"> * your own risk!. Base=0, limit=0x9ffff (=640kB)</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> INIT_TASK \</span></span><br><span class="line"><span class="meta"><span class="comment">/* state etc */</span>	&#123; 0,15,15, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* signals */</span>	0,&#123;&#123;&#125;,&#125;,0, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* ec,brk... */</span>	0,0,0,0,0,0, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* pid etc.. */</span>	0,-1,0,0,0, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* uid etc */</span>	0,0,0,0,0,0, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* alarm */</span>	0,0,0,0,0,0, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* math */</span>	0, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* fs info */</span>	-1,0022,NULL,NULL,NULL,0, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* filp */</span>	&#123;NULL,&#125;, \</span></span><br><span class="line"><span class="meta">	&#123; \</span></span><br><span class="line"><span class="meta">		&#123;0,0&#125;, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* ldt */</span>	&#123;0x9f,0xc0fa00&#125;, \</span></span><br><span class="line"><span class="meta">		&#123;0x9f,0xc0f200&#125;, \</span></span><br><span class="line"><span class="meta">	&#125;, \</span></span><br><span class="line"><span class="meta"><span class="comment">/*tss*/</span>	&#123;0,PAGE_SIZE+(long)&amp;init_task,0x10,0,0,0,0,(long)&amp;pg_dir,\</span></span><br><span class="line"><span class="meta">	 0,0,0,0,0,0,0,0, \</span></span><br><span class="line"><span class="meta">	 0,0,0x17,0x17,0x17,0x17,0x17,0x17, \</span></span><br><span class="line"><span class="meta">	 _LDT(0),0x80000000, \</span></span><br><span class="line"><span class="meta">		&#123;&#125; \</span></span><br><span class="line"><span class="meta">	&#125;, \</span></span><br><span class="line"><span class="meta">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>为剩余进程补充 TSS 和 LDT (linux 0.11 最多支持 <code>NR_TASK</code> 个进程)</li>
+<li>加载 0 进程的 TSSR 和 LDTR<ul>
+<li><code>ltr(0);</code> </li>
+<li><code>lldt(0);</code></li>
+</ul>
+</li>
+<li>设置时钟中断: <code>set_intr_gate(0x20,&amp;timer_interrupt);</code></li>
+<li>设置系统调用: <code>set_system_gate(0x80,&amp;system_call);</code><ul>
+<li><code>system_call</code> 定义于 <code>kernel/system_call.s</code></li>
+<li>之后系统调用将通过 <code>int 80</code> 陷入 IDT 的 system_gate 跳转到 <code>_system_call</code></li>
+</ul>
+</li>
+</ol>
+<h2 id="硬盘缓冲区初始化-buffer-init"><a href="#硬盘缓冲区初始化-buffer-init" class="headerlink" title="硬盘缓冲区初始化: buffer_init()"></a>硬盘缓冲区初始化: <code>buffer_init()</code></h2><p>in <code>fs/buffer.c</code></p>
+<ol>
+<li>如果 <code>buffer_end</code> 是 1MB ，则实际可用的 buffer 的末端在 640KB<ul>
+<li>因为 640KB - 1MB 区域被内存和 BIOS 占用</li>
+</ul>
+</li>
+</ol>
+<h2 id="fork"><a href="#fork" class="headerlink" title="fork()"></a>fork()</h2><p>通过 <code>_syscall0(int, fork)</code> 定义</p>
+<ul>
+<li><code>_syscall0</code> macro 定义于 <code>include/unistd.h</code>，本质是一条 <code>int 80, __NR_fork</code> 指令(trap in syscall gate)</li>
+<li>通过 <code>_system_call</code> 调用 <code>_sys_call_table</code> 中的 <code>sys_fork</code><ol>
+<li>判断传入参数是否是系统调用(&lt; <code>nr_system_calls</code>)，否则跳转到 <code>bad_sys_call</code></li>
+<li>将内核数据段(<code>0x10</code>)赋值 edx, ds, es</li>
+<li>将用户数据段(<code>0x17</code>)赋值 eax, fs</li>
+<li>调用 _sys_call_table 的第 <code>eax</code> 个 entry<ul>
+<li><code>sys_call_table</code> 定义于 <code>include/linux/sys.h</code>，存放 <code>nr_system_calls</code> 个系统调用函数入口</li>
+</ul>
+</li>
+</ol>
+</li>
+<li><code>_sys_fork</code><ul>
+<li>调用 <code>_find_empty_process</code> 找到 0 号进程 (in <code>kernel/fork.c</code>)<ul>
+<li>从 task 数组中找到空闲的 entry 的 idx</li>
+</ul>
+</li>
+<li>压栈 6 个寄存器 : 为 <code>copy_process</code> 准备参数</li>
+<li>调用 <code>_copy_process</code></li>
+</ul>
+</li>
+<li><code>copy_process</code> in <code>kernel/fork.c</code><ul>
+<li>参数来源: (右序压栈)<ul>
+<li><code>int 80</code> 硬件压栈(5 个寄存器): <code>eip, cs, eflags, esp, ss</code></li>
+<li><code>_system_call</code> 软件压栈(6 个寄存器) :<code>ebx, ecx, edx, fs, es, ds</code></li>
+<li><code>call _sys_call_table</code> 会压入一次栈且未返回 :<code>none</code></li>
+<li><code>_sys_fork</code> 软件压栈(5 个寄存器): <code>eax(nr), ebp, edi, esi, gs</code></li>
+</ul>
+</li>
+</ul>
+<ol>
+<li>为 nr 进程设置 task 结构体<ul>
+<li><code>get_free_page()</code> 获取内核中空闲物理内存的空闲页</li>
+<li>将 task 数组的第 nr 项指向刚获取的空闲物理页</li>
+<li>将当前进程(父进程, current)的 task 结构体直接复制到 nr 进程(子进程)的 task 结构体</li>
+<li>设置子进程 task 结构体状态<ul>
+<li>状态设置为 <code>TASK_UNINTERRUPTIBLE</code></li>
+<li>设置进程信息</li>
+<li>设置 tss <ul>
+<li>esp0 用户栈顶设置为刚刚获取的空闲页的地址末端</li>
+<li>将栈上的参数赋值给 tss 中保存的上下文</li>
+<li>eax 表示子进程 fork 返回值为 0</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
 
     </div>
 
@@ -396,7 +499,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#main-%E5%87%BD%E6%95%B0"><span class="nav-number">1.</span> <span class="nav-text">main() 函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%99%9A%E6%8B%9F%E7%9B%98%E5%88%9D%E5%A7%8B%E5%8C%96-rd-init"><span class="nav-number">1.1.</span> <span class="nav-text">虚拟盘初始化 rd_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%E5%88%9D%E5%A7%8B%E5%8C%96-mem-init"><span class="nav-number">1.2.</span> <span class="nav-text">物理内存初始化 mem_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%9Atrap-init"><span class="nav-number">1.3.</span> <span class="nav-text">异常处理初始化：trap_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9D%97%E8%AE%BE%E5%A4%87%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%9Ablk-dev-init"><span class="nav-number">1.4.</span> <span class="nav-text">块设备初始化：blk_dev_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%9A"><span class="nav-number">1.5.</span> <span class="nav-text">字符设备初始化：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E5%88%9D%E5%A7%8B%E5%8C%96-sched-init"><span class="nav-number">1.6.</span> <span class="nav-text">进程调度初始化: sched_init()</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#main-%E5%87%BD%E6%95%B0"><span class="nav-number">1.</span> <span class="nav-text">main() 函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%99%9A%E6%8B%9F%E7%9B%98%E5%88%9D%E5%A7%8B%E5%8C%96-rd-init"><span class="nav-number">1.1.</span> <span class="nav-text">虚拟盘初始化 rd_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%E5%88%9D%E5%A7%8B%E5%8C%96-mem-init"><span class="nav-number">1.2.</span> <span class="nav-text">物理内存初始化 mem_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%9Atrap-init"><span class="nav-number">1.3.</span> <span class="nav-text">异常处理初始化：trap_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9D%97%E8%AE%BE%E5%A4%87%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%9Ablk-dev-init"><span class="nav-number">1.4.</span> <span class="nav-text">块设备初始化：blk_dev_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%9A"><span class="nav-number">1.5.</span> <span class="nav-text">字符设备初始化：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E5%88%9D%E5%A7%8B%E5%8C%96-sched-init"><span class="nav-number">1.6.</span> <span class="nav-text">进程调度初始化: sched_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A1%AC%E7%9B%98%E7%BC%93%E5%86%B2%E5%8C%BA%E5%88%9D%E5%A7%8B%E5%8C%96-buffer-init"><span class="nav-number">1.7.</span> <span class="nav-text">硬盘缓冲区初始化: buffer_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fork"><span class="nav-number">1.8.</span> <span class="nav-text">fork()</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -412,14 +515,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-count">47</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-count">29</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
   </nav>

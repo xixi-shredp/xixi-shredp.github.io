@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="乱序执行 CPU 发射阶段唤醒电路简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OOO CPU Issue Stage: Wake Up">
+<meta property="og:url" content="http://example.com/2025/10/29/Arch/ooo/issue/wake_up/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="乱序执行 CPU 发射阶段唤醒电路简介">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/img/tomasulo_wakeup.svg">
+<meta property="og:image" content="http://example.com/img/is_wakeup_1.png">
+<meta property="og:image" content="http://example.com/img/is_wakeup_2.png">
+<meta property="og:image" content="http://example.com/img/is_wakeup_3.png">
+<meta property="og:image" content="http://example.com/img/is_wakeup_4.png">
+<meta property="og:image" content="http://example.com/img/is_wakeup_delayed_wakeup.png">
+<meta property="og:image" content="http://example.com/img/is_wakeup_shifter.png">
+<meta property="article:published_time" content="2025-10-29T12:08:11.000Z">
+<meta property="article:modified_time" content="2025-10-29T12:12:46.325Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/tomasulo_wakeup.svg">
+
+<link rel="canonical" href="http://example.com/2025/10/29/Arch/ooo/issue/wake_up/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>OOO CPU Issue Stage: Wake Up | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/10/29/Arch/ooo/issue/wake_up/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OOO CPU Issue Stage: Wake Up
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2025-10-29 20:08:11 / Modified: 20:12:46" itemprop="dateCreated datePublished" datetime="2025-10-29T20:08:11+08:00">2025-10-29</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/" itemprop="url" rel="index"><span itemprop="name">Arch</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/ooo/" itemprop="url" rel="index"><span itemprop="name">ooo</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/ooo/issue/" itemprop="url" rel="index"><span itemprop="name">issue</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">乱序执行 CPU 发射阶段唤醒电路简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>任务：<u>将功能单元计算出的结果通知到发射队列当中所有等待该数据的指令</u></p>
+<h1 id="Tomasulo-算法唤醒"><a href="#Tomasulo-算法唤醒" class="headerlink" title="Tomasulo 算法唤醒"></a>Tomasulo 算法唤醒</h1><p>当指令执行完之后才将相关指令进行唤醒。</p>
+<p><img src="/img/tomasulo_wakeup.svg" alt="Tomasulo 算法唤醒电路"></p>
+<h1 id="back-to-back-背靠背执行唤醒"><a href="#back-to-back-背靠背执行唤醒" class="headerlink" title="back-to-back 背靠背执行唤醒"></a>back-to-back 背靠背执行唤醒</h1><h2 id="对于单周期指令"><a href="#对于单周期指令" class="headerlink" title="对于单周期指令"></a>对于单周期指令</h2><p><img src="/img/is_wakeup_1.png" alt="单周期指令背靠背执行唤醒"></p>
+<ul>
+<li>被仲裁电路选中的指令将其目的寄存器编号发送的对应的总线上广播 (tag bus)</li>
+<li>发射队列当中的所有指令将 tag bus 上的编号和自己的源寄存器编号对比，如匹配则标记为 ready<br> 通过旁路网络获得寄存器值（这样才能背靠背执行）</li>
+<li>发射队列当中的指令如果源操作数均 ready ，则可以向仲裁电路发出请求<ul>
+<li>一条指令可以轮流向多个仲裁电路发送请求，直到找到愿意响应的仲裁电路（平衡负载）</li>
+</ul>
+</li>
+<li>仲裁电路对所有发送请求的指令进行仲裁选择发射<ul>
+<li>未发射的指令需要在下个 cycle 继续发送请求</li>
+<li>发射的指令会收到仲裁电路的响应信号，并将其目的寄存器编号广播（第 1 步）<br>不会马上离开发射队列：对于访存指令而言可能出现访存违例</li>
+</ul>
+</li>
+</ul>
+<p>发射队列对单周期指令唤醒电路的影响：</p>
+<ol>
+<li>如果使用多个小容量的发射队列（分布式）<ul>
+<li>由于总容量并不变，所以 tag bus 总体的复杂度不变（由于布局布线的问题，可能复杂度会上升）</li>
+<li>但每个发射队列上仲裁电路的请求端变少，可以加快仲裁电路</li>
+</ul>
+</li>
+</ol>
+<h2 id="对于多周期指令"><a href="#对于多周期指令" class="headerlink" title="对于多周期指令"></a>对于多周期指令</h2><p>将唤醒划分为 2 个主要阶段：</p>
+<ol>
+<li>广播：被仲裁电路选中的指令的目的寄存器编号被送到 tag bus 上</li>
+<li>唤醒：将 tag bus 上的寄存器编号和发射队列中所有指令的源寄存器编号比较</li>
+</ol>
+<p>多周期指令的唤醒，需要根据其在功能单元中执行的周期数将唤醒过程延迟，所以就有 2 种延迟方法：</p>
+<ol>
+<li>延迟广播 (delayed tag broadcast)</li>
+<li>延迟唤醒 (delayed wake-up)</li>
+</ol>
+<h3 id="延迟广播-delayed-tag-broadcast"><a href="#延迟广播-delayed-tag-broadcast" class="headerlink" title="延迟广播 (delayed tag broadcast)"></a>延迟广播 (delayed tag broadcast)</h3><p>指令被选中的当前周期，并不将指令的目的寄存器编号立刻送到 tag bus 上，而是延迟 (N - 1) 个周期后送到总线上（对于执行周期为 N 的指令）</p>
+<p><img src="/img/is_wakeup_2.png" alt="多周期指令延迟广播唤醒"></p>
+<p>问题：可能导致 tag bus 冲突<br><img src="/img/is_wakeup_3.png" alt="多周期指令延迟广播唤醒 tag bus 冲突问题"></p>
+<p>tag bus 冲突解决方案：</p>
+<ol>
+<li>方案1: 增加这个功能单元对应的 tag bus 数<br>不具有可扩展性：需要大量总线，唤醒电路复杂度大幅上升</li>
+<li>方案2: 使用表格记录每条指令的执行周期<br>后续指令通过查表发现冲突后延时到下个 cycle 继续仲裁<ul>
+<li>关于表格的实现方案：(trade-off)<ul>
+<li>访问表格和仲裁电路并行工作<ul>
+<li>不会增加延时，但造成性能损失：在基于 oldest-first 的仲裁规则下, tag bus 冲突会导致后续可被仲裁的指令都被延时</li>
+<li><strong>如果不遵循 oldest-first 呢？</strong></li>
+</ul>
+</li>
+<li>访问表格和仲裁电路串行工作：指令首先查找表格，没有冲突后再向仲裁电路发出请求<ul>
+<li>后续的指令不会受到前面冲突的影响（站在仲裁电路的角度看，前面冲突的第二条指令其实是未 ready 的）</li>
+<li>缺点是串行访问会增大延时</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p><img src="/img/is_wakeup_4.png" alt="解决 tag bus 的冲突问题"></p>
+<h3 id="延迟唤醒（delayed-wake-up）"><a href="#延迟唤醒（delayed-wake-up）" class="headerlink" title="延迟唤醒（delayed wake-up）"></a>延迟唤醒（delayed wake-up）</h3><p>指令被选中的当前周期，就将指令的目的寄存器编号立刻送到 tag bus 上并和所有指令的源寄存器编号比较。但匹配项并不立即置位 ready ，延时 (N-1) 个周期后再置位 ready</p>
+<p><img src="/img/is_wakeup_delayed_wakeup.png" alt="多周期指令延迟唤醒"></p>
+<ul>
+<li>不存在 tag bus 的冲突问题</li>
+<li>本质是在发射队列的每条指令的 ready 位前增加延时寄存器</li>
+</ul>
+<p>实现方案1：移位寄存器</p>
+<p><img src="/img/is_wakeup_shifter.png" alt="移位寄存器实现延迟唤醒"></p>
+<ul>
+<li>发射队列中每条指令的目的寄存器对应一个 DELAY 值<ul>
+<li>DELAY 值位宽由 FU 中最多需要周期数决定：8 位 4 周期编码 11111000</li>
+<li>DELAY 值同分配电路一同写入发射队列</li>
+<li>指令被仲裁电路选中后广播时，同时将 DELAY 值广播到总线 DELAY bus</li>
+</ul>
+</li>
+<li>发射队列的每条指令的源寄存器添加一个移位寄存器和移位使能位<ul>
+<li>广播匹配后，使能位拉高，移位寄存器初始值置为DELAY bus上的值</li>
+<li>使能位拉高后，移位寄存器每周期算术右移1位，其最后一位表示进入ready状态</li>
+<li>当指令被仲裁电路选中并收到响应信号后将使能位和移位寄存器清零</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>可以使用功能单元完成计算的 valid 信号作为指令 ready 唤醒的条件吗？  </p>
+<p>使用指定周期延迟的目的是为了实现背靠背执行，tomusolu 算法本身就是以指令执行完作为置位 ready 的条件，但这样对于 RAW 相关的指令不能实现背靠背执行</p>
+</blockquote>
+<p>如果有多条使用相同功能单元的指令均延迟唤醒，第一条收到响应后后续其他几条不能置位 ready ，所以可以在功能单元中维护一个 valid 表（移位寄存器 or FIFO），每开始执行一条指令就移位一次（移位值 0 ），同时有一个指针指向第一个 0 项，执行结束前一个周期就将指针处置 1 并下移到下一条 0 项</p>
+<p>同时，发射队列中延迟唤醒的指令可以记录功能单元中 valid 表的地址，来匹配指定的 valid 信号</p>
+<h2 id="推测唤醒-speculative-wake-up"><a href="#推测唤醒-speculative-wake-up" class="headerlink" title="推测唤醒 (speculative wake-up)"></a>推测唤醒 (speculative wake-up)</h2><p>针对执行周期数不确定的指令，如 load 指令、除法指令等</p>
+<ul>
+<li>最简单的处理方法是：等指令执行完再进行唤醒<ul>
+<li>tomasulo算法</li>
+<li>问题: <strong>RAW 相关的指令不能背靠背执行</strong></li>
+</ul>
+</li>
+<li>对于 load 指令，其延迟取决于 DCache 和 TLB 的命中情况<ul>
+<li>hit 则周期数确定</li>
+</ul>
+</li>
+</ul>
+<h3 id="Load指令的推测唤醒"><a href="#Load指令的推测唤醒" class="headerlink" title="Load指令的推测唤醒"></a>Load指令的推测唤醒</h3><ul>
+<li>总是预测 hit ，因为 DCache 的命中率很高</li>
+<li>按照 DCache hit 的周期数进行延迟唤醒</li>
+<li>预测错误的处理<ul>
+<li>状态恢复<ul>
+<li>发射队列中被Load指令唤醒的所有寄存器置为 not ready 状态</li>
+<li>被 Load 唤醒并且离开发射队列的指令需要从流水线中清除，重新放回发射队列</li>
+</ul>
+</li>
+<li>之后 Load 指令可以继续按照 L2Cache hit 继续进行预测，一直到 DRAM</li>
+</ul>
+</li>
+<li>对于支持虚拟存储的 DCache , TLB miss也需要按照预测错误进行处理<ul>
+<li>对于软件处理TLB miss ，按照异常的方式处理</li>
+</ul>
+</li>
+<li>对于不同结构的 DCache, 预测执行的方式不同:<br><strong>to be continued …</strong></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/10/29/Arch/ooo/issue/arbiter/" rel="prev" title="OOO CPU Issue Stage: Select/Arbiter">
+      <i class="fa fa-chevron-left"></i> OOO CPU Issue Stage: Select/Arbiter
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/10/29/Arch/ooo/issue/issue_queue/" rel="next" title="OOO CPU Issue Stage: Issue Queue">
+      OOO CPU Issue Stage: Issue Queue <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Tomasulo-%E7%AE%97%E6%B3%95%E5%94%A4%E9%86%92"><span class="nav-number">1.</span> <span class="nav-text">Tomasulo 算法唤醒</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#back-to-back-%E8%83%8C%E9%9D%A0%E8%83%8C%E6%89%A7%E8%A1%8C%E5%94%A4%E9%86%92"><span class="nav-number">2.</span> <span class="nav-text">back-to-back 背靠背执行唤醒</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E4%BA%8E%E5%8D%95%E5%91%A8%E6%9C%9F%E6%8C%87%E4%BB%A4"><span class="nav-number">2.1.</span> <span class="nav-text">对于单周期指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E4%BA%8E%E5%A4%9A%E5%91%A8%E6%9C%9F%E6%8C%87%E4%BB%A4"><span class="nav-number">2.2.</span> <span class="nav-text">对于多周期指令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BB%B6%E8%BF%9F%E5%B9%BF%E6%92%AD-delayed-tag-broadcast"><span class="nav-number">2.2.1.</span> <span class="nav-text">延迟广播 (delayed tag broadcast)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BB%B6%E8%BF%9F%E5%94%A4%E9%86%92%EF%BC%88delayed-wake-up%EF%BC%89"><span class="nav-number">2.2.2.</span> <span class="nav-text">延迟唤醒（delayed wake-up）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A8%E6%B5%8B%E5%94%A4%E9%86%92-speculative-wake-up"><span class="nav-number">2.3.</span> <span class="nav-text">推测唤醒 (speculative wake-up)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Load%E6%8C%87%E4%BB%A4%E7%9A%84%E6%8E%A8%E6%B5%8B%E5%94%A4%E9%86%92"><span class="nav-number">2.3.1.</span> <span class="nav-text">Load指令的推测唤醒</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

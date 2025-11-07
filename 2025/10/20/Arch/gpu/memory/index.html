@@ -28,7 +28,7 @@
 <meta property="og:description" content="GPU Memory System 简介">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-10-20T13:28:41.000Z">
-<meta property="article:modified_time" content="2025-10-20T13:34:58.007Z">
+<meta property="article:modified_time" content="2025-10-29T05:13:53.031Z">
 <meta property="article:author" content="xixi">
 <meta name="twitter:card" content="summary">
 
@@ -190,10 +190,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2025-10-20 21:28:41 / Modified: 21:34:58" itemprop="dateCreated datePublished" datetime="2025-10-20T21:28:41+08:00">2025-10-20</time>
+              <time title="Created: 2025-10-20 21:28:41" itemprop="dateCreated datePublished" datetime="2025-10-20T21:28:41+08:00">2025-10-20</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-10-29 13:13:53" itemprop="dateModified" datetime="2025-10-29T13:13:53+08:00">2025-10-29</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -223,7 +229,34 @@
         <blockquote>
 <p>内容参考自：<em>General-Purpose Graphics Processor Architecture</em></p>
 </blockquote>
-
+<p>现代 GPU 将内存在逻辑上划分为局部内存空间和全局内存空间</p>
+<ul>
+<li>局部内存空间: 每个线程私有，通常用于寄存器溢出，</li>
+<li>全局内存空间: 用于多个线程之间共享的数据结构</li>
+<li>临时存储器: 由程序员管理的可共享的临时存储器，供在 CTA 中一起执行的线程共享使用<ul>
+<li>动机: 在许多应用程序中，程序员知道在计算的特定步骤需要访问哪些数据。通过一次性将所有这些数据加载到共享内存中，可以重叠长时间延迟的片外内存访问，并在对这些数据进行计算时避免长时间延迟的内存访问</li>
+</ul>
+</li>
+</ul>
+<h1 id="First-Level-Memory-Structures"><a href="#First-Level-Memory-Structures" class="headerlink" title="First-Level Memory Structures"></a>First-Level Memory Structures</h1><h2 id="Shared-Memory-Scratchpad-Memory-Local-Memory"><a href="#Shared-Memory-Scratchpad-Memory-Local-Memory" class="headerlink" title="Shared Memory &#x2F; Scratchpad Memory &#x2F; Local Memory"></a>Shared Memory &#x2F; Scratchpad Memory &#x2F; Local Memory</h2><ul>
+<li>内存空间相对较小</li>
+<li>访问延迟通常与寄存器文件的访问延迟相当</li>
+<li>可被同一 CTA 中的所有线程访问</li>
+</ul>
+<p>在不同的编程模型中有不同的名称：</p>
+<ul>
+<li>CUDA 编程模型: shared memory</li>
+<li>OpenCL:  local memory</li>
+<li>其他架构: scratchpad memory</li>
+</ul>
+<p>Shared Memory 以 SRAM 的形式实现</p>
+<ul>
+<li>每个通道对应一个 Bank </li>
+<li>每个 Bank 拥有一个读端口和一个写端口</li>
+<li>每个线程都可以访问所有的 Bank</li>
+</ul>
+<p>使用 Shared Memory 需要考虑的一个关键问题: <strong>潜在的 Bank 冲突</strong><br>当多个线程在同一周期内访问同一个 Bank ，并且这些线程访问该 Bank 中不同的位置时，就会发生 Bank 冲突</p>
+<h2 id="L1-Texture-Cache"><a href="#L1-Texture-Cache" class="headerlink" title="L1 Texture Cache"></a>L1 Texture Cache</h2>
     </div>
 
     
@@ -303,6 +336,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#First-Level-Memory-Structures"><span class="nav-number">1.</span> <span class="nav-text">First-Level Memory Structures</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Shared-Memory-Scratchpad-Memory-Local-Memory"><span class="nav-number">1.1.</span> <span class="nav-text">Shared Memory &#x2F; Scratchpad Memory &#x2F; Local Memory</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#L1-Texture-Cache"><span class="nav-number">1.2.</span> <span class="nav-text">L1 Texture Cache</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -318,14 +352,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-count">47</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-count">29</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
   </nav>

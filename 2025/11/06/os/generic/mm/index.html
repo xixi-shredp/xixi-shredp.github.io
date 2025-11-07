@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="操作系统虚拟内存管理简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OS Virtual Memory Management">
+<meta property="og:url" content="http://example.com/2025/11/06/os/generic/mm/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="操作系统虚拟内存管理简介">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-11-06T06:03:30.000Z">
+<meta property="article:modified_time" content="2025-11-07T08:25:01.288Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/11/06/os/generic/mm/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>OS Virtual Memory Management | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/11/06/os/generic/mm/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OS Virtual Memory Management
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2025-11-06 14:03:30" itemprop="dateCreated datePublished" datetime="2025-11-06T14:03:30+08:00">2025-11-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-11-07 16:25:01" itemprop="dateModified" datetime="2025-11-07T16:25:01+08:00">2025-11-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/" itemprop="url" rel="index"><span itemprop="name">os</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/generic/" itemprop="url" rel="index"><span itemprop="name">generic</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">操作系统虚拟内存管理简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="历史"><a href="#历史" class="headerlink" title="历史"></a>历史</h1><h2 id="最早期的计算机系统"><a href="#最早期的计算机系统" class="headerlink" title="最早期的计算机系统"></a>最早期的计算机系统</h2><ul>
+<li>硬件: 物理内存容量小</li>
+<li>软件<ul>
+<li>单个应用程序 + （简单）操作系统</li>
+<li>直接面对物理内存编程</li>
+<li>各自使用物理内存的一部分</li>
+</ul>
+</li>
+</ul>
+<h2 id="多道编程时代"><a href="#多道编程时代" class="headerlink" title="多道编程时代"></a>多道编程时代</h2><ul>
+<li>多用户多程序: 计算机很昂贵，多人同时使用（远程连接）</li>
+<li>分时复用 CPU 资源: 保存恢复寄存器速度很快</li>
+<li>分时复用物理内存资源: 将全部内存写入磁盘开销太高</li>
+<li>多个进程同时使用、各占一部分物理内存: 没有安全性（隔离性）</li>
+</ul>
+<h2 id="IBM-360-内存隔离-Protection-Key-机制"><a href="#IBM-360-内存隔离-Protection-Key-机制" class="headerlink" title="IBM 360 内存隔离: Protection Key 机制"></a>IBM 360 内存隔离: Protection Key 机制</h2><ul>
+<li>内存被划分为一个个大小为 2KB 的内存块（Block）</li>
+<li>每个内存块有一个 4-bit 的 key，保存在寄存器中</li>
+<li>1MB 内存需要 256 个保存 key 的寄存器，占 256-Byte<ul>
+<li>内存变大，则需要改 CPU 以增加 key 寄存器</li>
+</ul>
+</li>
+<li>每个进程对应一个 key<ul>
+<li>CPU 用另一个专门的寄存器，保存当前运行进程的 key</li>
+<li>不同进程的 key 不同</li>
+</ul>
+</li>
+<li>当一个进程访问一块内存时<ul>
+<li>CPU 检查进程的 key 与内存的 key 是否匹配</li>
+<li>不匹配则拒绝内存访问</li>
+</ul>
+</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>不具有可扩展性，随着内存扩大，需要的 key 寄存器太多，无法实现<ul>
+<li>可以将 key 放到内存中实现</li>
+</ul>
+</li>
+<li>加载内存的定位问题: 绝对内存寻址在不同进程上的行为不同 <ul>
+<li>这个问题本质上来源于直接使用物理地址寻址</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>直接使用物理地址寻址的问题：</p>
+<ul>
+<li>干扰性：一个应用会因其他应用的加载而受到影响</li>
+<li>扩展性：一旦物理地址范围确定，则很难使用更大范围的内存</li>
+<li>安全性：一个应用可通过自身的内存地址，猜测其他应用的位置</li>
+</ul>
+<h1 id="硬件虚拟地址寻址机制"><a href="#硬件虚拟地址寻址机制" class="headerlink" title="硬件虚拟地址寻址机制"></a>硬件虚拟地址寻址机制</h1><h2 id="分段"><a href="#分段" class="headerlink" title="分段"></a>分段</h2><p>分段机制常见于 x86 平台: 现代操作系统通常不再依赖分段</p>
+<ul>
+<li>x86 ISA 中 GDT 和 LDT</li>
+</ul>
+<h3 id="虚拟地址"><a href="#虚拟地址" class="headerlink" title="虚拟地址"></a>虚拟地址</h3><ul>
+<li>虚拟地址分为：段号 + 段内地址<ul>
+<li>段号：由操作系统决定</li>
+<li>段内地址：由编译器生成</li>
+</ul>
+</li>
+</ul>
+<h3 id="虚拟地址转换"><a href="#虚拟地址转换" class="headerlink" title="虚拟地址转换"></a>虚拟地址转换</h3><p>维护一个段表（由操作系统配置）<br>翻译时由 CPU 负责查表并转换</p>
+<h3 id="分段机制的问题"><a href="#分段机制的问题" class="headerlink" title="分段机制的问题:"></a>分段机制的问题:</h3><ul>
+<li>对物理内存连续性的要求: 物理内存也必须以段为单位进行分配</li>
+<li>存在问题：内存利用率<ul>
+<li>外部碎片：段与段之间留下碎片空间</li>
+<li>内部碎片：段内部预留未使用的碎片空间</li>
+</ul>
+</li>
+</ul>
+<h2 id="分页"><a href="#分页" class="headerlink" title="分页"></a>分页</h2><h3 id="虚拟地址-1"><a href="#虚拟地址-1" class="headerlink" title="虚拟地址"></a>虚拟地址</h3><ul>
+<li>虚拟地址空间划分成连续的、等长的虚拟页</li>
+<li>物理内存也被划分成连续的、等长的物理页</li>
+<li>虚拟页和物理页的页长相等</li>
+<li>虚拟地址分为：虚拟页号 + 页内偏移</li>
+<li>使用页表记录虚拟页号到物理页号的映射</li>
+</ul>
+<p>不同 ISA 的页表基地址：</p>
+<ul>
+<li>RISC-V: satp 寄存器</li>
+<li>x86-64: CR3 寄存器</li>
+<li>AARCH64(Arm): 两个寄存器：TTBR0_EL1 &amp; TTBR1_EL1<ul>
+<li>根据虚拟地址第63位选择</li>
+<li>以Linux为例<ul>
+<li>应用程序（地址首位为0）：使用 TTBR0_EL1</li>
+<li>操作系统（地址首位为1）：使用 TTBR1_EL1</li>
+</ul>
+</li>
+<li>系统调用中不需要切换页表<ul>
+<li>RISC-V 和 x86 都使用单个页表基地址寄存器，在系统调用过程需要切换页表基地址寄存器</li>
+<li>将内核映射到虚拟地址高位可以避免 TLB flush</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="分页机制的特点"><a href="#分页机制的特点" class="headerlink" title="分页机制的特点"></a>分页机制的特点</h3><ul>
+<li>物理内存离散分配<ul>
+<li>任意虚拟页可以映射到任意物理页</li>
+<li>大大降低对物理内存连续性的要求</li>
+</ul>
+</li>
+<li>主存资源易于管理，利用率更高<ul>
+<li>按照固定页大小分配物理内存</li>
+<li>能大大降低外部碎片和内部碎片</li>
+</ul>
+</li>
+<li>被现代处理器和操作系统广泛采用</li>
+</ul>
+<h3 id="TLB-优化"><a href="#TLB-优化" class="headerlink" title="TLB 优化"></a>TLB 优化</h3><h4 id="降低-TLB-flush-开销"><a href="#降低-TLB-flush-开销" class="headerlink" title="降低 TLB flush 开销"></a>降低 TLB flush 开销</h4><p>新的硬件特性 ASID（RISC-V）： Address Space ID</p>
+<ul>
+<li>OS 为不同进程分配8位或16位 ASID (SATP 的第 44-59 位)</li>
+<li>TLB 的每一项也会缓存 ASID</li>
+<li>地址翻译时，硬件会将 TLB entry 的 ASID 与 SATP 的 ASID 对比<ul>
+<li>若不匹配，则 TLB miss</li>
+</ul>
+</li>
+</ul>
+<p>使用了 ASID 之后:</p>
+<ul>
+<li>切换页表（即切换进程）后，不再需要刷掉 TLB，提高性能</li>
+<li>但修改页表映射后，仍需刷掉 TLB</li>
+</ul>
+<h4 id="多核场景下的-TLB-实现"><a href="#多核场景下的-TLB-实现" class="headerlink" title="多核场景下的 TLB 实现"></a>多核场景下的 TLB 实现</h4><ul>
+<li>OS 修改页表后，需要清空其它核的 TLB 吗？<ul>
+<li>需要，因为一个进程可能在多个核上运行</li>
+</ul>
+</li>
+<li>OS 如何知道需要清空哪些核的 TLB？<ul>
+<li>操作系统知道进程调度信息</li>
+</ul>
+</li>
+<li>OS如何清空其它核的TLB？<ul>
+<li>x86_64: 发送 IPI 中断某个核，通知它主动清空</li>
+<li>AARCH64: 可在 local CPU 上清空其它核 TLB<ul>
+<li>调用的 ARM 指令: TLBI ASIDE1IS</li>
+</ul>
+</li>
+<li>RISC-V：SFENCE.VMA<ul>
+<li>rs1 针对页表，指示了页表哪个虚拟地址对应的转换被修改了</li>
+<li>rs2 给出了被修改页表的进程的地址空间标识符 (ASID)</li>
+<li>• SBI call + IPI 实现 remote sfence</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="操作系统对虚拟内存的管理"><a href="#操作系统对虚拟内存的管理" class="headerlink" title="操作系统对虚拟内存的管理"></a>操作系统对虚拟内存的管理</h1><h2 id="段"><a href="#段" class="headerlink" title="段"></a>段</h2><p>OS 采用段来管理虚拟地址</p>
+<ul>
+<li>段内连续，段与段之间非连续</li>
+<li>合法虚拟地址段：代码、数据、堆、栈</li>
+<li>非法虚拟地址段：未映射<br>一旦访问，则触发 segfault</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">+---------+</span><br><span class="line">|         | --------------+</span><br><span class="line">|         |               |</span><br><span class="line">+---------+               |</span><br><span class="line">|  Stack  |               |</span><br><span class="line">+---------+               |</span><br><span class="line">|         |               |</span><br><span class="line">|         |  ----------+  |</span><br><span class="line">|         |            |  |</span><br><span class="line">+---------+</span><br><span class="line">|  Heap   |        Unmapped</span><br><span class="line">+---------+</span><br><span class="line">|         |         |  |  |</span><br><span class="line">|         | --------+  |  |</span><br><span class="line">+---------+            |  |</span><br><span class="line">| RO data |            |  |</span><br><span class="line">+---------+            |  |</span><br><span class="line">|         | -----------+  |</span><br><span class="line">+---------+               |</span><br><span class="line">|  code   |               |</span><br><span class="line">+---------+               |</span><br><span class="line">|         | --------------+</span><br><span class="line">+---------+</span><br></pre></td></tr></table></figure>
+
+<h2 id="VMA"><a href="#VMA" class="headerlink" title="VMA"></a>VMA</h2><p>在 Linux 中通过 vm_area_struct（VMA）结构体管理记录进程的合法虚拟地址空间</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">+---------+               +--------------------- -+</span><br><span class="line">|         |               | start: 0x7ffcfbc67000 |</span><br><span class="line">|         |           +---| end  : 0x7ffcfbc88000 |  VMA0</span><br><span class="line">+---------+           |   | perm : R, W           |--+</span><br><span class="line">|  Stack  |&lt;----------+   +-----------------------+  |</span><br><span class="line">+---------+                                          |</span><br><span class="line">|         |               +--------------------- -+  |</span><br><span class="line">|         |               | start: 0x144f000      |&lt;-+</span><br><span class="line">|         |           +---| end  : 0x1470000      |  VMA1</span><br><span class="line">+---------+           |   | perm : R, W           |--+</span><br><span class="line">|  Heap   |&lt;----------+   +-----------------------+  |</span><br><span class="line">+---------+                                          |</span><br><span class="line">|         |               +--------------------- -+  |</span><br><span class="line">|         |           +---| start: 0x600000       |&lt;-+</span><br><span class="line">+---------+           |   | end  : 0x601000       |  VMA2</span><br><span class="line">| RO data |&lt;----------+   | perm : R              |--+</span><br><span class="line">+---------+               +-----------------------+  |</span><br><span class="line">|         |                                          |</span><br><span class="line">+---------+               +--------------------- -+  |</span><br><span class="line">|  code   |&lt;----------+   | start: 0x400000       |&lt;-+</span><br><span class="line">+---------+           |   | end  : 0x401000       |  VMA3</span><br><span class="line">|         |           +---| perm : R, X           |</span><br><span class="line">+---------+               +-----------------------+</span><br></pre></td></tr></table></figure>
+
+<p>VMA 的添加:</p>
+<ol>
+<li>OS 在创建应用程序时分配<ul>
+<li>数据（对应 ELF 段）</li>
+<li>代码（对应 ELF 段）</li>
+<li>栈（初始无内容）</li>
+</ul>
+</li>
+<li>应用程序主动向 OS 发出请求<ul>
+<li>brk()（扩大、缩小堆区域）<ul>
+<li>可选策略： OS 也可以在创建应用时分配初始的堆 VMA</li>
+</ul>
+</li>
+<li>mmap()<ul>
+<li>申请空的虚拟内存区域 (匿名映射)</li>
+<li>申请映射文件数据的虚拟内存区域</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p>VMA 和作用：便于操作系统更快速高效的完成地址的检查（使用页表则慢的多）</p>
+<ul>
+<li>不落在 VMA 区域的访存，则为非法</li>
+</ul>
+<h2 id="物理页面的分配"><a href="#物理页面的分配" class="headerlink" title="物理页面的分配"></a>物理页面的分配</h2><p>操作系统何时分配物理页:</p>
+<ol>
+<li>立即映射：每个虚拟页都对应了一个物理内存页</li>
+<li>延迟映射(<strong>延迟映射&#x2F;按需调页, DEMAND PAGING</strong>)：有些虚拟页不对应任何物理内存页<ul>
+<li>对应的数据在磁盘上</li>
+<li>没有对应的数据（初始化为0）</li>
+<li>通过缺页异常处理函数映射</li>
+<li>优势：节约内存资源</li>
+<li>劣势：缺页异常导致访问延迟增加</li>
+<li>权衡优化(预取 Prefault): 每次 page fault 载入连续的多个页，减少 fault 次数</li>
+</ul>
+</li>
+</ol>
+<h1 id="OS-内存管理中的其他机制"><a href="#OS-内存管理中的其他机制" class="headerlink" title="OS 内存管理中的其他机制"></a>OS 内存管理中的其他机制</h1><ol>
+<li>共享内存: 多个进程共享一段物理内存</li>
+<li>写时拷贝（copy-on-write）: 共享读，写触发 page fault 处理时拷贝</li>
+<li>内存去重（memory deduplication）<ul>
+<li>基于 copy-on-write 在内存中扫描发现具有相同内容的物理页面时执行去重</li>
+<li>操作系统发起，对用户态透明</li>
+<li>例：Linux KSM,  kernel same-page merging</li>
+</ul>
+</li>
+<li>内存压缩<ul>
+<li>当内存资源不充足的时候， 选择将一些“最近不太会使用”的内存页进行数据压缩，从而释放出空闲内存</li>
+<li>Windows 10<ul>
+<li>压缩后的数据仍然存放在内存中</li>
+<li>当访问被压缩的数据时，操作系统将其解压即可</li>
+</ul>
+</li>
+<li>Linux<ul>
+<li>zswap：换页过程中磁盘的缓存</li>
+<li>将准备换出的数据压缩并先写入 zswap 区域 （内存）</li>
+<li>好处：减少甚至避免磁盘I&#x2F;O；增加设备寿命</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>大页的使用<ul>
+<li>好处<ul>
+<li>减少TLB缓存项的使用，提高 TLB 命中率</li>
+<li>减少页表的级数，提升遍历页表的效率</li>
+</ul>
+</li>
+<li>案例<ul>
+<li>提供API允许应用程序进行显示的大页分配</li>
+<li>透明大页（Transparent Huge Pages) 机制</li>
+</ul>
+</li>
+<li>弊端<ul>
+<li>未使用整个大页而造成物理内存资源浪费</li>
+<li>增加管理内存的复杂度</li>
+</ul>
+</li>
+<li>不同 ISA 对页面大小的支持不同<ul>
+<li>RISC-V: 1G, 2M, 4K</li>
+<li>x86: 4K</li>
+<li>AARCH64<ul>
+<li>TCR_EL1 可以配置 3 种：4K, 16K, 64K</li>
+<li>4K + 大页：2M&#x2F;1G</li>
+<li>16K + 大页：32M</li>
+<li>64K + 大页：512M</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/11/06/os/linux/riscv/boot/" rel="prev" title="Linux RISC-V Boot 流程">
+      <i class="fa fa-chevron-left"></i> Linux RISC-V Boot 流程
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8E%86%E5%8F%B2"><span class="nav-number">1.</span> <span class="nav-text">历史</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E6%97%A9%E6%9C%9F%E7%9A%84%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F"><span class="nav-number">1.1.</span> <span class="nav-text">最早期的计算机系统</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E9%81%93%E7%BC%96%E7%A8%8B%E6%97%B6%E4%BB%A3"><span class="nav-number">1.2.</span> <span class="nav-text">多道编程时代</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IBM-360-%E5%86%85%E5%AD%98%E9%9A%94%E7%A6%BB-Protection-Key-%E6%9C%BA%E5%88%B6"><span class="nav-number">1.3.</span> <span class="nav-text">IBM 360 内存隔离: Protection Key 机制</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E5%AF%BB%E5%9D%80%E6%9C%BA%E5%88%B6"><span class="nav-number">2.</span> <span class="nav-text">硬件虚拟地址寻址机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E6%AE%B5"><span class="nav-number">2.1.</span> <span class="nav-text">分段</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80"><span class="nav-number">2.1.1.</span> <span class="nav-text">虚拟地址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2"><span class="nav-number">2.1.2.</span> <span class="nav-text">虚拟地址转换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E6%AE%B5%E6%9C%BA%E5%88%B6%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">2.1.3.</span> <span class="nav-text">分段机制的问题:</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E9%A1%B5"><span class="nav-number">2.2.</span> <span class="nav-text">分页</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80-1"><span class="nav-number">2.2.1.</span> <span class="nav-text">虚拟地址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E9%A1%B5%E6%9C%BA%E5%88%B6%E7%9A%84%E7%89%B9%E7%82%B9"><span class="nav-number">2.2.2.</span> <span class="nav-text">分页机制的特点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TLB-%E4%BC%98%E5%8C%96"><span class="nav-number">2.2.3.</span> <span class="nav-text">TLB 优化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%99%8D%E4%BD%8E-TLB-flush-%E5%BC%80%E9%94%80"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">降低 TLB flush 开销</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%9A%E6%A0%B8%E5%9C%BA%E6%99%AF%E4%B8%8B%E7%9A%84-TLB-%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">多核场景下的 TLB 实现</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%AF%B9%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%9A%84%E7%AE%A1%E7%90%86"><span class="nav-number">3.</span> <span class="nav-text">操作系统对虚拟内存的管理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AE%B5"><span class="nav-number">3.1.</span> <span class="nav-text">段</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VMA"><span class="nav-number">3.2.</span> <span class="nav-text">VMA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E9%A1%B5%E9%9D%A2%E7%9A%84%E5%88%86%E9%85%8D"><span class="nav-number">3.3.</span> <span class="nav-text">物理页面的分配</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#OS-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%AD%E7%9A%84%E5%85%B6%E4%BB%96%E6%9C%BA%E5%88%B6"><span class="nav-number">4.</span> <span class="nav-text">OS 内存管理中的其他机制</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

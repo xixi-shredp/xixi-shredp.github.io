@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Linux 操作系统启动简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux Boot 过程">
+<meta property="og:url" content="http://example.com/2025/11/04/os/linux/boot/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="Linux 操作系统启动简介">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/os/linux/boot/systemd.png">
+<meta property="article:published_time" content="2025-11-04T06:09:06.000Z">
+<meta property="article:modified_time" content="2025-11-05T17:06:11.716Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/os/linux/boot/systemd.png">
+
+<link rel="canonical" href="http://example.com/2025/11/04/os/linux/boot/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Linux Boot 过程 | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/11/04/os/linux/boot/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux Boot 过程
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2025-11-04 14:09:06" itemprop="dateCreated datePublished" datetime="2025-11-04T14:09:06+08:00">2025-11-04</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2025-11-06 01:06:11" itemprop="dateModified" datetime="2025-11-06T01:06:11+08:00">2025-11-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/" itemprop="url" rel="index"><span itemprop="name">os</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">Linux 操作系统启动简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>参考: 中国科学院大学 2025年秋《高级操作系统教程》课件 </p>
+</blockquote>
+<h1 id="Linux-启动流程"><a href="#Linux-启动流程" class="headerlink" title="Linux 启动流程"></a>Linux 启动流程</h1><ol>
+<li>BIOS    : 硬件检测，查找加载磁盘上的 MBR</li>
+<li>MBR     : 存储 bootloader 信息，加载 Grub</li>
+<li>Grub    : 查找并加载 kernel</li>
+<li>kernel  : 装载驱动，挂载 rootfs, 执行 &#x2F;sbin&#x2F;init</li>
+<li>init    : OS 初始化，执行 runlevel 相关程序</li>
+<li>runlevel: 启动指定级别的服务</li>
+</ol>
+<h2 id="Grub"><a href="#Grub" class="headerlink" title="Grub"></a>Grub</h2><p>Linux 上最常用的 bootloader (GNU GRUB: 来自 GNU 项目的启动引导程序)</p>
+<ul>
+<li>GRUB 允许用户可以在计算机内同时拥有多个操作系统，并在计算机启动时选择希望运行的操作系统</li>
+<li>GRUB 可通过链式引导来引导 Windows 系统</li>
+<li>支持所有的 Linux 文件系统，也支持 Windows 的 FAT 和 NTFS 文件系统</li>
+<li>支持图形界面，可定制启动菜单和背景图片，支持鼠标</li>
+<li>拥有丰富的终端命令，用户可以查看硬盘分区的细节，修改分区设置，临时重新映射磁盘顺序，从任何用户定义的配置文件启动</li>
+</ul>
+<h2 id="kernel"><a href="#kernel" class="headerlink" title="kernel"></a>kernel</h2><p>kernel 启动过程：<br>压缩的 kernel &#x3D;&gt; 解压缩的 kernel &#x3D;&gt; 根文件系统 rootfs &#x3D;&gt; 第一个程序 init</p>
+<h2 id="init"><a href="#init" class="headerlink" title="init"></a>init</h2><p>init 程序: 进行 OS 初始化操作<br>实际上是根据 <code>/etc/inittab</code> (定义系统默认运行级别) 设定的动作执行脚本</p>
+<ol>
+<li>第一个被执行的脚本为 <code>/etc/rc.d/rc.sysinit</code> : 真正的 OS 初始化脚本<ol>
+<li>激活 udev 和 selinux</li>
+<li>根据 <code>/etc/sysctl.conf</code> 文件设定内核参数</li>
+<li>设定系统时钟</li>
+<li>装载硬盘映射</li>
+<li>启用交换分区</li>
+<li>设置主机名</li>
+<li>根文件系统检测，并以读写方式重新挂载根文件系统</li>
+<li>激活 RAID 和 LVM 设备</li>
+<li>启用磁盘配额</li>
+<li>根据 <code>/etc/fstab</code> 检查并挂载其他文件系统</li>
+<li>清理过期的锁和 PID 文件</li>
+</ol>
+</li>
+<li>根据配置的启动级别，执行对应目录底下的脚本</li>
+<li>最后执行 <code>/etc/rc.d/rc.local</code> 脚本，至此，<strong>系统启动完成</strong>。</li>
+</ol>
+<h3 id="运行级别-runlevel"><a href="#运行级别-runlevel" class="headerlink" title="运行级别 runlevel"></a>运行级别 runlevel</h3><p>Linux 的启动级别分为以下几种:</p>
+<ul>
+<li>0: 关机模式</li>
+<li>1: 单一用户模式(直接以管理员身份进入)</li>
+<li>2: 多用户模式（无网络）</li>
+<li>3: 多用户模式（命令行）</li>
+<li>4: 保留</li>
+<li>5: 多用户模式（图形界面）</li>
+<li>6: 重启</li>
+</ul>
+<p>在不同的运行级别下，<code>/etc/rc.d/rc</code> 脚本会分别执行不同目录下的脚本:</p>
+<ul>
+<li>Run level 0 – <code>/etc/rc.d/rc0.d/</code></li>
+<li>Run level 1 – <code>/etc/rc.d/rc1.d/</code></li>
+<li>Run level 2 – <code>/etc/rc.d/rc2.d/</code></li>
+<li>Run level 3 – <code>/etc/rc.d/rc3.d/</code></li>
+<li>Run level 4 – <code>/etc/rc.d/rc4.d/</code></li>
+<li>Run level 5 – <code>/etc/rc.d/rc5.d/</code></li>
+<li>Run level 6 – <code>/etc/rc.d/rc6.d/</code></li>
+</ul>
+<p>这些目录下的脚本只有 <code>K*</code> 和 <code>S*</code> 开头的文件:<br><code>K*</code> 开头的文件为开机需要执行关闭的服务<br><code>S*</code> 开头的文件为开机需要执行开启的服务</p>
+<h3 id="进程创建"><a href="#进程创建" class="headerlink" title="进程创建"></a>进程创建</h3><p>init 进程为 1 号进程:</p>
+<ul>
+<li>通过 fork 系统调用创建</li>
+<li>第一个用户态进程</li>
+<li>所有用户态进程的父进程或先祖进程</li>
+</ul>
+<p>主要任务：</p>
+<ol>
+<li>系统启动 </li>
+<li>zombie 进程管理</li>
+</ol>
+<p>init 进程的缺点:</p>
+<ul>
+<li>启动时间长: init 进程是串行启动，只有前一个进程启动完，才会启动下一个进程。</li>
+<li>启动脚本复杂: 脚本需要自己处理各种情况，这往往使得脚本变得很长。</li>
+</ul>
+<h3 id="当前的-1-号进程"><a href="#当前的-1-号进程" class="headerlink" title="当前的 1 号进程"></a>当前的 1 号进程</h3><table>
+<thead>
+<tr>
+<th>Process 1</th>
+<th>描述</th>
+<th>启动管理</th>
+<th>进程回收</th>
+<th>服务管理</th>
+<th>并行启动</th>
+<th>设备管理</th>
+<th>资源控制</th>
+<th>日志管理</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>sysvinit</td>
+<td>早期版本的初始化进程工具，逐渐淘汰</td>
+<td>&#10004;</td>
+<td>&#10004;</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>upstart</td>
+<td>Debian 7, Ubuntu 14 等早期使用，目前仅仅处于维护模式</td>
+<td>&#10004;</td>
+<td>&#10004;</td>
+<td>&#10004;</td>
+<td>&#10004;</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>Systemd</strong></td>
+<td>快速启动，目前被大多数 Linux 发行版使用</td>
+<td>&#10004;</td>
+<td>&#10004;</td>
+<td>&#10004;</td>
+<td>&#10004;</td>
+<td>&#10004;</td>
+<td>&#10004;</td>
+<td>&#10004;</td>
+</tr>
+</tbody></table>
+<p>当前大多数 Linux 发行版采用 <strong>Systemd</strong> 作为 1 号进程</p>
+<img src="/images/os/linux/boot/systemd.png" alt="systemd" width="600">
+
+<ol>
+<li>SysMaster-Init<ul>
+<li>Zombie reaping</li>
+<li>监控 sysmaster-core</li>
+<li>Less 1k LoC</li>
+</ul>
+</li>
+<li>SysMaster-core<ul>
+<li>依赖管理器</li>
+<li>Hot restart，live update</li>
+</ul>
+</li>
+<li>SysMaster-extends</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/11/04/os/generic/boot/init/" rel="prev" title="操作系统初始化">
+      <i class="fa fa-chevron-left"></i> 操作系统初始化
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/11/06/os/linux/riscv/boot/" rel="next" title="Linux RISC-V Boot 流程">
+      Linux RISC-V Boot 流程 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B"><span class="nav-number">1.</span> <span class="nav-text">Linux 启动流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Grub"><span class="nav-number">1.1.</span> <span class="nav-text">Grub</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kernel"><span class="nav-number">1.2.</span> <span class="nav-text">kernel</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#init"><span class="nav-number">1.3.</span> <span class="nav-text">init</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E7%BA%A7%E5%88%AB-runlevel"><span class="nav-number">1.3.1.</span> <span class="nav-text">运行级别 runlevel</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E5%88%9B%E5%BB%BA"><span class="nav-number">1.3.2.</span> <span class="nav-text">进程创建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BD%93%E5%89%8D%E7%9A%84-1-%E5%8F%B7%E8%BF%9B%E7%A8%8B"><span class="nav-number">1.3.3.</span> <span class="nav-text">当前的 1 号进程</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

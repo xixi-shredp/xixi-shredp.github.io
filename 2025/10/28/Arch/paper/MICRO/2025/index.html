@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="MICRO 2025 论文简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MICRO 2025 论文简介">
+<meta property="og:url" content="http://example.com/2025/10/28/Arch/paper/MICRO/2025/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="MICRO 2025 论文简介">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-10-28T11:24:21.000Z">
+<meta property="article:modified_time" content="2025-10-28T14:52:16.922Z">
+<meta property="article:author" content="xixi">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/10/28/Arch/paper/MICRO/2025/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>MICRO 2025 论文简介 | xixi's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">xixi's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life is so beautiful!</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/10/28/Arch/paper/MICRO/2025/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="xixi">
+      <meta itemprop="description" content="xixi's personal blog">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xixi's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MICRO 2025 论文简介
+        </h1>
+
+        <div class="post-meta">
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2025-10-28 19:24:21 / Modified: 22:52:16" itemprop="dateCreated datePublished" datetime="2025-10-28T19:24:21+08:00">2025-10-28</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/" itemprop="url" rel="index"><span itemprop="name">Arch</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/paper/" itemprop="url" rel="index"><span itemprop="name">paper</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Arch/paper/MICRO/" itemprop="url" rel="index"><span itemprop="name">MICRO</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">MICRO 2025 论文简介</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="A-TRRIP-Down-Memory-Lane-Temperature-Based-Re-Reference-Interval-Prediction-For-Instruction-Caching"><a href="#A-TRRIP-Down-Memory-Lane-Temperature-Based-Re-Reference-Interval-Prediction-For-Instruction-Caching" class="headerlink" title="A TRRIP Down Memory Lane: Temperature-Based Re-Reference Interval Prediction For Instruction Caching"></a>A TRRIP Down Memory Lane: Temperature-Based Re-Reference Interval Prediction For Instruction Caching</h2><p>Author: Henry Kao(Huawei Technologies Canada), Nikhil Sreekumar(Huawei Technologies Canada), Prabhdeep Singh Soni(Huawei Technologies Canada), Ali Sedaghati(Huawei Technologies Canada), Fang Su(Huawei Technologies), Bryan Chan(Huawei Technologies Canada)</p>
+<p>Abstruct:<br>现代移动端 CPU 的软件由于其复杂的运行时行为导致相同指令在执行之间的 reuse distance 较高，对传统的指令缓存替换策略构成了挑战。移动端代码通常会在 CPU 前端产生大量的停顿，从而导致 CPU 其他资源的 starvation 。这些应用程序及其代码规模预计会以比可用片上内存更快的速度增长，这是由于功耗和面积限制所致，使得传统的以硬件为中心的指令缓存管理方法变得不足。我们提出了一种名为 TRRIP（基于温度的 Re-Reference Interval Prediction）的新型软硬件协同设计方法，该方法使编译器能够根据“温度”（hot&#x2F;cold）对代码进行分析、分类和转换，并通过基于代码页面属性的定义良好的操作系统接口向硬件提供代码温度信息的汇总。TRRIP 的轻量级硬件扩展利用代码温度属性优化指令缓存替换策略，从而降低热代码的踢出率。TRRIP 被设计为适用于具有严格软硬件组件功能要求的真实移动系统，能够在已使用 PGO 优化移动代码的 RRIP 缓存替换基础上，将指令的 L2 MPKI 降低 26.5% ，从而实现几何平均 3.9% 的速度提升。</p>
+<h2 id="ATR-Out-of-Order-Register-Release-Exploiting-Atomic-Regions"><a href="#ATR-Out-of-Order-Register-Release-Exploiting-Atomic-Regions" class="headerlink" title="ATR: Out-of-Order Register Release Exploiting Atomic Regions"></a>ATR: Out-of-Order Register Release Exploiting Atomic Regions</h2><p>Author: Yinyuan Zhao(University of California, Santa Cruz), Surim Oh(University of California, Santa Cruz), Mingsheng Xu(University of California, Santa Cruz), Heiner Litz(University of California, Santa Cruz)</p>
+<p>Abstruct:<br>现代超标量处理器需要大型物理寄存器文件以支持大量在途指令，这对于实现更高的 ILP （指令级并行性）和 IPC （每时钟周期指令数）至关重要。传统的寄存器重命名技术会保守地释放物理寄存器，直到重新定义同一架构寄存器的指令提交，这会导致寄存器利用率不高。特别是，寄存器经常被分配很多个周期，尽管它们已不再被使用。为解决这一不足，先前的方法探索了早期寄存器释放，其目标是尽可能早地释放已完全使用的寄存器。然而，这些技术要么不安全，要么过于保守，限制了其优势。<br>我们观察到，在 SPEC2017int 中，超过 17% 的已分配寄存器位于原子提交区域，即不包含条件分支或引发异常的指令的序列。此类区域内的指令保证会原子性地提交或刷新，从而允许安全地提前释放由区域第一条指令分配的寄存器。特别是，**可以在不需要等待重新定义架构寄存器的指令提交的情况下释放寄存器。我们提出了一种新颖的重命名技术，利用这一洞察来减少寄存器文件的压力。该技术通过一种简单的机制识别原子提交区域，无需使用栈、队列、额外内存或 shadow cells。**我们证明，对于 SPEC2017int 基准测试，所提出的寄存器重命名方案在 64-entry 寄存器文件中实现了平均 5.13% 的加速，在 224-entry 寄存器文件中实现了平均 1.48% 的加速。</p>
+<h2 id="Beyond-Page-Migration-Enhancing-Tiered-Memory-Performance-via-Integrated-Last-Level-Cache-Management-and-Page-Migration"><a href="#Beyond-Page-Migration-Enhancing-Tiered-Memory-Performance-via-Integrated-Last-Level-Cache-Management-and-Page-Migration" class="headerlink" title="Beyond Page Migration: Enhancing Tiered Memory Performance via Integrated Last-Level Cache Management and Page Migration"></a>Beyond Page Migration: Enhancing Tiered Memory Performance via Integrated Last-Level Cache Management and Page Migration</h2><p>Author: Hwanjun Lee(DGIST), Minho Kim(DGIST), Yeji Jung(DGIST), Seonmu Oh(DGIST), Ki-Dong Kang(ETRI), Seunghak Lee(Samsung Electronics), Daehoon Kim(Yonsei University)</p>
+<p>Abstruct:<br>新兴的内存互连技术，如 Compute Express Link（CXL），通过集成异构内存组件（如本地 DRAM 和 CXL 附加的 DRAM）实现了可扩展的内存扩展。这些分层内存系统在带宽和容量方面具有潜在优势，但其异构性能特性对高效的内存管理提出了重大挑战。传统方法，包括基于 hotness 的页面放置，通过将频繁访问的数据保留在近端内存中以优先降低延迟。然而，这些方法通常无法有效利用总内存带宽，导致在内存密集型工作负载下出现流量不平衡和性能下降。此外，对昂贵的页面迁移的依赖引入了阻碍应对工作负载变化的开销。为解决这些问题，我们提出了 **TierTune ，这是一种集成 LLC Partitioning 和 page migration 的动态内存管理框架。TierTune 在近端和远端内存节点之间动态划分 LLC，迅速缓解延迟不平衡，并比基于软件的页面迁移更有效地平衡内存流量。**我们进一步通过一种动态重新分配页面的迁移策略扩展了该方法，以解决持续的不平衡问题，在放置决策中结合缓存层次效应和带宽压力。实验评估表明，与最先进的页面迁移策略相比，TierTune 在多种工作负载下平均提升了 19.6% 的性能，这是通过更有效地平衡内存流量并减少迁移开销实现的。</p>
+<h2 id="Drishti-Do-Not-Forget-Slicing-While-Designing-Last-Level-Cache-Replacement-Policies-for-Many-Core-Systems"><a href="#Drishti-Do-Not-Forget-Slicing-While-Designing-Last-Level-Cache-Replacement-Policies-for-Many-Core-Systems" class="headerlink" title="Drishti: Do Not Forget Slicing While Designing Last-Level Cache Replacement Policies for Many-Core Systems"></a>Drishti: Do Not Forget Slicing While Designing Last-Level Cache Replacement Policies for Many-Core Systems</h2><p>Author: Sweta(Indian Institute of Technology), Prerna Priyadarshini(Indian Institute of Technology), Biswabandan Panda(Indian Institute of Technology)</p>
+<p>Abstruct:<br>高性能的 LLC 替换策略通过智能地决定哪些缓存行应保留在LLC中，从而缓解片外内存访问延迟。最先进的替换策略显著优于如LRU等传统策略。然而，这些策略在具有 sliced LLC 的多核系统上的有效性尚未得到评估，而这种结构在商用多核系统中很常见。最近的先进LLC替换策略采用了两个基本思想：(i) sampled cache; (ii) reuse predictor 。在单一的LLC中，存在一个 sampled cache 和一个 reuse predictor 。然而，在 sliced LLC 中，这些结构必须为每个 slice 单独创建。我们研究了 sliced LLC 与先进替换策略之间的相互作用，发现了几个未被探索的交互问题。每个 slice 的 reuse predictor 基于对特定 slice 的访问做出短视的决策，而不了解全局的 reuse 行为。解决这一问题的一个简单方法是设计一个由所有 LLC slices 共享的集中式 reuse predictor。然而，这将显著增加互连流量，需要更多的带宽来访问集中式 reuse predictor 。接下来，我们观察到，在 sliced LLC 中，用于 sampled cache 的 LLC sets 没有获得足够的 LLC misses 。由于这些 LLC sets 驱动 LLC 替换策略的决策，部分决策变得次优。<br>我们提出了 <strong>Drishti，旨在进一步提高 LLC 替换策略的有效性。我们提出两项改进：(i) 一个基于每个核心但全局的 reuse predictor ，结合局部（每个 slice）的 sampled cache，并认为无需全局 sampled cache；(ii) 每个 slice 的 dynamic sampled cache ，以提高用于 sampled cache 的 LLC sets 的利用率。</strong> 我们在具有 8MB、32MB 和 64MB sliced LLC 的四核、十六核和三十二核系统上评估了两种最先进的 LLC 替换策略—— Hawkeye 和 Mockingjay。在三十二核系统中，与基线 LRU 策略相比，Drishti 分别使 Hawkeye 和 Mockingjay 的性能提升了 5.6% 和 13.2% 。在没有 Drishti 的情况下，Hawkeye 和 Mockingjay 分别仅提升了 3.3% 和 6.7%。</p>
+<h2 id="Learning-to-Walk-Architecting-Learned-Virtual-Memory-Translation"><a href="#Learning-to-Walk-Architecting-Learned-Virtual-Memory-Translation" class="headerlink" title="Learning to Walk: Architecting Learned Virtual Memory Translation"></a>Learning to Walk: Architecting Learned Virtual Memory Translation</h2><p>Author: Kaiyang Zhao(Carnegie Mellon University), Yuang Chen(Carnegie Mellon University), Xenia Xu(Carnegie Mellon University), Dan Schatzberg(Meta), Nastaran Hajinaza(Intel), Rupin Vakharwala(Intel), Andy Anderson(Intel), Dimitrios Skarlatos(Carnegie Mellon University)</p>
+<p>Abstruct:<br>随着新兴数据中心应用对内存需求的增加，虚拟内存翻译再次受到关注，暴露出其作为显著性能瓶颈的问题。为了解决这一问题，本文介绍了学习型虚拟内存（LVM），这是一种能够有效提供最优单次访问地址翻译的页表结构。LVM 基于一种新颖的学习索引模型，该模型根据应用程序虚拟地址空间的特性动态适应地址翻译过程。此外，LVM 的学习索引占用极小的内存空间，不需要严格的物理连续性要求，在 MMU 中具有较高的缓存性，能够高效支持插入操作，并依赖简单的定点运算。最后，LVM 支持虚拟内存的所有功能，包括多种页面大小。我们通过在 Linux 中的一组操作系统（OS）扩展、RTL 综合以及跨广泛工作负载的全系统仿真对 LVM 进行了评估。LVM 平均将地址翻译开销降低了 44% ，同时将所需的页表遍历缓存面积减少了 1.5 倍。总体而言，LVM 在应用执行时间上实现了 2% 至 27% 的速度提升，并接近理想页表的性能（误差在 1% 以内）。</p>
+<h2 id="LoopFrog-In-Core-Hint-Based-Loop-Parallelization"><a href="#LoopFrog-In-Core-Hint-Based-Loop-Parallelization" class="headerlink" title="LoopFrog: In-Core Hint-Based Loop Parallelization"></a>LoopFrog: In-Core Hint-Based Loop Parallelization</h2><p>Author: Marton Erdos(University of Cambridge), Utpal Bora(University of Cambridge), Akshay Bhosale(University of Cambridge), Bob Lytton(Arm), Ali M. Zaidi(Arm), Alexandra W. Chadwick(University of Cambridge), Yuxin Guo(University of Cambridge), Giacomo Gabrielli(Arm), Timothy M. Jones(University of Cambridge)</p>
+<p>Abstruct:  为了扩展 ILP ，设计者构建了更深更宽的乱序超标量 CPU 。然而，这种方法随着每一代的发展会带来二次方增长的复杂度、面积和能耗成本。<strong>尽管小循环可能从更大的指令窗口中受益，而大循环可能通过跨核心的线程级并行性获得加速，但仍然存在未被利用的中间粒度并行性。</strong><br>我们提出 **LoopFrog ，以挖掘这一潜力，将线程级推测方案带入现代架构。LoopFrog 在微架构中通过单一线程并行执行多个循环迭代。**核心可根据编译器插入的提示生成未来循环迭代作为新的微架构线程片段，从而超越父线程的指令窗口，暴露一种与传统 ILP 和 TLP 正交的新型中粒度并行性。LoopFrog 监控执行线程片段之间的数据依赖关系，对真依赖关系进行数据转发，并在顺序违规时回滚推测性线程片段。<br>使用基于 LLVM 的编译器插入提示，我们实现了循环速度的几何平均提升 43% ，在 SPEC CPU 2006 和 SPEC CPU 2017 基准测试中，分别实现了 9.2% 和 9.5% 的整体程序加速，且仅带来适度的面积和功耗开销。</p>
+<h2 id="Multi-Stream-Squash-Reuse-for-Control-Independent-Processors"><a href="#Multi-Stream-Squash-Reuse-for-Control-Independent-Processors" class="headerlink" title="Multi-Stream Squash Reuse for Control-Independent Processors"></a>Multi-Stream Squash Reuse for Control-Independent Processors</h2><p>Author: Qingxuan Kang(National University of Singapore), Trevor E. Carlson(National University of Singapore)</p>
+<p>Abstruct:<br>根据 Amdahl’s Law ，单核性能对于缓解应用程序中的串行瓶颈仍然至关重要。然而，难以预测的分支会给实现高指令级并行性（ILP）带来重大挑战，这是由于频繁的流水线清空所致。在典型的处理器中，当分支被错误预测时，后续指令会被无差别地清空，包括那些在未来一定会被执行的潜在有用指令，这些指令被称为控制无关（CI）指令。尽管现有的 CI 方案在利用典型的控制流结构方面是有效的，但这些技术忽略了更一般的收敛场景。我们的分析表明，<strong>由于程序的动态执行行为，重定向的指令流不仅可以与最后被清空的流重新汇聚，还可以与多个先前的流重新汇聚。如果仅考虑最后被清空的指令流与当前流之间的交互，平均有 10% （最高达 31% ）的收敛机会会被忽略。</strong><br>本文中，我们介绍了 <strong>Multi-Stream Squash Reuse ，该技术从多个先前 squashed 的执行流中发现执行 reuse 机会。我们使用带标签的重命名映射，以实现任意两个程序执行状态之间的两两比较，从而识别数据重用</strong>。我们的方案在 IPC 方面实现了平均提升，分别为 2.2% (SPECint2006), 0.8%(SPECint2017) 和 2.4% (GAP)，并在 SPECint2006 和 GAP 基准测试套件中分别达到了最高提升 8.9%(astar), 6.1%(bc) 和 4.0%(cc)</p>
+<h2 id="SHADOW-Simultaneous-Multi-Threading-Architecture-with-Asymmetric-Threads"><a href="#SHADOW-Simultaneous-Multi-Threading-Architecture-with-Asymmetric-Threads" class="headerlink" title="SHADOW: Simultaneous Multi-Threading Architecture with Asymmetric Threads"></a>SHADOW: Simultaneous Multi-Threading Architecture with Asymmetric Threads</h2><p>Author: Ishita Chaturvedi(Princeton University), Bhargav Reddy Godala(AheadComputing), Abiram Gangavaram(Princeton University), Daniel Flyer(Princeton University), Tyler Sorensen(Microsoft), Tor M. Aamodt(University of British Columbia), David I. August(Princeton University)</p>
+<p>Abstruct:<br>许多重要的应用由于不规则的稀疏性和不可预测的内存访问模式，表现出在指令级并行性（ILP）和线程级并行性（TLP）之间的需求变化。传统 CPU 专注于其中一种但无法平衡两者，导致执行资源未被充分利用并出现性能瓶颈。解决这一挑战需要一种能够无缝且高效适应工作负载变化的架构。<br>本文介绍了 **SHADOW ，这是首个非对称 SMT 核心，它通过在同一核心上同时执行乱序（OoO）和顺序（InO）线程，动态地平衡 ILP 和 TLP。SHADOW 通过利用 OoO 线程中的深层 ILP 和轻量级 InO 线程中的高 TLP 来最大化 CPU 利用率。**它支持运行时配置，使应用程序能够优化 OoO 与 InO 执行的混合比例。在九个不同的基准测试中评估，SHADOW 相对于一个 OoO CPU 实现了最高 <strong>3.16 倍</strong>的加速和平均 1.33 倍的提升，仅带来 1% 的面积和功耗开销。通过动态适应工作负载特性，SHADOW 优于传统架构，在不牺牲计算密集型性能的前提下，有效加速内存受限的工作负载。</p>
+<h2 id="Symbiotic-Task-Scheduling-and-Data-Prefetching"><a href="#Symbiotic-Task-Scheduling-and-Data-Prefetching" class="headerlink" title="Symbiotic Task Scheduling and Data Prefetching"></a>Symbiotic Task Scheduling and Data Prefetching</h2><p>Author: Gilead Posluns(University of Toronto), Mark C. Jeffrey(University of Toronto)</p>
+<p>Abstruct:<br>任务并行编程模型使程序员能够从不规则的应用程序中提取并行性。由于基于软件的任务并行运行时会对细粒度任务造成严重的开销，架构师设计了具有硬件任务管理支持的多核处理器。这些硬件任务并行系统可以将具有挑战性的负载扩展到数百个核心，但由于任务时间较短（100周期），无法使用传统的预取器。缺乏预取功能，它们常常将 DRAM 延迟暴露给应用程序，从而抵消了硬件的性能优势。我们提出了**任务种子预取器（TSP）和内存响应任务调度器（MRS），这是一个协同工作的组合，能够在通用任务并行硬件中提升性能。TSP 通过任务描述符学习并预取每个任务函数的数据访问模式，该描述符由任务调度器排队。MRS 通过利用来自 TSP 的预取状态来优化核心利用率，从而增强基线任务到核心的调度策略。**TSP 和 MRS 共同在 256 核任务并行系统上为 13 个基准测试提供了最高 3.1 倍（gmeans最高1.4倍）的加速效果，这些系统本身比并行软件快 3 至 60 倍。</p>
+<h2 id="Titan-I-An-Open-Source-High-Performance-RISC-V-Vector-Core"><a href="#Titan-I-An-Open-Source-High-Performance-RISC-V-Vector-Core" class="headerlink" title="Titan-I: An Open-Source, High Performance RISC-V Vector Core"></a>Titan-I: An Open-Source, High Performance RISC-V Vector Core</h2><p>Author: Jiuyang Liu(Huazhong University of Science and Technology), Qinjun Li(Institute of Software Chinese Academy of Sciences), Yunqian Luo(Tsinghua University), Hongbin Zhang(Institute of Software Chinese Academy of Sciences), Jiongjia Lu(Xinpian Technology Co., Ltd.), Shupei Fan(Tsinghua University), Jianhao Ye(University of Chinese Academy of Sciences), Yang Liu(Institute of Software Chinese Academy of Sciences), Xiaoyi Liu(Tsinghua University), Yanqi Yang(Huazhong University of Science and Technology), Zewen Ye(Zhejiang University), Yuhang Zeng(Xinpian Technology Co., Ltd.), Ao Shen(Tsinghua University), Rui Huang(Xinpian Technology Co., Ltd.), Wei Cong(UCUN Technology Inc), Xuecheng Zou(Henan Academy of Sciences), and Mingyu Gao(Tsinghua University).</p>
+<p>Abstruct:<br>向量处理已从早期的系统如 CDC STAR-100 和 Cray-1 发展到现代的指令集架构（ISA），如 ARM 的可扩展向量扩展（SVE）和 RISC-V 向量（RVV）扩展。然而，由于传统架构中的开销，对现代工作负载进行向量处理的扩展面临挑战。我们介绍了 Titan-I(T1) 一个乱序 RVV 架构，用于扩展 ILP 和 DLP。TI 集成了一个粗粒度布局求解器、一个数据通路范围的排列单元以及用于掩码寄存器的寄存器缓存，从而提高了带宽并降低了延迟。它还使用了多种乱序（OoO）技术，如细粒度链式处理、指令发布-提交和内存交错，以优化更宽向量数据通路的指令级并行性（ILP）。T1 在密码学应用中性能优于通用图形处理器（GP-GPU）和其他向量核心，在仅占用 GA102（Nvidia 3090）的 40% 流式多处理器（SM）面积的情况下，相较于 GB202（Nvidia 5090）实现了最高 1.85 倍的加速，相较于 GA102 实现了最高 2.41 倍的加速。在高性能计算（HPC）工作负载中，T1 在仅占用 HiSilicon TaiShan V120（KP920）19% 面积的情况下表现出兼容的性能，当将 T1 的数据通路扩展 4 倍时，其性能相比该芯片提升了4.59 倍。此外，T1 对内存延迟表现出强大的容忍能力，在纯 DDR 模式下，其性能比 SpacemiT X60（K1）提升了 8.05 倍。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/10/28/os/generic/structure/" rel="prev" title="操作系统结构">
+      <i class="fa fa-chevron-left"></i> 操作系统结构
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/10/29/Arch/ooo/issue/issue/" rel="next" title="OOO CPU Issue Stage">
+      OOO CPU Issue Stage <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#A-TRRIP-Down-Memory-Lane-Temperature-Based-Re-Reference-Interval-Prediction-For-Instruction-Caching"><span class="nav-number">1.</span> <span class="nav-text">A TRRIP Down Memory Lane: Temperature-Based Re-Reference Interval Prediction For Instruction Caching</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ATR-Out-of-Order-Register-Release-Exploiting-Atomic-Regions"><span class="nav-number">2.</span> <span class="nav-text">ATR: Out-of-Order Register Release Exploiting Atomic Regions</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Beyond-Page-Migration-Enhancing-Tiered-Memory-Performance-via-Integrated-Last-Level-Cache-Management-and-Page-Migration"><span class="nav-number">3.</span> <span class="nav-text">Beyond Page Migration: Enhancing Tiered Memory Performance via Integrated Last-Level Cache Management and Page Migration</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Drishti-Do-Not-Forget-Slicing-While-Designing-Last-Level-Cache-Replacement-Policies-for-Many-Core-Systems"><span class="nav-number">4.</span> <span class="nav-text">Drishti: Do Not Forget Slicing While Designing Last-Level Cache Replacement Policies for Many-Core Systems</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Learning-to-Walk-Architecting-Learned-Virtual-Memory-Translation"><span class="nav-number">5.</span> <span class="nav-text">Learning to Walk: Architecting Learned Virtual Memory Translation</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LoopFrog-In-Core-Hint-Based-Loop-Parallelization"><span class="nav-number">6.</span> <span class="nav-text">LoopFrog: In-Core Hint-Based Loop Parallelization</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Multi-Stream-Squash-Reuse-for-Control-Independent-Processors"><span class="nav-number">7.</span> <span class="nav-text">Multi-Stream Squash Reuse for Control-Independent Processors</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SHADOW-Simultaneous-Multi-Threading-Architecture-with-Asymmetric-Threads"><span class="nav-number">8.</span> <span class="nav-text">SHADOW: Simultaneous Multi-Threading Architecture with Asymmetric Threads</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Symbiotic-Task-Scheduling-and-Data-Prefetching"><span class="nav-number">9.</span> <span class="nav-text">Symbiotic Task Scheduling and Data Prefetching</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Titan-I-An-Open-Source-High-Performance-RISC-V-Vector-Core"><span class="nav-number">10.</span> <span class="nav-text">Titan-I: An Open-Source, High Performance RISC-V Vector Core</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xixi"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">xixi</p>
+  <div class="site-description" itemprop="description">xixi's personal blog</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xixi-shredp" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xixi-shredp" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xixi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>
