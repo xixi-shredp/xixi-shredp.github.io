@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#222">
 <meta name="generator" content="Hexo 7.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
 <link rel="stylesheet" href="/css/main.css">
@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="AMD 高性能微架构简介">
@@ -117,6 +117,7 @@
 
   <div class="site-nav-right">
     <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
     </div>
   </div>
 </div>
@@ -151,11 +152,38 @@
     <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
   </ul>
 </nav>
 
 
 
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
 
 </div>
     </header>
@@ -240,18 +268,18 @@
         <blockquote>
 <p>架构图来自 <em>Cardyak_s Microarchitecture Block Diagram Images</em></p>
 </blockquote>
-<p>1996 - K5:<br><img src="/images/Arch/implement/AMD/high_power/1996-K5.jpg" alt="K5"></p>
-<p>1997 - K6:<br><img src="/images/Arch/implement/AMD/high_power/1997-K6.jpg" alt="K6"></p>
-<p>1999 - K7:<br><img src="/images/Arch/implement/AMD/high_power/1999-K7.jpg" alt="K7"></p>
-<p>2003 - K8:<br><img src="/images/Arch/implement/AMD/high_power/2003-K8.jpg" alt="K8"></p>
-<p>2007 - K10:<br><img src="/images/Arch/implement/AMD/high_power/2007-K10.jpg" alt="K10"></p>
-<p>2011 - Bulldozer:<br><img src="/images/Arch/implement/AMD/high_power/2011-Bulldozer.jpg" alt="Bulldozer"></p>
-<p>2014 - Steamroller:<br><img src="/images/Arch/implement/AMD/high_power/2014-Steamroller.jpg" alt="Steamroller"></p>
-<p>2017 - Zen:<br><img src="/images/Arch/implement/AMD/high_power/2017-Zen.jpg" alt="Zen"></p>
-<p>2019 - Zen2:<br><img src="/images/Arch/implement/AMD/high_power/2019-Zen2.jpg" alt="Zen2"></p>
-<p>2020 - Zen3:<br><img src="/images/Arch/implement/AMD/high_power/2020-Zen3.jpg" alt="Zen3"></p>
-<p>2022 - Zen4:<br><img src="/images/Arch/implement/AMD/high_power/2022-Zen4.jpg" alt="Zen4"></p>
-<p>2024 - Zen5:<br><img src="/images/Arch/implement/AMD/high_power/2024-Zen5.jpg" alt="Zen5"></p>
+<p>1996 - K5:<br><img data-src="/images/Arch/implement/AMD/high_power/1996-K5.jpg" alt="K5"></p>
+<p>1997 - K6:<br><img data-src="/images/Arch/implement/AMD/high_power/1997-K6.jpg" alt="K6"></p>
+<p>1999 - K7:<br><img data-src="/images/Arch/implement/AMD/high_power/1999-K7.jpg" alt="K7"></p>
+<p>2003 - K8:<br><img data-src="/images/Arch/implement/AMD/high_power/2003-K8.jpg" alt="K8"></p>
+<p>2007 - K10:<br><img data-src="/images/Arch/implement/AMD/high_power/2007-K10.jpg" alt="K10"></p>
+<p>2011 - Bulldozer:<br><img data-src="/images/Arch/implement/AMD/high_power/2011-Bulldozer.jpg" alt="Bulldozer"></p>
+<p>2014 - Steamroller:<br><img data-src="/images/Arch/implement/AMD/high_power/2014-Steamroller.jpg" alt="Steamroller"></p>
+<p>2017 - Zen:<br><img data-src="/images/Arch/implement/AMD/high_power/2017-Zen.jpg" alt="Zen"></p>
+<p>2019 - Zen2:<br><img data-src="/images/Arch/implement/AMD/high_power/2019-Zen2.jpg" alt="Zen2"></p>
+<p>2020 - Zen3:<br><img data-src="/images/Arch/implement/AMD/high_power/2020-Zen3.jpg" alt="Zen3"></p>
+<p>2022 - Zen4:<br><img data-src="/images/Arch/implement/AMD/high_power/2022-Zen4.jpg" alt="Zen4"></p>
+<p>2024 - Zen5:<br><img data-src="/images/Arch/implement/AMD/high_power/2024-Zen5.jpg" alt="Zen5"></p>
 
     </div>
 
@@ -410,6 +438,7 @@
 
   
   <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
 
@@ -424,11 +453,19 @@
 <script src="/js/next-boot.js"></script>
 
 
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_lines.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_sphere.min.js"></script>
 
 
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 

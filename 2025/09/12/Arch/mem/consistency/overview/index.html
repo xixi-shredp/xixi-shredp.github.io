@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#222">
 <meta name="generator" content="Hexo 7.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
 <link rel="stylesheet" href="/css/main.css">
@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="一致性简介：Memory Consistency 和 Cache Coherence">
@@ -109,6 +109,7 @@
 
   <div class="site-nav-right">
     <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
     </div>
   </div>
 </div>
@@ -143,11 +144,38 @@
     <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
   </ul>
 </nav>
 
 
 
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
 
 </div>
     </header>
@@ -269,7 +297,7 @@
 <ul>
 <li>TSO 在执行模型和实现上均是 SC 的子集，因此 TSO 比 SC 更松散 (relaxed&#x2F;weaker)</li>
 </ul>
-<h2 id="与-Coherence-的区别"><a href="#与-Coherence-的区别" class="headerlink" title="与 Coherence 的区别"></a>与 Coherence 的区别</h2><p><img src="/images/Arch/mem/consistency/overview/consistency-model.svg" alt="Consistency Model"></p>
+<h2 id="与-Coherence-的区别"><a href="#与-Coherence-的区别" class="headerlink" title="与 Coherence 的区别"></a>与 Coherence 的区别</h2><p><img data-src="/images/Arch/mem/consistency/overview/consistency-model.svg" alt="Consistency Model"></p>
 <ul>
 <li>Consistency 规定程序访存行为</li>
 <li>Coherence 提供内存抽象 (black box)</li>
@@ -299,7 +327,7 @@
 </ol>
 <p>问题场景:<br>多个线程对同一内存地址(存在多个副本)的访问中至少有一个是写</p>
 <p>目的:<br>使 cache 在共享内存中的行为同在单核系统中一致。具体而言，实现的一致性协议需要使一个线程对某个 cache 的写可以被其他线程看到（广播到所有 cache ）</p>
-<p><img src="/images/Arch/mem/consistency/overview/coherence_box.svg" alt="coherence box"></p>
+<p><img data-src="/images/Arch/mem/consistency/overview/coherence_box.svg" alt="coherence box"></p>
 <p>不同的 Cache 一致性协议实现对于广播的时机不同:  </p>
 <ol>
 <li><a href="#consistency_agnostic_coherence">consistency-agnostic coherence</a><ul>
@@ -362,13 +390,13 @@
 <li>在 LLC&#x2F;memory 端，为 <a href="#memory_controller">memory_controller</a></li>
 </ul>
 <h3 id="cache-controller"><a href="#cache-controller" class="headerlink" title="cache controller"></a>cache controller</h3><p><a id="cache_controller"></a></p>
-<p><img src="/images/Arch/mem/consistency/overview/cache_controller.svg" alt="Cache Controller"></p>
+<p><img data-src="/images/Arch/mem/consistency/overview/cache_controller.svg" alt="Cache Controller"></p>
 <ul>
 <li>core side: 接受来自核的访存请求，返回数据值</li>
 <li>network side: 发送和接受一致性请求(通过互联网络与系统其他的控制器交互)</li>
 </ul>
 <h3 id="memory-controller"><a href="#memory-controller" class="headerlink" title="memory controller"></a>memory controller</h3><p><a id="memory_controller"></a></p>
-<p><img src="/images/Arch/mem/consistency/overview/memory_controller.svg" alt="Memory Controller"></p>
+<p><img data-src="/images/Arch/mem/consistency/overview/memory_controller.svg" alt="Memory Controller"></p>
 <ul>
 <li>只有 network 端</li>
 <li>不会发送一致性请求和接受一致性响应</li>
@@ -532,6 +560,7 @@
 
   
   <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
 
@@ -546,11 +575,19 @@
 <script src="/js/next-boot.js"></script>
 
 
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_lines.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_sphere.min.js"></script>
 
 
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 

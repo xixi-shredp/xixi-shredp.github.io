@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#222">
 <meta name="generator" content="Hexo 7.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
 <link rel="stylesheet" href="/css/main.css">
@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="乱序执行 CPU 发射阶段简介">
@@ -108,6 +108,7 @@
 
   <div class="site-nav-right">
     <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
     </div>
   </div>
 </div>
@@ -142,11 +143,38 @@
     <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
   </ul>
 </nav>
 
 
 
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
 
 </div>
     </header>
@@ -259,15 +287,15 @@
 <li>可以从寄存器堆 &#x2F; payload RAM &#x2F; 旁路网络中获得源操作数的值</li>
 </ol>
 <p>发射阶段可以划分为唤醒和仲裁两个阶段</p>
-<h2 id="非数据捕捉结构的流水线"><a href="#非数据捕捉结构的流水线" class="headerlink" title="非数据捕捉结构的流水线"></a>非数据捕捉结构的流水线</h2><h3 id="方案1-指令执行完后对其他指令进行唤醒-Tomasulo-算法"><a href="#方案1-指令执行完后对其他指令进行唤醒-Tomasulo-算法" class="headerlink" title="方案1: 指令执行完后对其他指令进行唤醒 (Tomasulo 算法)"></a>方案1: 指令执行完后对其他指令进行唤醒 (Tomasulo 算法)</h3><p><img src="/../../../../images/Arch/ooo/issue/issue/non_data_capture_tomasulo.svg" alt="tomasulo 算法唤醒的非数据捕捉结构流水线"></p>
+<h2 id="非数据捕捉结构的流水线"><a href="#非数据捕捉结构的流水线" class="headerlink" title="非数据捕捉结构的流水线"></a>非数据捕捉结构的流水线</h2><h3 id="方案1-指令执行完后对其他指令进行唤醒-Tomasulo-算法"><a href="#方案1-指令执行完后对其他指令进行唤醒-Tomasulo-算法" class="headerlink" title="方案1: 指令执行完后对其他指令进行唤醒 (Tomasulo 算法)"></a>方案1: 指令执行完后对其他指令进行唤醒 (Tomasulo 算法)</h3><p><img data-src="/../../../../images/Arch/ooo/issue/issue/non_data_capture_tomasulo.svg" alt="tomasulo 算法唤醒的非数据捕捉结构流水线"></p>
 <ul>
 <li>优势：设计简单</li>
 <li>缺陷：两条 RAW 相关的指令不能背靠背执行，中间相差 3 个周期</li>
 </ul>
-<h3 id="方案2-通过广播将唤醒阶段提前-背靠背执行"><a href="#方案2-通过广播将唤醒阶段提前-背靠背执行" class="headerlink" title="方案2: 通过广播将唤醒阶段提前 (背靠背执行)"></a>方案2: 通过广播将唤醒阶段提前 (背靠背执行)</h3><p><img src="/../../../../images/Arch/ooo/issue/issue/non_data_capture_b2b_one_stage.svg" alt="提前唤醒的非数据捕捉流水线"></p>
+<h3 id="方案2-通过广播将唤醒阶段提前-背靠背执行"><a href="#方案2-通过广播将唤醒阶段提前-背靠背执行" class="headerlink" title="方案2: 通过广播将唤醒阶段提前 (背靠背执行)"></a>方案2: 通过广播将唤醒阶段提前 (背靠背执行)</h3><p><img data-src="/../../../../images/Arch/ooo/issue/issue/non_data_capture_b2b_one_stage.svg" alt="提前唤醒的非数据捕捉流水线"></p>
 <p>为保证背靠背执行，必须保证<strong>前一条指令的 Select 阶段和后一条指令的 Wake-up 阶段之间原子化串行</strong></p>
 <p>由于 Select-Wakeup 阶段的延时较高，可以将其再分成 2 个周期：</p>
-<p><img src="/../../../../images/Arch/ooo/issue/issue/non_data_capture_b2b_two_stage.svg" alt="分两周期提前唤醒的非数据捕捉流水线"><br>但这样无法保证上述的原子性，所以两条 RAW 相关的指令无法背靠背执行，会相差一个周期</p>
+<p><img data-src="/../../../../images/Arch/ooo/issue/issue/non_data_capture_b2b_two_stage.svg" alt="分两周期提前唤醒的非数据捕捉流水线"><br>但这样无法保证上述的原子性，所以两条 RAW 相关的指令无法背靠背执行，会相差一个周期</p>
 <p>对于多周期指令，还需要在词基础上采用延时广播&#x2F;延时唤醒, 推测唤醒等策略保证正确性</p>
 <h2 id="数据捕捉结构的流水线"><a href="#数据捕捉结构的流水线" class="headerlink" title="数据捕捉结构的流水线"></a>数据捕捉结构的流水线</h2>
     </div>
@@ -428,6 +456,7 @@
 
   
   <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
 
@@ -442,11 +471,19 @@
 <script src="/js/next-boot.js"></script>
 
 
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_lines.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_sphere.min.js"></script>
 
 
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 

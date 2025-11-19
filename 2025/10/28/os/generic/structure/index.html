@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#222">
 <meta name="generator" content="Hexo 7.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
 <link rel="stylesheet" href="/css/main.css">
@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="操作系统架构分类简介">
@@ -118,6 +118,7 @@
 
   <div class="site-nav-right">
     <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
     </div>
   </div>
 </div>
@@ -152,11 +153,38 @@
     <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
   </ul>
 </nav>
 
 
 
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
 
 </div>
     </header>
@@ -265,7 +293,7 @@
 </li>
 </ul>
 <h1 id="Monolithic-Kernel-宏内核"><a href="#Monolithic-Kernel-宏内核" class="headerlink" title="Monolithic-Kernel, 宏内核"></a>Monolithic-Kernel, 宏内核</h1><p><a id="monolithic"></a></p>
-<p><img src="/images/os/generic/structure/monolithic.svg" alt="monolithic"></p>
+<p><img data-src="/images/os/generic/structure/monolithic.svg" alt="monolithic"></p>
 <p>整个系统分为内核与应用两层</p>
 <ul>
 <li>内核：运行在特权级，集中控制所有计算资源</li>
@@ -317,7 +345,7 @@
 </li>
 </ul>
 <h1 id="Microkernel-微内核"><a href="#Microkernel-微内核" class="headerlink" title="Microkernel, 微内核"></a>Microkernel, 微内核</h1><p><a id="microkernel"></a></p>
-<p><img src="/images/os/generic/structure/microkernel.svg" alt="microkernel"></p>
+<p><img data-src="/images/os/generic/structure/microkernel.svg" alt="microkernel"></p>
 <p><strong>设计原则：最小化内核功能</strong></p>
 <ul>
 <li>将操作系统功能移到用户态，称为”服务”（Server）</li>
@@ -538,10 +566,10 @@
 </ul>
 </li>
 </ul>
-<h3 id="Libra"><a href="#Libra" class="headerlink" title="Libra"></a>Libra</h3><p>基于虚拟机实现的JVM<br><img src="/images/os/generic/structure/Libra.png" alt="Libra" width="500"></p>
-<h3 id="Drawbridge"><a href="#Drawbridge" class="headerlink" title="Drawbridge"></a>Drawbridge</h3><img src="/images/os/generic/structure/Drawbridge.png" alt="Drawbridge" width="200">
+<h3 id="Libra"><a href="#Libra" class="headerlink" title="Libra"></a>Libra</h3><p>基于虚拟机实现的JVM<br><img data-src="/images/os/generic/structure/Libra.png" alt="Libra" width="500"></p>
+<h3 id="Drawbridge"><a href="#Drawbridge" class="headerlink" title="Drawbridge"></a>Drawbridge</h3><img data-src="/images/os/generic/structure/Drawbridge.png" alt="Drawbridge" width="200">
 
-<h3 id="MultiLibOS"><a href="#MultiLibOS" class="headerlink" title="MultiLibOS"></a>MultiLibOS</h3><img src="/images/os/generic/structure/MultiLibOS.png" alt="MultiLibOS" width="500">
+<h3 id="MultiLibOS"><a href="#MultiLibOS" class="headerlink" title="MultiLibOS"></a>MultiLibOS</h3><img data-src="/images/os/generic/structure/MultiLibOS.png" alt="MultiLibOS" width="500">
 
 <h1 id="Multikernel-多内核"><a href="#Multikernel-多内核" class="headerlink" title="Multikernel, 多内核"></a>Multikernel, 多内核</h1><p><a id="multikernel"></a></p>
 <p>设计动机：解决多核与异构带来的扩展性问题</p>
@@ -570,7 +598,7 @@
 </li>
 <li>显式的核间通信机制</li>
 </ul>
-<img src="/images/os/generic/structure/multikernel.svg" alt="MultiKernel" width="500">
+<img data-src="/images/os/generic/structure/multikernel.svg" alt="MultiKernel" width="500">
 
 <ul>
 <li>在每个core上运行一个小内核 (包括CPU、GPU等)</li>
@@ -593,7 +621,7 @@
 <li>在CPU核与节点之间提供通用异构消息抽象</li>
 </ul>
 <p>设计结构：</p>
-<img src="/images/os/generic/structure/Barrelfish.png" alt="Barrelfish" width="500">
+<img data-src="/images/os/generic/structure/Barrelfish.png" alt="Barrelfish" width="500">
 
 <ul>
 <li>每个core对应一个内核<ul>
@@ -614,7 +642,7 @@
 </li>
 </ul>
 <p>提供本地 IPC 和远程 IPC 实现对于不同资源的访问</p>
-<h3 id="Popcorn-Linux"><a href="#Popcorn-Linux" class="headerlink" title="Popcorn Linux"></a>Popcorn Linux</h3><img src="/images/os/generic/structure/PopcornLinux.png" alt="Popcorn Linux" width="400">
+<h3 id="Popcorn-Linux"><a href="#Popcorn-Linux" class="headerlink" title="Popcorn Linux"></a>Popcorn Linux</h3><img data-src="/images/os/generic/structure/PopcornLinux.png" alt="Popcorn Linux" width="400">
 
 <ul>
 <li>支持异构体系结构(ARM、x86等)</li>
@@ -628,7 +656,7 @@
 <blockquote>
 <p>将 Linux 移植为 Popcorn Linux ，需要改启动代码，虽然扫描到所有硬件，但只能使用其中一部分硬件（静态划分）</p>
 </blockquote>
-<h3 id="Tessellation"><a href="#Tessellation" class="headerlink" title="Tessellation"></a>Tessellation</h3><img src="/images/os/generic/structure/Tessellation.png" alt="Tessellation" width="400">
+<h3 id="Tessellation"><a href="#Tessellation" class="headerlink" title="Tessellation"></a>Tessellation</h3><img data-src="/images/os/generic/structure/Tessellation.png" alt="Tessellation" width="400">
 
 <p>设计理念:</p>
 <ul>
@@ -638,7 +666,7 @@
 </ul>
 </li>
 </ul>
-<img src="/images/os/generic/structure/TessellationSchedule.png" alt="Tessellation Schedule" width="300">
+<img data-src="/images/os/generic/structure/TessellationSchedule.png" alt="Tessellation Schedule" width="300">
 
 <h3 id="FOS"><a href="#FOS" class="headerlink" title="FOS"></a>FOS</h3><ul>
 <li>设计理念<ul>
@@ -654,7 +682,7 @@
 </ol>
 </li>
 </ul>
-<img src="/images/os/generic/structure/FOS.png" alt="FOS" width="500">
+<img data-src="/images/os/generic/structure/FOS.png" alt="FOS" width="500">
 
 <ul>
 <li>每个核上跑一个 microkernel</li>
@@ -669,9 +697,9 @@
 <li>亲和度（Affinity Metric）</li>
 <li>二级编译</li>
 </ul>
-<img src="/images/os/generic/structure/HeilOS.png" alt="HeilOS" width="500">
+<img data-src="/images/os/generic/structure/HeilOS.png" alt="HeilOS" width="500">
 
-<h3 id="K2"><a href="#K2" class="headerlink" title="K2"></a>K2</h3><img src="/images/os/generic/structure/K2.png" alt="K2" width="500">
+<h3 id="K2"><a href="#K2" class="headerlink" title="K2"></a>K2</h3><img data-src="/images/os/generic/structure/K2.png" alt="K2" width="500">
 
 <ul>
 <li>双内核：适配强弱核</li>
@@ -847,6 +875,7 @@
 
   
   <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
 
@@ -861,11 +890,19 @@
 <script src="/js/next-boot.js"></script>
 
 
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_lines.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_sphere.min.js"></script>
 
 
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 

@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#222">
 <meta name="generator" content="Hexo 7.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
 <link rel="stylesheet" href="/css/main.css">
@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="GPU 架构简介">
@@ -109,6 +109,7 @@
 
   <div class="site-nav-right">
     <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
     </div>
   </div>
 </div>
@@ -143,11 +144,38 @@
     <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
   </ul>
 </nav>
 
 
 
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
 
 </div>
     </header>
@@ -249,14 +277,14 @@
 </li>
 <li>CPU 可以提供 IO 设备的访问和对操作系统服务的请求</li>
 </ol>
-<p>不同线程数下的计算架构的性能建模图：<br><img src="/images/Arch/gpu/overview/analytical_performance.png" alt="不同线程数下的计算架构的性能建模图">  </p>
+<p>不同线程数下的计算架构的性能建模图：<br><img data-src="/images/Arch/gpu/overview/analytical_performance.png" alt="不同线程数下的计算架构的性能建模图">  </p>
 <ul>
 <li>MC(multicore) Region: 当较少的线程数共享一个大的 cache 时，随着线程数上升，性能显著提升</li>
 <li>Valley: 之后随着线程数增加，cache 无法容纳整个工作负载，性能下降</li>
 <li>MT(multithreading) Region: 当线程数足够多时，高吞吐率可以掩盖片外访存延时，性能上升</li>
 </ul>
 <h2 id="GPU-与-CPU-系统架构"><a href="#GPU-与-CPU-系统架构" class="headerlink" title="GPU 与 CPU 系统架构"></a>GPU 与 CPU 系统架构</h2><ol>
-<li>System with discrete GPU<br> <img src="/images/Arch/gpu/overview/discrete_gpu.svg" alt="System with discrete gpu"><ul>
+<li>System with discrete GPU<br> <img data-src="/images/Arch/gpu/overview/discrete_gpu.svg" alt="System with discrete gpu"><ul>
 <li>CPU 和 GPU 之间通过总线连接</li>
 <li>CPU 和 GPU 有分离的DRAM 存储空间<ul>
 <li>CPU 中称为 system memory 系统内存，通常使用 DDR 实现，主要优化目标是降低访问时延</li>
@@ -265,7 +293,7 @@
 </li>
 </ul>
 </li>
-<li>Integrated CPU and GPU<br> <img src="/images/Arch/gpu/overview/integrated_gpu.svg" alt="Integrated CPU and GPU"><ul>
+<li>Integrated CPU and GPU<br> <img data-src="/images/Arch/gpu/overview/integrated_gpu.svg" alt="Integrated CPU and GPU"><ul>
 <li>一般用于低功耗设备</li>
 <li>共享一个 DRAM 存储空间，通常使用 LPDDR 实现</li>
 </ul>
@@ -294,7 +322,7 @@
 <li>data location: 线程在哪里查找输入数据</li>
 </ol>
 <p>初始化完成，驱动程序会向 GPU 发送信号，表明可以开始进行计算。</p>
-<h2 id="GPU-架构"><a href="#GPU-架构" class="headerlink" title="GPU 架构"></a>GPU 架构</h2><p><img src="/images/Arch/gpu/overview/general_gpu_arch.svg" alt="通用现代 GPU 架构"></p>
+<h2 id="GPU-架构"><a href="#GPU-架构" class="headerlink" title="GPU 架构"></a>GPU 架构</h2><p><img data-src="/images/Arch/gpu/overview/general_gpu_arch.svg" alt="通用现代 GPU 架构"></p>
 <h3 id="SIMT-Core"><a href="#SIMT-Core" class="headerlink" title="SIMT Core"></a>SIMT Core</h3><p>现代 GPU 中存在大量的 SIMT Core (NVIDIA 称为 SM, Streaming Multiprocessors; AMD 称为 Compute Units)  </p>
 <ul>
 <li>每个 SIMT Core 执行 kernel 中的一个 SIMT 程序  </li>
@@ -465,6 +493,7 @@
 
   
   <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
 
@@ -479,11 +508,19 @@
 <script src="/js/next-boot.js"></script>
 
 
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_lines.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_sphere.min.js"></script>
 
 
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 

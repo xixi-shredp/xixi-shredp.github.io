@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#222">
 <meta name="generator" content="Hexo 7.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
 <link rel="stylesheet" href="/css/main.css">
@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="乱序执行 CPU 发射阶段唤醒电路简介">
@@ -112,6 +112,7 @@
 
   <div class="site-nav-right">
     <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
     </div>
   </div>
 </div>
@@ -146,11 +147,38 @@
     <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
   </ul>
 </nav>
 
 
 
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
 
 </div>
     </header>
@@ -234,8 +262,8 @@
       
         <p>任务：<u>将功能单元计算出的结果通知到发射队列当中所有等待该数据的指令</u></p>
 <h1 id="Tomasulo-算法唤醒"><a href="#Tomasulo-算法唤醒" class="headerlink" title="Tomasulo 算法唤醒"></a>Tomasulo 算法唤醒</h1><p>当指令执行完之后才将相关指令进行唤醒。</p>
-<p><img src="/img/tomasulo_wakeup.svg" alt="Tomasulo 算法唤醒电路"></p>
-<h1 id="back-to-back-背靠背执行唤醒"><a href="#back-to-back-背靠背执行唤醒" class="headerlink" title="back-to-back 背靠背执行唤醒"></a>back-to-back 背靠背执行唤醒</h1><h2 id="对于单周期指令"><a href="#对于单周期指令" class="headerlink" title="对于单周期指令"></a>对于单周期指令</h2><p><img src="/img/is_wakeup_1.png" alt="单周期指令背靠背执行唤醒"></p>
+<p><img data-src="/img/tomasulo_wakeup.svg" alt="Tomasulo 算法唤醒电路"></p>
+<h1 id="back-to-back-背靠背执行唤醒"><a href="#back-to-back-背靠背执行唤醒" class="headerlink" title="back-to-back 背靠背执行唤醒"></a>back-to-back 背靠背执行唤醒</h1><h2 id="对于单周期指令"><a href="#对于单周期指令" class="headerlink" title="对于单周期指令"></a>对于单周期指令</h2><p><img data-src="/img/is_wakeup_1.png" alt="单周期指令背靠背执行唤醒"></p>
 <ul>
 <li>被仲裁电路选中的指令将其目的寄存器编号发送的对应的总线上广播 (tag bus)</li>
 <li>发射队列当中的所有指令将 tag bus 上的编号和自己的源寄存器编号对比，如匹配则标记为 ready<br> 通过旁路网络获得寄存器值（这样才能背靠背执行）</li>
@@ -268,8 +296,8 @@
 <li>延迟唤醒 (delayed wake-up)</li>
 </ol>
 <h3 id="延迟广播-delayed-tag-broadcast"><a href="#延迟广播-delayed-tag-broadcast" class="headerlink" title="延迟广播 (delayed tag broadcast)"></a>延迟广播 (delayed tag broadcast)</h3><p>指令被选中的当前周期，并不将指令的目的寄存器编号立刻送到 tag bus 上，而是延迟 (N - 1) 个周期后送到总线上（对于执行周期为 N 的指令）</p>
-<p><img src="/img/is_wakeup_2.png" alt="多周期指令延迟广播唤醒"></p>
-<p>问题：可能导致 tag bus 冲突<br><img src="/img/is_wakeup_3.png" alt="多周期指令延迟广播唤醒 tag bus 冲突问题"></p>
+<p><img data-src="/img/is_wakeup_2.png" alt="多周期指令延迟广播唤醒"></p>
+<p>问题：可能导致 tag bus 冲突<br><img data-src="/img/is_wakeup_3.png" alt="多周期指令延迟广播唤醒 tag bus 冲突问题"></p>
 <p>tag bus 冲突解决方案：</p>
 <ol>
 <li>方案1: 增加这个功能单元对应的 tag bus 数<br>不具有可扩展性：需要大量总线，唤醒电路复杂度大幅上升</li>
@@ -290,15 +318,15 @@
 </ul>
 </li>
 </ol>
-<p><img src="/img/is_wakeup_4.png" alt="解决 tag bus 的冲突问题"></p>
+<p><img data-src="/img/is_wakeup_4.png" alt="解决 tag bus 的冲突问题"></p>
 <h3 id="延迟唤醒（delayed-wake-up）"><a href="#延迟唤醒（delayed-wake-up）" class="headerlink" title="延迟唤醒（delayed wake-up）"></a>延迟唤醒（delayed wake-up）</h3><p>指令被选中的当前周期，就将指令的目的寄存器编号立刻送到 tag bus 上并和所有指令的源寄存器编号比较。但匹配项并不立即置位 ready ，延时 (N-1) 个周期后再置位 ready</p>
-<p><img src="/img/is_wakeup_delayed_wakeup.png" alt="多周期指令延迟唤醒"></p>
+<p><img data-src="/img/is_wakeup_delayed_wakeup.png" alt="多周期指令延迟唤醒"></p>
 <ul>
 <li>不存在 tag bus 的冲突问题</li>
 <li>本质是在发射队列的每条指令的 ready 位前增加延时寄存器</li>
 </ul>
 <p>实现方案1：移位寄存器</p>
-<p><img src="/img/is_wakeup_shifter.png" alt="移位寄存器实现延迟唤醒"></p>
+<p><img data-src="/img/is_wakeup_shifter.png" alt="移位寄存器实现延迟唤醒"></p>
 <ul>
 <li>发射队列中每条指令的目的寄存器对应一个 DELAY 值<ul>
 <li>DELAY 值位宽由 FU 中最多需要周期数决定：8 位 4 周期编码 11111000</li>
@@ -508,6 +536,7 @@
 
   
   <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
 
@@ -522,11 +551,19 @@
 <script src="/js/next-boot.js"></script>
 
 
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_lines.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_sphere.min.js"></script>
 
 
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 

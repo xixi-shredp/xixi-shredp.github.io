@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#222">
 <meta name="generator" content="Hexo 7.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
 <link rel="stylesheet" href="/css/main.css">
@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="文件系统简介">
@@ -114,6 +114,7 @@
 
   <div class="site-nav-right">
     <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
     </div>
   </div>
 </div>
@@ -148,11 +149,38 @@
     <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
   </ul>
 </nav>
 
 
 
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
 
 </div>
     </header>
@@ -310,7 +338,7 @@
 <li>挂载文件 &#x3D; 在虚拟磁盘上虚拟出的虚拟磁盘</li>
 </ol>
 <p><strong>目录结构</strong>: Filesystem Hierarchy Standard (FHS)</p>
-<h1 id="文件系统实现"><a href="#文件系统实现" class="headerlink" title="文件系统实现"></a>文件系统实现</h1><h2 id="数据结构（data-structure）"><a href="#数据结构（data-structure）" class="headerlink" title="数据结构（data structure）"></a>数据结构（data structure）</h2><h3 id="磁盘映像整体结构"><a href="#磁盘映像整体结构" class="headerlink" title="磁盘映像整体结构"></a>磁盘映像整体结构</h3><p><img src="/images/os/generic/fs/file_system/disk_img_model.png" alt="磁盘映像整体结构"></p>
+<h1 id="文件系统实现"><a href="#文件系统实现" class="headerlink" title="文件系统实现"></a>文件系统实现</h1><h2 id="数据结构（data-structure）"><a href="#数据结构（data-structure）" class="headerlink" title="数据结构（data structure）"></a>数据结构（data structure）</h2><h3 id="磁盘映像整体结构"><a href="#磁盘映像整体结构" class="headerlink" title="磁盘映像整体结构"></a>磁盘映像整体结构</h3><p><img data-src="/images/os/generic/fs/file_system/disk_img_model.png" alt="磁盘映像整体结构"></p>
 <ul>
 <li>元数据(metadata)<ul>
 <li>I: <a href="#inode">inode</a>：记录每个文件的信息</li>
@@ -507,7 +535,7 @@
 <p><strong>细节参考: <a href="#lfs">日志结构文件系统 LFS</a></strong></p>
 <h2 id="基于反向指针的一致性（Backpointer-Based-Consistency，BBC）"><a href="#基于反向指针的一致性（Backpointer-Based-Consistency，BBC）" class="headerlink" title="基于反向指针的一致性（Backpointer-Based Consistency，BBC）"></a>基于反向指针的一致性（Backpointer-Based Consistency，BBC）</h2><p><a id="bbc"></a><br>在写入之间不强制执行排序。<br>为了实现一致性，系统中的每个块都会添加一个额外的反向指针。<br>例如，每个数据块都引用它所属的inode。<br>访问文件时，文件系统可以检查正向指针（inode 或直接块中的地址）是否指向引用它的块，<br>从而确定文件是否一致。如果是这样，一切都肯定安全地到达磁盘，因此文件是<br>一致的。如果不是，则文件不一致，并返回错误。</p>
 <h2 id="乐观崩溃一致性（optimistic-crash-consistency）"><a href="#乐观崩溃一致性（optimistic-crash-consistency）" class="headerlink" title="乐观崩溃一致性（optimistic crash consistency）"></a>乐观崩溃一致性（optimistic crash consistency）</h2><p><a id="occ"></a><br>尽可能多地向磁盘发出写入，并利用事务校验和（transaction checksum）的一般形式，<br>以及其他一些技术来检测不一致。<br>对于某些工作负载，这些乐观技术可以将性能提高一个数量级。但是对磁盘有特殊要求。</p>
-<h1 id="文件系统实例"><a href="#文件系统实例" class="headerlink" title="文件系统实例"></a>文件系统实例</h1><h2 id="第一个-UNIX-文件系统"><a href="#第一个-UNIX-文件系统" class="headerlink" title="第一个 UNIX 文件系统"></a>第一个 UNIX 文件系统</h2><p><strong>磁盘数据结构</strong>:<br><img src="/images/os/generic/fs/file_system/first_fs.png" alt="第一个 UNIX 文件系统"></p>
+<h1 id="文件系统实例"><a href="#文件系统实例" class="headerlink" title="文件系统实例"></a>文件系统实例</h1><h2 id="第一个-UNIX-文件系统"><a href="#第一个-UNIX-文件系统" class="headerlink" title="第一个 UNIX 文件系统"></a>第一个 UNIX 文件系统</h2><p><strong>磁盘数据结构</strong>:<br><img data-src="/images/os/generic/fs/file_system/first_fs.png" alt="第一个 UNIX 文件系统"></p>
 <ul>
 <li>超级块（S）：包含有关整个文件系统的信息：卷的大小、有多少 inode、指向空闲列表块的头部的指针等等</li>
 <li>inode 区域：包含文件系统的所有 inode</li>
@@ -523,7 +551,7 @@
 <li>在同一组中放置多个文件，以确保先后访问这些文件不会导致穿越磁盘的长时间寻道</li>
 </ul>
 <p><strong>组织结构</strong>: 柱面组（cylinder group，或块组block group)</p>
-<p>每个柱面组的结构：<br><img src="/images/os/generic/fs/file_system/ffs_block_group.png" alt="FFS 柱面组的结构"></p>
+<p>每个柱面组的结构：<br><img data-src="/images/os/generic/fs/file_system/ffs_block_group.png" alt="FFS 柱面组的结构"></p>
 <ul>
 <li>超级块（super block）的一个副本：提高可靠性</li>
 <li>inode 位图（inode bitmap，ib）和数据位图（data bitmap，db）：记录分配</li>
@@ -582,8 +610,8 @@
 </ul>
 </li>
 </ol>
-<p><strong>ext2: 磁盘镜像格式</strong>: in <code>ext2.h</code><br>磁盘被分成块组，每个块组都有一个 inode和数据位图以及 inode 和数据块<br><img src="/images/os/generic/fs/file_system/fs_ext2.png" alt="ext2 磁盘镜像格式"></p>
-<p><strong>ext2 inode</strong>:<br><img src="/images/os/generic/fs/file_system/ext2_inode.png" alt="ext2 inode 结构"></p>
+<p><strong>ext2: 磁盘镜像格式</strong>: in <code>ext2.h</code><br>磁盘被分成块组，每个块组都有一个 inode和数据位图以及 inode 和数据块<br><img data-src="/images/os/generic/fs/file_system/fs_ext2.png" alt="ext2 磁盘镜像格式"></p>
+<p><strong>ext2 inode</strong>:<br><img data-src="/images/os/generic/fs/file_system/ext2_inode.png" alt="ext2 inode 结构"></p>
 <p><strong>ext2 目录</strong>:<br>目录文件：与 FAT 本质相同，在文件上建立目录的数据结构</p>
 <h3 id="优劣-1"><a href="#优劣-1" class="headerlink" title="优劣"></a>优劣</h3><ul>
 <li>局部性与缓存：通过内存缓存减少读&#x2F;写放大，inode 在磁盘上连续存储，便于缓存&#x2F;预取</li>
@@ -594,8 +622,8 @@
 </ul>
 <h2 id="Linux-ext3-文件系统"><a href="#Linux-ext3-文件系统" class="headerlink" title="Linux ext3 文件系统"></a>Linux ext3 文件系统</h2><p><a id="ext3"></a></p>
 <p>一种流行的日志文件系统，大多数磁盘上的结构与 Linux ext2 相同，区别只是日志的存在</p>
-<p><img src="/images/os/generic/fs/file_system/ext3.png" alt="ext3 磁盘镜像结构"></p>
-<h3 id="基础协议：数据日志（data-journaling）"><a href="#基础协议：数据日志（data-journaling）" class="headerlink" title="基础协议：数据日志（data journaling）"></a>基础协议：数据日志（data journaling）</h3><p><img src="/images/os/generic/fs/file_system/data_journaling.png" alt="ext3 数据日志"></p>
+<p><img data-src="/images/os/generic/fs/file_system/ext3.png" alt="ext3 磁盘镜像结构"></p>
+<h3 id="基础协议：数据日志（data-journaling）"><a href="#基础协议：数据日志（data-journaling）" class="headerlink" title="基础协议：数据日志（data journaling）"></a>基础协议：数据日志（data journaling）</h3><p><img data-src="/images/os/generic/fs/file_system/data_journaling.png" alt="ext3 数据日志"></p>
 <p><strong>日志内容</strong>:  </p>
 <ul>
 <li>事务开始块（TxB）：有关此更新的信息<br>包括对文件系统即将进行的更新的相关信息以及某种事务标识符（transaction identifier，TID）</li>
@@ -643,7 +671,7 @@
 </li>
 </ol>
 <h3 id="优化：有序日志（ordered-journaling，或称为元数据日志，metadata-journaling）"><a href="#优化：有序日志（ordered-journaling，或称为元数据日志，metadata-journaling）" class="headerlink" title="优化：有序日志（ordered journaling，或称为元数据日志，metadata journaling）"></a>优化：有序日志（ordered journaling，或称为元数据日志，metadata journaling）</h3><p><a id="metadata_journaling"></a></p>
-<p><img src="/images/os/generic/fs/file_system/metadata_journaling.png" alt="ext3 元数据日志"></p>
+<p><img data-src="/images/os/generic/fs/file_system/metadata_journaling.png" alt="ext3 元数据日志"></p>
 <p>强制先写入数据，文件系统可以保证指针永远不会指向垃圾</p>
 <blockquote>
 <p><strong>崩溃一致性的核心</strong>：“先写入被指对象，再写入指针对象”</p>
@@ -691,7 +719,7 @@
 <li>将 inode号作为输入，并生成最新版本的 inode 的磁盘地址</li>
 <li>每次将 inode 写入磁盘时，imap 都会使用其新位置进行更新</li>
 </ul>
-<p><img src="/images/os/generic/fs/file_system/lfs_imap.png" alt="lfs imap"></p>
+<p><img data-src="/images/os/generic/fs/file_system/lfs_imap.png" alt="lfs imap"></p>
 <p>imap的驻留位置：放在它写入所有其他新信息的位置旁边</p>
 <p><strong>如何找到 inode 映射块？</strong> LFS 在磁盘上只有一个固定的位置，称为<strong>检查点区域（checkpoint region，CR）</strong>  </p>
 <ul>
@@ -906,6 +934,7 @@
 
   
   <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
 
@@ -920,11 +949,19 @@
 <script src="/js/next-boot.js"></script>
 
 
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_lines.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_sphere.min.js"></script>
 
 
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 

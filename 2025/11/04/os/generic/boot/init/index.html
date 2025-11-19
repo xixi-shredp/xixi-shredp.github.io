@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#222">
 <meta name="generator" content="Hexo 7.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
 <link rel="stylesheet" href="/css/main.css">
@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="操作系统初始化过程简介">
@@ -108,6 +108,7 @@
 
   <div class="site-nav-right">
     <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
     </div>
   </div>
 </div>
@@ -142,11 +143,38 @@
     <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
   </ul>
 </nav>
 
 
 
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
 
 </div>
     </header>
@@ -238,7 +266,7 @@
 <p>参考: 中国科学院大学 2025年秋《高级操作系统教程》课件 </p>
 </blockquote>
 <h1 id="计算机启动"><a href="#计算机启动" class="headerlink" title="计算机启动"></a>计算机启动</h1><p>启动流程：</p>
-<img src="/images/os/generic/boot/init/start.png" alt="start" width="700">
+<img data-src="/images/os/generic/boot/init/start.png" alt="start" width="700">
 
 <h2 id="从上电到内核的第一行代码：BIOS-bootload"><a href="#从上电到内核的第一行代码：BIOS-bootload" class="headerlink" title="从上电到内核的第一行代码：BIOS -&gt; bootload"></a>从上电到内核的第一行代码：BIOS -&gt; bootload</h2><p>任务：</p>
 <ol>
@@ -307,7 +335,7 @@
 </ul>
 </li>
 </ul>
-<img src="/images/os/generic/boot/init/uefi.svg" alt="UEFI" width="700">
+<img data-src="/images/os/generic/boot/init/uefi.svg" alt="UEFI" width="700">
 
 <h3 id="bootloader-引导程序"><a href="#bootloader-引导程序" class="headerlink" title="bootloader 引导程序"></a>bootloader 引导程序</h3><p>存放于磁盘的 MBR 扇区</p>
 <ul>
@@ -334,7 +362,7 @@
 </ol>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">+------+---------------------------+---------------------+-----------+--------+</span><br><span class="line">| PMBR |      Partition Table      |      Partition      |  Table    | GPT    |</span><br><span class="line">|      |                           |                     |  Backup   | Backup |</span><br><span class="line">+------+-----+---+---+---+---+-----+---+---+---+---+-----+-----------+--------+</span><br><span class="line">|      | GPT |   |   |   |   |     |   |   |   |   |     | Partition | GPT    |</span><br><span class="line">| MBR  | HDR | 1 | 2 | 3 | 4 | ... | 1 | 2 | 3 | 4 | ... | Table     | HDR    |</span><br><span class="line">|      |     |   |   |   |   |     |   |   |   |   |     | Backup    | Backup |</span><br><span class="line">+------+-----+---+---+---+---+-----+---+---+---+---+-----+-----------+--------+</span><br><span class="line">| LBA0 | LBA1|     LBA2      |LBA3~|    LBA35 ~ LBA-35   | LBA-34~   | LBA-1  |</span><br><span class="line">|      |     |               |LBA34|                     | LBA-2     |        |</span><br><span class="line">+------+-----+---------------+-----+---------------------+-----------+--------+</span><br></pre></td></tr></table></figure></blockquote>
 <hr>
-<p>当前在 Linux 上希望统一 bootloader 的进展： LinuxBoot<br><img src="/images/os/generic/boot/init/linuxboot.png" alt="LinuxBoot" width="700"></p>
+<p>当前在 Linux 上希望统一 bootloader 的进展： LinuxBoot<br><img data-src="/images/os/generic/boot/init/linuxboot.png" alt="LinuxBoot" width="700"></p>
 <h2 id="从内核的第一行代码到第一个用户态程序的第一行代码：kernel-boot"><a href="#从内核的第一行代码到第一个用户态程序的第一行代码：kernel-boot" class="headerlink" title="从内核的第一行代码到第一个用户态程序的第一行代码：kernel boot"></a>从内核的第一行代码到第一个用户态程序的第一行代码：kernel boot</h2><p>任务：</p>
 <ol>
 <li>配置页表并开启虚拟内存机制，允许使用虚拟地址</li>
@@ -499,6 +527,7 @@
 
   
   <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
 
@@ -513,11 +542,19 @@
 <script src="/js/next-boot.js"></script>
 
 
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_lines.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_sphere.min.js"></script>
 
 
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 

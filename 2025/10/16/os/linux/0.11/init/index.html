@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#222">
 <meta name="generator" content="Hexo 7.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
 <link rel="stylesheet" href="/css/main.css">
@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="Linux 0.11 源码简介：Init 初始化过程">
@@ -28,7 +28,7 @@
 <meta property="og:description" content="Linux 0.11 源码简介：Init 初始化过程">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-10-16T03:32:53.000Z">
-<meta property="article:modified_time" content="2025-11-06T03:57:08.320Z">
+<meta property="article:modified_time" content="2025-11-18T03:55:03.194Z">
 <meta property="article:author" content="xixi">
 <meta name="twitter:card" content="summary">
 
@@ -104,6 +104,7 @@
 
   <div class="site-nav-right">
     <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
     </div>
   </div>
 </div>
@@ -138,11 +139,38 @@
     <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
   </ul>
 </nav>
 
 
 
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
 
 </div>
     </header>
@@ -198,7 +226,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2025-11-06 11:57:08" itemprop="dateModified" datetime="2025-11-06T11:57:08+08:00">2025-11-06</time>
+                <time title="Modified: 2025-11-18 11:55:03" itemprop="dateModified" datetime="2025-11-18T11:55:03+08:00">2025-11-18</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -253,14 +281,16 @@
 </ol>
 </li>
 <li>初始化<ul>
-<li>如果定义了 RAMDISK, 则初始化虚拟盘 <code>rd_init()</code>，主存设置到虚拟盘之后</li>
-<li>物理内存初始化：<code>mem_init()</code></li>
-<li>异常处理初始化：<code>trap_init()</code></li>
-<li>块设备初始化：<code>blk_dev_init()</code></li>
+<li>如果定义了 RAMDISK, 则<a href="#rd_init">初始化虚拟盘 <code>rd_init()</code></a>，主存设置到虚拟盘之后</li>
+<li><a href="#mem_init">物理内存初始化：<code>mem_init()</code></a></li>
+<li><a href="#trap_init">异常处理初始化：<code>trap_init()</code></a></li>
+<li><a href="#blk_dev_init">块设备初始化：<code>blk_dev_init()</code></a></li>
 <li>字符设备初始化：<code>chr_dev_init()</code></li>
 <li>系统时钟初始化: <code>time_init()</code></li>
-<li>进程调度初始化: <code>sched_init()</code></li>
-<li>硬盘缓冲区初始化: <code>buffer_init()</code></li>
+<li><a href="#sched_init">进程调度初始化: <code>sched_init()</code></a></li>
+<li><a href="#buffer_init">硬盘缓冲区初始化: <code>buffer_init()</code></a></li>
+<li><a href="#hd_init">硬盘控制器初始化：<code>hd_init()</code></a></li>
+<li><a href="#floppy_init">软盘控制器初始化：<code>floppy_init()</code></a></li>
 </ul>
 </li>
 <li>开中断: <code>sti()</code></li>
@@ -279,19 +309,58 @@
 </li>
 </ul>
 </li>
-<li>通过 <code>fork()</code> 创建子进程</li>
+<li>通过 <a href="#fork"><code>fork()</code></a> 创建子进程<ul>
+<li>对于父进程（进程0） 进入死循环执行 <code>pause()</code> <ul>
+<li><code>pause()</code> 将通过 <code>_syscall0</code> 执行 <code>sys_pause</code> 系统调用 in <code>kernel/sched.c</code></li>
+<li><code>sys_pause</code> 将当前进程(进程 0)挂起(<code>TASK_INTERRUPTIBLE</code>)后开始调度：<a href="#schedule"><code>schedule()</code></a></li>
+</ul>
+</li>
+<li>对于子进程（进程1）：执行 <code>init()</code></li>
+</ul>
+</li>
 </ol>
-<h2 id="虚拟盘初始化-rd-init"><a href="#虚拟盘初始化-rd-init" class="headerlink" title="虚拟盘初始化 rd_init()"></a>虚拟盘初始化 <code>rd_init()</code></h2><p>in <code>kernel/blk_dev/ramdisk.c</code></p>
-<ol>
-<li>设置 RAMDISK 的请求处理函数 <code>do_rd_request</code> : <code>blk_dev[MAJOR_NR].request_fn = DEVICE_REQUEST</code></li>
-</ol>
-<blockquote>
+<h2 id="设备初始化"><a href="#设备初始化" class="headerlink" title="设备初始化"></a>设备初始化</h2><h3 id="字符设备初始化："><a href="#字符设备初始化：" class="headerlink" title="字符设备初始化："></a>字符设备初始化：</h3><ul>
+<li><code>chr_dev_init()</code>: 空</li>
+<li><code>tty_init()</code><ul>
+<li><code>rs_init()</code></li>
+<li><code>con_init()</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="块设备初始化"><a href="#块设备初始化" class="headerlink" title="块设备初始化"></a>块设备初始化</h3><blockquote>
 <p><strong>块设备数组，管理所有的块设备</strong>  </p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">blk_dev_struct</span> <span class="title">blk_dev</span>[<span class="title">NR_BLK_DEV</span>] =</span> &#123;</span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* no_dev */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* dev mem */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* dev fd */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* dev hd */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* dev ttyx */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* dev tty */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;		<span class="comment">/* dev lp */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
 <p>linux 中每个设备的 c 文件在定义 MAJOR_NR 之后 include <code>blk.h</code> ，<code>blk.h</code> 将根据 <code>MAJOR_NR</code> 定义相应的 <code>DEVICE_REQUEST</code></p>
 </blockquote>
-<h2 id="物理内存初始化-mem-init"><a href="#物理内存初始化-mem-init" class="headerlink" title="物理内存初始化 mem_init()"></a>物理内存初始化 <code>mem_init()</code></h2><p>in <code>mm/memory.c</code></p>
+<h4 id="虚拟盘初始化-rd-init"><a href="#虚拟盘初始化-rd-init" class="headerlink" title="虚拟盘初始化 rd_init()"></a>虚拟盘初始化 <code>rd_init()</code></h4><p><a id="rd_init"></a><br>in <code>kernel/blk_dev/ramdisk.c</code></p>
+<ol>
+<li>设置 RAMDISK 的请求处理函数 <code>do_rd_request</code> : <code>blk_dev[MAJOR_NR].request_fn = DEVICE_REQUEST</code></li>
+</ol>
+<h4 id="块设备初始化：blk-dev-init"><a href="#块设备初始化：blk-dev-init" class="headerlink" title="块设备初始化：blk_dev_init()"></a>块设备初始化：<code>blk_dev_init()</code></h4><p><a id="blk_dev_init"></a><br>初始化 <code>request</code> 数组: dev 置 <code>-1</code>, next 置空（还未组成链表）</p>
+<h4 id="硬盘缓冲区初始化-buffer-init"><a href="#硬盘缓冲区初始化-buffer-init" class="headerlink" title="硬盘缓冲区初始化: buffer_init()"></a>硬盘缓冲区初始化: <code>buffer_init()</code></h4><p><a id="buffer_init"></a></p>
+<p>in <code>fs/buffer.c</code></p>
+<ol>
+<li>如果 <code>buffer_end</code> 是 1MB ，则实际可用的 buffer 的末端在 640KB<ul>
+<li>因为 640KB - 1MB 区域被内存和 BIOS 占用</li>
+</ul>
+</li>
+</ol>
+<h4 id="硬盘控制器初始化-hd-init"><a href="#硬盘控制器初始化-hd-init" class="headerlink" title="硬盘控制器初始化 hd_init()"></a>硬盘控制器初始化 <code>hd_init()</code></h4><p><a id="hd_init"></a></p>
+<p>in <code>kernel/blk_dev/hd.c</code></p>
+<ol>
+<li>设置 hd 的请求处理函数 <code>do_hd_request</code> : <code>blk_dev[MAJOR_NR].request_fn = DEVICE_REQUEST</code></li>
+<li>设置 hd 的中断处理函数：<code>set_intr_gate(0x2E,&amp;hd_interrupt)</code></li>
+<li>复位 hd 的中断屏蔽位，允许从硬盘控制器发出中断：<code>outb</code></li>
+</ol>
+<h4 id="软盘控制器初始化-floppy-init"><a href="#软盘控制器初始化-floppy-init" class="headerlink" title="软盘控制器初始化 floppy_init()"></a>软盘控制器初始化 <code>floppy_init()</code></h4><p><a id="floppy_init"></a></p>
+<p>in <code>kernel/blk_dev/floppy.c</code></p>
+<ol>
+<li>设置 fd 的请求处理函数 <code>do_fd_request</code> : <code>blk_dev[MAJOR_NR].request_fn = DEVICE_REQUEST</code></li>
+<li>设置 fd 的中断处理函数：<code>set_trap_gate(0x26,&amp;floppy_interrupt)</code> </li>
+<li>复位 fd 的中断屏蔽位，允许从软盘控制器发出中断：<code>outb</code></li>
+</ol>
+<h2 id="物理内存初始化-mem-init"><a href="#物理内存初始化-mem-init" class="headerlink" title="物理内存初始化 mem_init()"></a>物理内存初始化 <code>mem_init()</code></h2><p><a id="mem_init"></a><br>in <code>mm/memory.c</code></p>
 <ol>
 <li>设置主存终点 <code>HIGH_MEMORY</code></li>
 <li>遍历 1-16MB 的页，设置每个页为 USED<ul>
@@ -305,7 +374,8 @@
 </ul>
 </li>
 </ol>
-<h2 id="异常处理初始化：trap-init"><a href="#异常处理初始化：trap-init" class="headerlink" title="异常处理初始化：trap_init()"></a>异常处理初始化：<code>trap_init()</code></h2><p>in <code>kernel/traps.c</code></p>
+<h2 id="异常处理初始化：trap-init"><a href="#异常处理初始化：trap-init" class="headerlink" title="异常处理初始化：trap_init()"></a>异常处理初始化：<code>trap_init()</code></h2><p><a id="trap_init"></a></p>
+<p>in <code>kernel/traps.c</code></p>
 <ol>
 <li>设置 IDT 中的 trap_gate 和 system_gate: <code>set_trap_gate</code>, <code>set_system_gate</code><ul>
 <li>trap_gate 用于异常处理, dpl 为 0</li>
@@ -315,19 +385,8 @@
 </ol>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> _set_gate(gate_addr,type,dpl,addr) \</span></span><br><span class="line"><span class="meta">__asm__ (<span class="string">&quot;movw %%dx,%%ax\n\t&quot;</span> \</span></span><br><span class="line"><span class="meta">	<span class="string">&quot;movw %0,%%dx\n\t&quot;</span> \</span></span><br><span class="line"><span class="meta">	<span class="string">&quot;movl %%eax,%1\n\t&quot;</span> \</span></span><br><span class="line"><span class="meta">	<span class="string">&quot;movl %%edx,%2&quot;</span> \</span></span><br><span class="line"><span class="meta">	: \</span></span><br><span class="line"><span class="meta">	: <span class="string">&quot;i&quot;</span> ((short) (0x8000+(dpl&lt;&lt;13)+(type&lt;&lt;8))), \</span></span><br><span class="line"><span class="meta">	<span class="string">&quot;o&quot;</span> (*((char *) (gate_addr))), \</span></span><br><span class="line"><span class="meta">	<span class="string">&quot;o&quot;</span> (*(4+(char *) (gate_addr))), \</span></span><br><span class="line"><span class="meta">	<span class="string">&quot;d&quot;</span> ((char *) (addr)),<span class="string">&quot;a&quot;</span> (0x00080000))</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> set_intr_gate(n,addr) \</span></span><br><span class="line"><span class="meta">	_set_gate(&amp;idt[n],14,0,addr)</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> set_trap_gate(n,addr) \</span></span><br><span class="line"><span class="meta">	_set_gate(&amp;idt[n],15,0,addr)</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> set_system_gate(n,addr) \</span></span><br><span class="line"><span class="meta">	_set_gate(&amp;idt[n],15,3,addr)</span></span><br></pre></td></tr></table></figure>
 
-<h2 id="块设备初始化：blk-dev-init"><a href="#块设备初始化：blk-dev-init" class="headerlink" title="块设备初始化：blk_dev_init()"></a>块设备初始化：<code>blk_dev_init()</code></h2><p>初始化 <code>request</code> 数组: dev 置 <code>-1</code>, next 置空（还未组成链表）</p>
-<blockquote>
-<p>request 数组</p>
-</blockquote>
-<h2 id="字符设备初始化："><a href="#字符设备初始化：" class="headerlink" title="字符设备初始化："></a>字符设备初始化：</h2><ul>
-<li><code>chr_dev_init()</code>: 空</li>
-<li><code>tty_init()</code><ul>
-<li><code>rs_init()</code></li>
-<li><code>con_init()</code></li>
-</ul>
-</li>
-</ul>
-<h2 id="进程调度初始化-sched-init"><a href="#进程调度初始化-sched-init" class="headerlink" title="进程调度初始化: sched_init()"></a>进程调度初始化: <code>sched_init()</code></h2><ol>
+<h2 id="进程调度初始化-sched-init"><a href="#进程调度初始化-sched-init" class="headerlink" title="进程调度初始化: sched_init()"></a>进程调度初始化: <code>sched_init()</code></h2><p><a id="sched_init"></a></p>
+<ol>
 <li>补充 GDT ：为初始进程 init_task 补充 TSS 和 LDT<ul>
 <li>从 GDT 的第 4 项开始(<code>FIRST_TSS_ENTRY</code>)，每个进程占用一个 TSS 项和一个 LDT 项</li>
 <li><code>init_task</code> 属于 <code>task_union</code><ul>
@@ -345,7 +404,11 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">                    TSS Descriptor for 32-bit TSS</span><br><span class="line">31                23                15                7                 0</span><br><span class="line">+-----------------+-+-+-+-+---------+-+-----+---------+-----------------+</span><br><span class="line">|                 | | | |A|  LIMIT  | |     |  TYPE   |                 |</span><br><span class="line">|   BASE 31..24   |G|0|0|V|         |P| DPL |         |   BASE 23..16   | 4</span><br><span class="line">|                 | | | |L|  19..16 | |     |0|1|0|B|1|                 |</span><br><span class="line">|-----------------+-+-+-+-+---------+-+-----+-+-+-+-+-+-----------------|</span><br><span class="line">|                                   |                                   |</span><br><span class="line">|             BASE 15..0            |             LIMIT 15..0           | 0</span><br><span class="line">|                                   |                                   |</span><br><span class="line">+-----------------+-----------------+-----------------+-----------------+</span><br></pre></td></tr></table></figure></blockquote>
 <p>init_task task_struct 初始化结构：  </p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> *  INIT_TASK is used to set up the first task table, touch at</span></span><br><span class="line"><span class="comment"> * your own risk!. Base=0, limit=0x9ffff (=640kB)</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> INIT_TASK \</span></span><br><span class="line"><span class="meta"><span class="comment">/* state etc */</span>	&#123; 0,15,15, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* signals */</span>	0,&#123;&#123;&#125;,&#125;,0, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* ec,brk... */</span>	0,0,0,0,0,0, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* pid etc.. */</span>	0,-1,0,0,0, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* uid etc */</span>	0,0,0,0,0,0, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* alarm */</span>	0,0,0,0,0,0, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* math */</span>	0, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* fs info */</span>	-1,0022,NULL,NULL,NULL,0, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* filp */</span>	&#123;NULL,&#125;, \</span></span><br><span class="line"><span class="meta">	&#123; \</span></span><br><span class="line"><span class="meta">		&#123;0,0&#125;, \</span></span><br><span class="line"><span class="meta"><span class="comment">/* ldt */</span>	&#123;0x9f,0xc0fa00&#125;, \</span></span><br><span class="line"><span class="meta">		&#123;0x9f,0xc0f200&#125;, \</span></span><br><span class="line"><span class="meta">	&#125;, \</span></span><br><span class="line"><span class="meta"><span class="comment">/*tss*/</span>	&#123;0,PAGE_SIZE+(long)&amp;init_task,0x10,0,0,0,0,(long)&amp;pg_dir,\</span></span><br><span class="line"><span class="meta">	 0,0,0,0,0,0,0,0, \</span></span><br><span class="line"><span class="meta">	 0,0,0x17,0x17,0x17,0x17,0x17,0x17, \</span></span><br><span class="line"><span class="meta">	 _LDT(0),0x80000000, \</span></span><br><span class="line"><span class="meta">		&#123;&#125; \</span></span><br><span class="line"><span class="meta">	&#125;, \</span></span><br><span class="line"><span class="meta">&#125;</span></span><br></pre></td></tr></table></figure>
-
+<p>内核初始化完成后将直接使用 INIT_TASK 作为 0 号进程：</p>
+<ul>
+<li>INIT_TASK 的 TSS 中 CR3 设置为 <code>pg_dir</code> ,即 INIT_TASK 将使用内核的页表作为其页表。</li>
+<li>INIT_TASK 和内核初始化时使用相同的段基址和段限长，二者的线性地址空间也相同。</li>
+</ul>
 <ol start="2">
 <li>为剩余进程补充 TSS 和 LDT (linux 0.11 最多支持 <code>NR_TASK</code> 个进程)</li>
 <li>加载 0 进程的 TSSR 和 LDTR<ul>
@@ -360,47 +423,68 @@
 </ul>
 </li>
 </ol>
-<h2 id="硬盘缓冲区初始化-buffer-init"><a href="#硬盘缓冲区初始化-buffer-init" class="headerlink" title="硬盘缓冲区初始化: buffer_init()"></a>硬盘缓冲区初始化: <code>buffer_init()</code></h2><p>in <code>fs/buffer.c</code></p>
+<h3 id="进程调度-schedule"><a href="#进程调度-schedule" class="headerlink" title="进程调度 schedule()"></a>进程调度 schedule()</h3><p><a id="schedule"></a></p>
+<p>in <code>kernel/sched.c</code></p>
 <ol>
-<li>如果 <code>buffer_end</code> 是 1MB ，则实际可用的 buffer 的末端在 640KB<ul>
-<li>因为 640KB - 1MB 区域被内存和 BIOS 占用</li>
+<li>检查 alarm ，唤醒所有收到信号的被挂起的进程: <code>TASK_INTERRUPTIBLE</code> -&gt; <code>TASK_RUNNING</code></li>
+<li>将就绪态的所有进程中 counter 最大的进程选出来(永远不会遍历到进程 0)<ul>
+<li>若所有就绪进程 counter 均为 0， 重新刷新所有进程的 counter</li>
 </ul>
 </li>
+<li>切换到调度选出的进程：<code>switch_to(next)</code></li>
 </ol>
-<h2 id="fork"><a href="#fork" class="headerlink" title="fork()"></a>fork()</h2><p>通过 <code>_syscall0(int, fork)</code> 定义</p>
+<p><code>switch_to</code> 定义于 <code>include/linux/sched.h</code>:</p>
+<ol>
+<li>比较 next 和 _current: 如果相同，则不需要切换进程，直接返回</li>
+<li>否则原子性将 _current 切换到 next</li>
+</ol>
+<h2 id="fork"><a href="#fork" class="headerlink" title="fork()"></a>fork()</h2><p><a id="fork"></a></p>
+<p>通过 <code>_syscall0(int, fork)</code> 定义</p>
 <ul>
 <li><code>_syscall0</code> macro 定义于 <code>include/unistd.h</code>，本质是一条 <code>int 80, __NR_fork</code> 指令(trap in syscall gate)</li>
-<li>通过 <code>_system_call</code> 调用 <code>_sys_call_table</code> 中的 <code>sys_fork</code><ol>
+<li>通过 <code>_system_call</code> 调用 <code>_sys_call_table</code> 中的 <code>sys_fork</code></li>
+</ul>
+<ol>
 <li>判断传入参数是否是系统调用(&lt; <code>nr_system_calls</code>)，否则跳转到 <code>bad_sys_call</code></li>
 <li>将内核数据段(<code>0x10</code>)赋值 edx, ds, es</li>
 <li>将用户数据段(<code>0x17</code>)赋值 eax, fs</li>
 <li>调用 _sys_call_table 的第 <code>eax</code> 个 entry<ul>
-<li><code>sys_call_table</code> 定义于 <code>include/linux/sys.h</code>，存放 <code>nr_system_calls</code> 个系统调用函数入口</li>
+<li><code>sys_call_table</code> 定义于 <code>include/linux/sys.h</code>，存放 <code>nr_system_calls</code> 个系统调用函数入口: <a href="#sys_fork"><code>sys_fork()</code></a></li>
+</ul>
+</li>
+<li>将 eax 压栈（系统调用返回值），将 <code>_current</code>(当前进程的 task struct 指针) 赋值给 eax</li>
+<li>如果当前进程不在就绪状态(state !&#x3D; 0)，跳转到 <code>schedule</code> 调度进程</li>
+<li>如果当前进程时间片用完(counter &#x3D;&#x3D; 0)，跳转到 <code>schedule</code> 调度进程</li>
+<li>准备用系统调用中返回<ul>
+<li>出栈相应参数后 iret 返回</li>
 </ul>
 </li>
 </ol>
-</li>
-<li><code>_sys_fork</code><ul>
+<h3 id="sys-fork"><a href="#sys-fork" class="headerlink" title="sys_fork"></a>sys_fork</h3><p><a id="sys_fork"></a></p>
+<p>in <code>kernel/system_call.S</code></p>
+<ul>
 <li>调用 <code>_find_empty_process</code> 找到 0 号进程 (in <code>kernel/fork.c</code>)<ul>
 <li>从 task 数组中找到空闲的 entry 的 idx</li>
 </ul>
 </li>
 <li>压栈 6 个寄存器 : 为 <code>copy_process</code> 准备参数</li>
-<li>调用 <code>_copy_process</code></li>
+<li><a href="#copy_process">调用 <code>_copy_process</code></a></li>
+<li>将栈恢复为调用 _sys_fork 之前的状态</li>
+<li>ret 返回</li>
 </ul>
-</li>
-<li><code>copy_process</code> in <code>kernel/fork.c</code><ul>
-<li>参数来源: (右序压栈)<ul>
+<h3 id="copy-process"><a href="#copy-process" class="headerlink" title="copy_process"></a>copy_process</h3><p><a id="copy_process"></a><br>in <code>kernel/fork.c</code><br>参数来源: (右序压栈)</p>
+<ul>
 <li><code>int 80</code> 硬件压栈(5 个寄存器): <code>eip, cs, eflags, esp, ss</code></li>
 <li><code>_system_call</code> 软件压栈(6 个寄存器) :<code>ebx, ecx, edx, fs, es, ds</code></li>
 <li><code>call _sys_call_table</code> 会压入一次栈且未返回 :<code>none</code></li>
 <li><code>_sys_fork</code> 软件压栈(5 个寄存器): <code>eax(nr), ebp, edi, esi, gs</code></li>
 </ul>
-</li>
-</ul>
 <ol>
 <li>为 nr 进程设置 task 结构体<ul>
-<li><code>get_free_page()</code> 获取内核中空闲物理内存的空闲页</li>
+<li><code>get_free_page()</code> 获取内核中空闲物理内存的空闲页<ul>
+<li>从空闲物理内存的高地址开始向低地址分配</li>
+</ul>
+</li>
 <li>将 task 数组的第 nr 项指向刚获取的空闲物理页</li>
 <li>将当前进程(父进程, current)的 task 结构体直接复制到 nr 进程(子进程)的 task 结构体</li>
 <li>设置子进程 task 结构体状态<ul>
@@ -410,15 +494,97 @@
 <li>esp0 用户栈顶设置为刚刚获取的空闲页的地址末端</li>
 <li>将栈上的参数赋值给 tss 中保存的上下文</li>
 <li>eax 表示子进程 fork 返回值为 0</li>
+<li>tss.ldt 设置到 <code>_LDT(nr)</code> : GDT 中的 task nr 对应的 LDT 选择符</li>
 </ul>
 </li>
 </ul>
+</li>
+</ul>
+</li>
+<li>设置子进程的虚拟地址空间并复制页表：<code>copy_mem</code><ul>
+<li>获得父进程的段限长和段基址: <code>get_limit</code> 和 <code>get_base</code></li>
+<li>计算子进程在虚拟地址空间中的基地址等于 64MB * 其任务号<ul>
+<li>linux 0.11 将 4GB 的虚拟地址空间等分给每个进程（最多 64 个进程），每个进程 64 MB 的空间</li>
+</ul>
+</li>
+<li>设置子进程的 LDT 的代码段和数据段(在 linux 0.11 中二者相同)</li>
+<li>设置子进程的页表: <a href="#copy_page_tables"><code>copy_page_tables</code></a> 将父进程的代码段复制到子进程的代码段</li>
+</ul>
+</li>
+<li>维护子进程的文件描述符表</li>
+<li>将子进程的 tss 和 ldt 写入 gdt 相应的 entry</li>
+<li>进程状态设置为 <code>TASK_RUNNING</code> </li>
+<li>返回子进程的 pid</li>
+</ol>
+<h4 id="copy-page-tables"><a href="#copy-page-tables" class="headerlink" title="copy_page_tables"></a>copy_page_tables</h4><p><a id="copy_page_tables"></a><br>in <code>mm/memory.c</code></p>
+<ol>
+<li>检查源地址和目标地址空间是否均为 4 MB 对齐<ul>
+<li>最后一级页表管理的地址空间为 4MB</li>
+</ul>
+</li>
+<li>计算源地址和目标地址的对应的一级页表项的地址<ul>
+<li>第一页表基地址均为 0 (<code>__pg_dir__</code>)</li>
+</ul>
+</li>
+<li>计算复制内存需要的页表数(一级页表项数)</li>
+<li>对占用的所有页表开始进行循环<ul>
+<li>如果目标地址对应的 L1 PTE 已存在，则 panic</li>
+<li>如果源地址对应的 L1 PTE 不存在（未使用），则 continue</li>
+<li>获取源地址对应的二级页表的基地址</li>
+<li>申请一个空闲页作为目的地址对应的二级页表</li>
+<li>设置目的地址的 L1PTE 的标志为 0x7 (U, RW, P)</li>
+<li>计算需要复制的页数<ul>
+<li>如果源地址来自内核空间（<code>from == 0</code>）,只需要复制 160 个页</li>
+<li>否则复制所有的 1024 个页</li>
+</ul>
+</li>
+<li>针对当前循环处理的二级页表的每个 PTE<ul>
+<li>如果源地址的 L2PTE not present，不用复制</li>
+<li>设置目的地址 L2PTE R&#x2F;W 标志位为 0 (只读)(为实现 Copy On Write)</li>
+<li>如果源地址 L2PTE 对应的页面地址小于 LOW_MEM (1MB)，则循环进入下一次迭代<ul>
+<li>只有进程 0 的页面地址才会小于 1MB</li>
+</ul>
+</li>
+<li>否则，将源地址的 L2PTE 也设置为只读(为实现 Copy On Write)，<br>并将目的地址对应页面的 mem_map 数组中对应的元素 +1 (表示页面已使用)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>invalidate()</code>: 刷新 TLB</li>
+</ol>
+<h2 id="init-进程-1-执行的初始化操作"><a href="#init-进程-1-执行的初始化操作" class="headerlink" title="init(): 进程 1 执行的初始化操作"></a>init(): 进程 1 执行的初始化操作</h2><ol>
+<li><code>setup()</code> 执行 <code>sys_setup</code> 系统调用 in <code>kernel/blk_dev/hd.c</code><ul>
+<li><code>callable</code> 强行使该函数只能被调用一次</li>
+</ul>
+<ol>
+<li>读取硬盘参数：config.h 未设置则从 BIOS 中读取</li>
+<li>设置每个硬盘的起始扇区号和扇区总数</li>
+<li>检测硬盘是否对 AT 控制器兼容，若不兼容，则将硬盘数据结构清零</li>
+<li>获取每一个兼容的硬盘的分区表信息（第一个扇区）<ul>
+<li>通过 <code>bread()</code> 读取数据块 in <code>fs/buffer.c</code><ol>
+<li><code>getblk()</code> 获取块号<ol>
+<li>通过 <code>get_hash_table()</code> 在 hash_table 中尝试获取<ol>
+<li>通过 <code>find_buffer()</code> 在缓冲区中尝试查找块, 找不到返回 NULL<ul>
+<li>遍历 hash_table ，对比每一项的 dev 和 blocknr, 匹配则返回对应的 <code>buffer_head*</code> </li>
+<li>如果找不到，则返回 NULL</li>
+</ul>
+</li>
+<li>如果找到，将相应的块引用计数 +1</li>
+<li><code>wait_on_buffer()</code></li>
+<li>再次检查块号是否匹配，匹配则返回，否则引用计数 -1</li>
+</ol>
+</li>
+<li>如果找到则直接返回找到的 <code>buffer_head*</code> </li>
+<li>找不到：……</li>
+</ol>
+</li>
+</ol>
 </li>
 </ul>
 </li>
 </ol>
 </li>
-</ul>
+</ol>
 
     </div>
 
@@ -499,7 +665,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#main-%E5%87%BD%E6%95%B0"><span class="nav-number">1.</span> <span class="nav-text">main() 函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%99%9A%E6%8B%9F%E7%9B%98%E5%88%9D%E5%A7%8B%E5%8C%96-rd-init"><span class="nav-number">1.1.</span> <span class="nav-text">虚拟盘初始化 rd_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%E5%88%9D%E5%A7%8B%E5%8C%96-mem-init"><span class="nav-number">1.2.</span> <span class="nav-text">物理内存初始化 mem_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%9Atrap-init"><span class="nav-number">1.3.</span> <span class="nav-text">异常处理初始化：trap_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9D%97%E8%AE%BE%E5%A4%87%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%9Ablk-dev-init"><span class="nav-number">1.4.</span> <span class="nav-text">块设备初始化：blk_dev_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%9A"><span class="nav-number">1.5.</span> <span class="nav-text">字符设备初始化：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E5%88%9D%E5%A7%8B%E5%8C%96-sched-init"><span class="nav-number">1.6.</span> <span class="nav-text">进程调度初始化: sched_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A1%AC%E7%9B%98%E7%BC%93%E5%86%B2%E5%8C%BA%E5%88%9D%E5%A7%8B%E5%8C%96-buffer-init"><span class="nav-number">1.7.</span> <span class="nav-text">硬盘缓冲区初始化: buffer_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fork"><span class="nav-number">1.8.</span> <span class="nav-text">fork()</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#main-%E5%87%BD%E6%95%B0"><span class="nav-number">1.</span> <span class="nav-text">main() 函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BE%E5%A4%87%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">1.1.</span> <span class="nav-text">设备初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%9A"><span class="nav-number">1.1.1.</span> <span class="nav-text">字符设备初始化：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9D%97%E8%AE%BE%E5%A4%87%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">1.1.2.</span> <span class="nav-text">块设备初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%99%9A%E6%8B%9F%E7%9B%98%E5%88%9D%E5%A7%8B%E5%8C%96-rd-init"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">虚拟盘初始化 rd_init()</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9D%97%E8%AE%BE%E5%A4%87%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%9Ablk-dev-init"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">块设备初始化：blk_dev_init()</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A1%AC%E7%9B%98%E7%BC%93%E5%86%B2%E5%8C%BA%E5%88%9D%E5%A7%8B%E5%8C%96-buffer-init"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">硬盘缓冲区初始化: buffer_init()</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A1%AC%E7%9B%98%E6%8E%A7%E5%88%B6%E5%99%A8%E5%88%9D%E5%A7%8B%E5%8C%96-hd-init"><span class="nav-number">1.1.2.4.</span> <span class="nav-text">硬盘控制器初始化 hd_init()</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BD%AF%E7%9B%98%E6%8E%A7%E5%88%B6%E5%99%A8%E5%88%9D%E5%A7%8B%E5%8C%96-floppy-init"><span class="nav-number">1.1.2.5.</span> <span class="nav-text">软盘控制器初始化 floppy_init()</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%E5%88%9D%E5%A7%8B%E5%8C%96-mem-init"><span class="nav-number">1.2.</span> <span class="nav-text">物理内存初始化 mem_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E5%88%9D%E5%A7%8B%E5%8C%96%EF%BC%9Atrap-init"><span class="nav-number">1.3.</span> <span class="nav-text">异常处理初始化：trap_init()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E5%88%9D%E5%A7%8B%E5%8C%96-sched-init"><span class="nav-number">1.4.</span> <span class="nav-text">进程调度初始化: sched_init()</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6-schedule"><span class="nav-number">1.4.1.</span> <span class="nav-text">进程调度 schedule()</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fork"><span class="nav-number">1.5.</span> <span class="nav-text">fork()</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#sys-fork"><span class="nav-number">1.5.1.</span> <span class="nav-text">sys_fork</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#copy-process"><span class="nav-number">1.5.2.</span> <span class="nav-text">copy_process</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#copy-page-tables"><span class="nav-number">1.5.2.1.</span> <span class="nav-text">copy_page_tables</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#init-%E8%BF%9B%E7%A8%8B-1-%E6%89%A7%E8%A1%8C%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E6%93%8D%E4%BD%9C"><span class="nav-number">1.6.</span> <span class="nav-text">init(): 进程 1 执行的初始化操作</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -578,6 +744,7 @@
 
   
   <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
 
@@ -592,11 +759,19 @@
 <script src="/js/next-boot.js"></script>
 
 
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_lines.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_sphere.min.js"></script>
 
 
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 

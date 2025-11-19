@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#222">
 <meta name="generator" content="Hexo 7.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.png">
   <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
 <link rel="stylesheet" href="/css/main.css">
@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="GPU Memory System 简介">
@@ -27,10 +27,13 @@
 <meta property="og:site_name" content="xixi&#39;s blog">
 <meta property="og:description" content="GPU Memory System 简介">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/Arch/gpu/memory/unified_dcache_and_shared_memory.svg">
+<meta property="og:image" content="http://example.com/images/Arch/gpu/memory/texture_cache.svg">
 <meta property="article:published_time" content="2025-10-20T13:28:41.000Z">
-<meta property="article:modified_time" content="2025-10-29T05:13:53.031Z">
+<meta property="article:modified_time" content="2025-11-19T02:28:06.012Z">
 <meta property="article:author" content="xixi">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/Arch/gpu/memory/unified_dcache_and_shared_memory.svg">
 
 <link rel="canonical" href="http://example.com/2025/10/20/Arch/gpu/memory/">
 
@@ -104,6 +107,7 @@
 
   <div class="site-nav-right">
     <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
     </div>
   </div>
 </div>
@@ -138,11 +142,38 @@
     <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
   </ul>
 </nav>
 
 
 
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
 
 </div>
     </header>
@@ -198,7 +229,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2025-10-29 13:13:53" itemprop="dateModified" datetime="2025-10-29T13:13:53+08:00">2025-10-29</time>
+                <time title="Modified: 2025-11-19 10:28:06" itemprop="dateModified" datetime="2025-11-19T10:28:06+08:00">2025-11-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -238,14 +269,35 @@
 </ul>
 </li>
 </ul>
-<h1 id="First-Level-Memory-Structures"><a href="#First-Level-Memory-Structures" class="headerlink" title="First-Level Memory Structures"></a>First-Level Memory Structures</h1><h2 id="Shared-Memory-Scratchpad-Memory-Local-Memory"><a href="#Shared-Memory-Scratchpad-Memory-Local-Memory" class="headerlink" title="Shared Memory &#x2F; Scratchpad Memory &#x2F; Local Memory"></a>Shared Memory &#x2F; Scratchpad Memory &#x2F; Local Memory</h2><ul>
+<h1 id="First-Level-Memory-Structures"><a href="#First-Level-Memory-Structures" class="headerlink" title="First-Level Memory Structures"></a>First-Level Memory Structures</h1><h2 id="Unified-L1Dcache-and-Shared-Memory"><a href="#Unified-L1Dcache-and-Shared-Memory" class="headerlink" title="Unified L1Dcache and Shared Memory"></a>Unified L1Dcache and Shared Memory</h2><p>一种 GPU l1 cache 组织形式：(统一的 L1Dcache 和 Shared Meomry)</p>
+<p><img data-src="/images/Arch/gpu/memory/unified_dcache_and_shared_memory.svg" alt="Unified L1Dcache and Shared Memory"></p>
+<ul>
+<li>NVIDIA’s Fermi 架构引入(also present in the Kepler architecture)</li>
+<li>SRAM (Data Array) 可配置为: <ul>
+<li>部分用作直接映射的 Shared Memory<ul>
+<li>在没有 bank 冲突的情况下，lookup 延迟恒定</li>
+<li>每个 bank 宽度为 32 位，并拥有自己的 decoder ，从而允许对每个 bank 中的不同行进行独立访问</li>
+</ul>
+</li>
+<li>部分用作组相联 cache<ul>
+<li>对 global memory 的访问会通过 cache 缓存</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>GPU 流水线通过 replay 处理 Shared Memory Bank 冲突和 L1Dcache miss</li>
+</ul>
+<h3 id="Shared-Memory-Scratchpad-Memory-Local-Memory"><a href="#Shared-Memory-Scratchpad-Memory-Local-Memory" class="headerlink" title="Shared Memory &#x2F; Scratchpad Memory &#x2F; Local Memory"></a>Shared Memory &#x2F; Scratchpad Memory &#x2F; Local Memory</h3><ul>
 <li>内存空间相对较小</li>
-<li>访问延迟通常与寄存器文件的访问延迟相当</li>
+<li>访问延迟通常与 Register Files 的访问延迟相当</li>
 <li>可被同一 CTA 中的所有线程访问</li>
 </ul>
 <p>在不同的编程模型中有不同的名称：</p>
 <ul>
-<li>CUDA 编程模型: shared memory</li>
+<li>CUDA 编程模型: shared memory<ul>
+<li>在 CUDA 编程中，其 local memory 不同于 shared memory, 是线程私有，位于 global memory 中用于寄存器溢出</li>
+</ul>
+</li>
 <li>OpenCL:  local memory</li>
 <li>其他架构: scratchpad memory</li>
 </ul>
@@ -256,7 +308,113 @@
 <li>每个线程都可以访问所有的 Bank</li>
 </ul>
 <p>使用 Shared Memory 需要考虑的一个关键问题: <strong>潜在的 Bank 冲突</strong><br>当多个线程在同一周期内访问同一个 Bank ，并且这些线程访问该 Bank 中不同的位置时，就会发生 Bank 冲突</p>
-<h2 id="L1-Texture-Cache"><a href="#L1-Texture-Cache" class="headerlink" title="L1 Texture Cache"></a>L1 Texture Cache</h2>
+<h4 id="Shared-Memory-访问"><a href="#Shared-Memory-访问" class="headerlink" title="Shared Memory 访问"></a>Shared Memory 访问</h4><ol>
+<li>仲裁器会判断该 warp 中的请求地址是否会导致 bank 冲突</li>
+<li>如果请求的地址会导致一个或多个 bank 冲突，仲裁器会将请求分为两部分<ul>
+<li>第一部分包含该 warp 中一组线程的地址，这些地址不会产生 bank 冲突。这部分原始请求会被仲裁器接受，并进一步处理</li>
+<li>第二部分包含那些与第一部分中地址产生 bank 冲突的地址。这部分原始请求会被返回到指令流水线，并必须重新执行。</li>
+</ul>
+</li>
+</ol>
+<p>被接受的部分:</p>
+<ol>
+<li>在 Tag Unit 内部绕过 tag lookup (shared memory 直接映射)</li>
+<li>在指令流水线内部安排一个写回事件到 register files (延迟恒定)</li>
+<li>Tag Unit 确定每个线程的请求映射到哪个 bank ，以控制 Address CrossBar 将地址分配到 Data Array 内的各个 bank</li>
+<li>数据通过 Data CrossBar 返回到相应线程的通道，写回到 Register Files 中</li>
+</ol>
+<h3 id="L1Dcache"><a href="#L1Dcache" class="headerlink" title="L1Dcache"></a>L1Dcache</h3><p>cache 部分的访问同 CPU 一致，<br>区别在于 GPU 中的 L1Dcache 不支持一致性协议</p>
+<p>NVIDIA GPUs 解决方案： L1Dcache 中只允许 local memory accesses for register spills 和 stack data or read-only global memory data (starting with Kepler)</p>
+<h2 id="Unified-Texture-And-Data-Cache"><a href="#Unified-Texture-And-Data-Cache" class="headerlink" title="Unified Texture And Data Cache"></a>Unified Texture And Data Cache</h2><p>NVIDIA 近期的 GPU 架构将 L1 Data Cache 和 Texture Cache 合并以节省面积。</p>
+<ul>
+<li>为方便实现，只有只读的数据会被缓存到 L1 cache 中</li>
+</ul>
+<p>AMD’s GCN GPU 架构中的所有向量访存均由 Texture Cache 处理</p>
+<h3 id="L1-Texture-Cache"><a href="#L1-Texture-Cache" class="headerlink" title="L1 Texture Cache"></a>L1 Texture Cache</h3><h4 id="Texture-Mapping"><a href="#Texture-Mapping" class="headerlink" title="Texture Mapping"></a>Texture Mapping</h4><p><strong>Texture Mapping</strong>:<br>在三维图形中，为了实现实时渲染所需的高帧率实现这种场景的真实感，图形 API 采用的技术。<br>一张图像（称为一个 texture）被应用于三维模型中的表面，以使该表面看起来更加真实。</p>
+<ul>
+<li>实现：<ol>
+<li>渲染流水线首先确定 texture 图像中一个或多个样本的坐标 (这些样本称为 texels)</li>
+<li>这些坐标用于查找包含 texels 的内存位置的地址</li>
+</ol>
+</li>
+<li>texture 内存访问具有显著的空间局部性:<br>屏幕上的相邻像素映射到相邻的 texels，并且通常需要对附近 texels 的值进行平均</li>
+</ul>
+<h4 id="Micro-Architecture"><a href="#Micro-Architecture" class="headerlink" title="Micro Architecture"></a>Micro Architecture</h4><p><img data-src="/images/Arch/gpu/memory/texture_cache.svg" alt="L1 Texture Cache"></p>
+<ul>
+<li>Tag Array 和 Data Array 之间通过一个 <strong>Fragment FIFO</strong> 分隔<ul>
+<li>作用：隐藏可能需要从 DRAM 访存的 miss 请求的延迟</li>
+<li>Texture Cache 的设计假设 cache miss 将频繁发生，并且访问地址空间相对较小</li>
+<li>为保持 Tag Array 和 Data Array 的规模较小，Tag Array 在时间上大致提前于 Data Array ，Tag Array 内容反映了经过约一个 miss 请求访问 DRAM 所需的时间后 Data Array 的未来状态</li>
+</ul>
+</li>
+<li><strong>Texture Filter</strong>: 对多个 texels 访问合并，并通过 Register File 返回至指令流水线<br>对于双线性插值和三线性插值（mipmap 过滤）等操作，每个 Fragment (pixel) 实际上需要进行四次或八次 texels 查找。 Texture Filter 将这些 texels 组合，生成一个单一的颜色值</li>
+<li><strong>Miss Request FIFO</strong>: 将 miss 请求发送至内存</li>
+<li><strong>Reorder Buffer</strong>: 按顺序将 miss 请求的处理结果从 Memory 返回<ul>
+<li>Memory 会通过使用内存访问调度技术提高 GPU 内存系统中的 DRAM 带宽利用率，这些技术会乱序地处理 miss 请求以减少行切换惩罚</li>
+<li>为确保 Data Array 的内容反映 Tag Array 的时间延迟</li>
+</ul>
+</li>
+</ul>
+<p>与常规 CPU cache 相比，Texture Cache 吞吐量得到了提升，但 cache hit&#x2F;miss 所经历的延迟大致相同</p>
+<h4 id="访问过程"><a href="#访问过程" class="headerlink" title="访问过程"></a>访问过程</h4><ol>
+<li>LSU 将计算出的 texel 地址发送至 Tag Array 进行 lookup<ul>
+<li>hit: 将指向 Data Array 中数据位置的指针以及完成 texture 操作所需的其他信息放入 Fragment FIFO 尾部的一个 entry 中</li>
+<li>miss: Tag Array 通过 Miss Request FIFO 发送内存请求</li>
+</ul>
+</li>
+<li>当有 entry 到达 Fragment FIFO 头部时，Controller 使用 enrty 中的指针从 Data Array 中查找 texel 数据，并返回至 Texture Filter</li>
+</ol>
+<h1 id="Memory-Partition-Unit"><a href="#Memory-Partition-Unit" class="headerlink" title="Memory Partition Unit"></a>Memory Partition Unit</h1><p>为了提供 SIMT Core 所需的大量内存带宽，高性能 GPU 通过 Memory Partition Unit 并行连接多个 DRAM 芯片, 内存流量通过 Address Interleaving 技术在各个 Memory Partition Unit 间进行分配</p>
+<p>SIMT core 通过片上互连网络连接到 Memory Partition Unit </p>
+<ul>
+<li>NVIDIA : Crossbar </li>
+<li>AMD GPU: ring network</li>
+</ul>
+<p>微架构:</p>
+<ul>
+<li>每个 Memory Partition Unit 包含<ul>
+<li>一部分 L2 cache (分布式)<ul>
+<li>同时包含图形和计算数据</li>
+</ul>
+</li>
+<li>一个或多个 Memory Access Scheduler, 也称为 Frame buffer，FB  <ul>
+<li>对内存读写操作进行重排序，以减少访问 DRAM 的开销</li>
+</ul>
+</li>
+<li>光栅操作（ROP）单元  <ul>
+<li>主要用于图形操作，例如 alpha 混合，并支持图形表面的压缩</li>
+<li>还支持原子操作，如 CUDA 编程模型中所使用的操作</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="L2-Cache"><a href="#L2-Cache" class="headerlink" title="L2 Cache"></a>L2 Cache</h2><p>L2 cache 的设计包含多项优化措施，以提高 GPU 单位面积的总体吞吐量。</p>
+<p>每个 Memory Partition 内部的 L2 Cache 由两个 slices 组成。每个 slice 包含独立的 Tag Array 和 Data Array，并按顺序处理传入的请求。</p>
+<p>为了匹配 GDDR5 中 DRAM 原子性 32 字节的大小，每个 slice 中的 cache line 包含四个 32 字节</p>
+<ul>
+<li>合并写入: 当写入 miss 时完全覆盖一个区域中的数据，不会先从内存中读取数据。</li>
+<li>未合并的写入: 即未完全覆盖一个区域的写入，有两种解决方案：<ol>
+<li>存储 Byte 级别的 Valid 位</li>
+<li>直接绕过 L2 Cache。</li>
+</ol>
+</li>
+</ul>
+<p>为了减少 Memory Access Scheduler 的面积，在等待调度的写入过程中，写入内存的数据会先在 L2 cacheline 中进行缓存</p>
+<h2 id="ROP-Unit"><a href="#ROP-Unit" class="headerlink" title="ROP Unit"></a>ROP Unit</h2><p>ROP Unit 包含用于执行原子和归约操作的功能单元。<br>一系列访问同一内存位置的原子操作可以被流水化，因为 ROP Unit 包含一个 local ROP cache 。</p>
+<p>原子操作可用于实现在不同线程块中运行的线程之间的同步。</p>
+<h2 id="Memory-Access-Scheduler"><a href="#Memory-Access-Scheduler" class="headerlink" title="Memory Access Scheduler"></a>Memory Access Scheduler</h2><p>目的：重排序 DRAM 访存请求以减少 DRAM row buffer 和 DRAM cells 之间数据的搬运</p>
+<p>GPU 中的每个 Memory Partition 可能包含多个 Memory Access Scheduler ，这些调度器将该 partition 所包含的 L2 Cache 部分连接到外部 DRAM。</p>
+<ul>
+<li>L2 Cache 的每个 Slice 都拥有自己的 Memory Access Scheduler</li>
+<li>每个 Memory Access Scheduler 包含独立的逻辑，用于对来自 L2 Cache 的读请求和写请求进行排序</li>
+<li>为了将同一 DRAM Bank 中的读请求分组，采用了两个独立的表:<ol>
+<li>读请求排序器(read request sorter)，组相联结构，通过内存地址进行访问，并将同一 Bank 中所有针对同一 Row 的读请求映射到一个单一指针</li>
+<li>读请求存储器(read request store): 使用 read request sorter 提供的指针查找独立读请求列表</li>
+</ol>
+</li>
+</ul>
+
     </div>
 
     
@@ -336,7 +494,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#First-Level-Memory-Structures"><span class="nav-number">1.</span> <span class="nav-text">First-Level Memory Structures</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Shared-Memory-Scratchpad-Memory-Local-Memory"><span class="nav-number">1.1.</span> <span class="nav-text">Shared Memory &#x2F; Scratchpad Memory &#x2F; Local Memory</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#L1-Texture-Cache"><span class="nav-number">1.2.</span> <span class="nav-text">L1 Texture Cache</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#First-Level-Memory-Structures"><span class="nav-number">1.</span> <span class="nav-text">First-Level Memory Structures</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Unified-L1Dcache-and-Shared-Memory"><span class="nav-number">1.1.</span> <span class="nav-text">Unified L1Dcache and Shared Memory</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Shared-Memory-Scratchpad-Memory-Local-Memory"><span class="nav-number">1.1.1.</span> <span class="nav-text">Shared Memory &#x2F; Scratchpad Memory &#x2F; Local Memory</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Shared-Memory-%E8%AE%BF%E9%97%AE"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">Shared Memory 访问</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#L1Dcache"><span class="nav-number">1.1.2.</span> <span class="nav-text">L1Dcache</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Unified-Texture-And-Data-Cache"><span class="nav-number">1.2.</span> <span class="nav-text">Unified Texture And Data Cache</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#L1-Texture-Cache"><span class="nav-number">1.2.1.</span> <span class="nav-text">L1 Texture Cache</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Texture-Mapping"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">Texture Mapping</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Micro-Architecture"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">Micro Architecture</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BF%E9%97%AE%E8%BF%87%E7%A8%8B"><span class="nav-number">1.2.1.3.</span> <span class="nav-text">访问过程</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Memory-Partition-Unit"><span class="nav-number">2.</span> <span class="nav-text">Memory Partition Unit</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#L2-Cache"><span class="nav-number">2.1.</span> <span class="nav-text">L2 Cache</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ROP-Unit"><span class="nav-number">2.2.</span> <span class="nav-text">ROP Unit</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Memory-Access-Scheduler"><span class="nav-number">2.3.</span> <span class="nav-text">Memory Access Scheduler</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -415,6 +573,7 @@
 
   
   <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
 
@@ -429,11 +588,19 @@
 <script src="/js/next-boot.js"></script>
 
 
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_lines.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/canvas_sphere.min.js"></script>
 
 
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 
