@@ -1,0 +1,545 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>SOSP 2024 论文简介 | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="SOSP 2024 论文简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SOSP 2024 论文简介">
+<meta property="og:url" content="https://xixi-shredp.github.io/2025/09/29/os/sosp/2024/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="SOSP 2024 论文简介">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2025-09-29T01:32:51.000Z">
+<meta property="article:modified_time" content="2026-02-08T15:32:07.576Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="CPU, Computer Architechture, OS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "SOSP 2024 论文简介",
+  "url": "https://xixi-shredp.github.io/2025/09/29/os/sosp/2024/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2025-09-29T01:32:51.000Z",
+  "dateModified": "2026-02-08T15:32:07.576Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2025/09/29/os/sosp/2024/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'SOSP 2024 论文简介',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/default_top.jpg);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">29</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/default_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">SOSP 2024 论文简介</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">SOSP 2024 论文简介</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2025-09-29T01:32:51.000Z" title="Created 2025-09-29 09:32:51">2025-09-29</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-02-08T15:32:07.576Z" title="Updated 2026-02-08 23:32:07">2026-02-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/os/">os</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/os/sosp/">sosp</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="Tiered-Memory-Management-Access-Latency-is-the-Key"><a href="#Tiered-Memory-Management-Access-Latency-is-the-Key" class="headerlink" title="Tiered Memory Management: Access Latency is the Key!"></a>Tiered Memory Management: Access Latency is the Key!</h2><p>Author: Midhul Vuppalapati (Cornell University), Rachit Agarwal (Cornell University)</p>
+<p>Abstruct:  </p>
+<ul>
+<li>分层内存架构的出现引发了人们对内存管理的新兴趣。近期关于分层内存管理的研究在访问跟踪机制、页面迁移和动态页面大小确定方面进行了创新；<br>然而，它们都使用相同的页面放置算法——将最热的页面打包到默认层级（具有最低硬件指定内存访问延迟的层级）。<br>这隐含地假设了即使服务于最热的页面，默认层级的访问延迟仍低于其他层级。<br>这一假设与实际情况相去甚远：在计算机体系结构领域，众所周知，在存在多个同时进行的请求情况下，内存访问延迟可能显著大于硬件指定的延迟。<br>我们表明，即使在中等负载下，默认层级的访问延迟也可能膨胀至其他层级延迟的 2.5 倍；<br>并且在这一模式下，现有最先进的分层内存系统性能可能比最优情况差 2.3 倍。   </li>
+<li><strong>Colloid 是一种内存管理机制，其体现了平衡访问延迟的原则——页面在不同层级之间的放置应使得它们的平均（负载）访问延迟趋于平衡。</strong><br>为了实现这一原则，Colloid 在每个层级的内存访问延迟测量机制以及决定每个层级应放置哪些页面的页面放置算法方面进行了创新。</li>
+<li>我们将 Colloid 集成到三种最先进的分层内存系统 HeMem, TPP 和 MEMTIS 中。</li>
+<li>在各种工作负载上的评估表明，Colloid 能够持续使底层系统达到接近最优的性能。</li>
+</ul>
+<h2 id="Fast-Flexible-and-Practical-Kernel-Extensions"><a href="#Fast-Flexible-and-Practical-Kernel-Extensions" class="headerlink" title="Fast, Flexible, and Practical Kernel Extensions"></a>Fast, Flexible, and Practical Kernel Extensions</h2><p>Author: Kumar Kartikeya Dwivedi, Rishabh Iyer, Sanidhya Kashyap† ,EPFL ∗UC Berkeley</p>
+<p>Abstruct:  </p>
+<ul>
+<li>在操作系统设计中，安全地扩展内核功能是一个长期目标，Linux 和 Windows 中广泛使用 eBPF 框架证明了这种可扩展性的优势。然而，<strong>现有的内核可扩展性解决方案（包括 eBPF ）存在局限性，限制了用户在能够卸载到内核的功能范围或其扩展所导致的性能开销方面的能力。</strong></li>
+<li>我们提出了 <strong>KFlex ：一种新的内核可扩展性方法，在内核扩展能力和性能之间实现了更好的平衡</strong>。<ul>
+<li>KFlex 将内核资源（如内核内存）的安全性与扩展特定资源（如扩展内存）的安全性分离开来<ul>
+<li>这种分离使 KFlex 能够分别使用定制的机制来强制执行每种安全性属性——自动化验证和轻量级运行时检查</li>
+<li>从而在带来低运行时开销的同时，实现多样化功能的卸载</li>
+</ul>
+</li>
+<li>它依赖于静态字节码验证，以确保扩展符合内核的接口</li>
+<li>并利用与验证协同设计的运行时机制，以确保它们安全地访问自己的内存并可证明地终止</li>
+<li>KFlex 的关键技术贡献包括与 eBPF 静态验证协同设计的运行时技术，从而确保扩展具有极低的开销</li>
+</ul>
+</li>
+<li>我们在 Linux 的基础上实现了 KFlex ，并基于eBPF框架进行构建<ul>
+<li>我们证明，KFlex 使用户能够卸载目前无法卸载的功能，并为应用程序提供了显著的端到端性能提升。</li>
+<li>KFlex 的一些机制已经合并到 Linux 内核主线中，全面集成的工作正在进行中。</li>
+</ul>
+</li>
+</ul>
+<h2 id="Fast-Safe-IO-Memory-Protection"><a href="#Fast-Safe-IO-Memory-Protection" class="headerlink" title="Fast &amp; Safe IO Memory Protection"></a>Fast &amp; Safe IO Memory Protection</h2><p>Author: Benny Rubin (Cornell University), Saksham Agarwal (UIUC), Qizhe Cai (Cornell University), Rachit Agarwal (Cornell University)</p>
+<p>Abstruct:  </p>
+<ul>
+<li>IO 内存保护机制可以防止恶意或存在缺陷的IO设备将错误的数据传输到内存中。<ul>
+<li>现代服务器通过使用 IOMMU（IO内存管理单元）来实现这一点——IO设备在虚拟地址上操作，IOMMU 在执行内存传输之前将虚拟地址转换为物理地址（可能通过一个称为IOTLB的缓存来加速转换）。</li>
+<li>尽管这些机制非常重要，但设计出既能提供强大安全特性又能保持高性能的内存保护机制一直是个难题。</li>
+<li>事实上，最近对生产数据中心的研究表明，现有内存保护机制中的低效率导致了显著的吞吐量下降、尾部延迟成数量级的增加以及隔离保证的违反。</li>
+</ul>
+</li>
+<li>我们提出了<strong>Fast &amp; Safe（F&amp;S）,这是对现有内存保护机制的一种简单修改，使它们能够提供最强的安全性，同时几乎完全消除了其开销。</strong><ul>
+<li>现代内存保护硬件具有 I&#x2F;O 页表缓存，这些缓存存储了每个 I&#x2F;O 页表层级中最常访问的条目，而这些缓存可以用来减少 I&#x2F;O 内存保护的开销。</li>
+<li>F&amp;S 设计的关键思路是，与其仅仅关注最小化 IOTLB 缺失率，不如关注降低每次 IOTLB 缺失的成本。</li>
+</ul>
+</li>
+<li>我们证明，这种视角的转变使得 F&amp;S 设计变得简单，无需对主机硬件进行任何修改，并且只需要对操作系统进行最少的修改。</li>
+</ul>
+<h2 id="VPRI-Efficient-I-O-Page-Fault-Handling-via-Software-Hardware-Co-Design-for-IaaS-Clouds"><a href="#VPRI-Efficient-I-O-Page-Fault-Handling-via-Software-Hardware-Co-Design-for-IaaS-Clouds" class="headerlink" title="VPRI: Efficient I&#x2F;O Page Fault Handling via  Software-Hardware Co-Design for IaaS Clouds"></a>VPRI: Efficient I&#x2F;O Page Fault Handling via  Software-Hardware Co-Design for IaaS Clouds</h2><p>Author: Kaijie Guo, Dingji Li, Ben Luo, Yibin Shen, Kaihuan Peng, Ning Luo, Shengdong Dai, Chen Liang, Jianming Song, Hang Yang, Xiantao Zhang, Zeyu Mi  (Alibaba Group; Institute of Parallel and Distributed Systems, Shanghai Jiao Tong University;  Engineering Research Center for Domain-specific Operating Systems, Ministry of Education, China)</p>
+<p>Abstruct:  </p>
+<ul>
+<li>设备直通已被云服务提供商广泛采用，以在虚拟机（VM）中实现接近裸机的 I&#x2F;O 性能。然而，这种方法需要对 VM 内存进行静态绑定，从而无法实现按需分页。硬件设备 I&#x2F;O page fault （IOPF）功能为解决这一限制提供了最优方案。</li>
+<li>目前使用的 IOPF 方法，无论是基于标准 IOMMU 功能（ATS+PRI）还是具备独立 IOMMU 实现的设备，尚未在 Infrastructure-as-a-Service（IaaS）云中得到广泛应用。这是由于成本高昂、平台依赖性以及对性能和服务等级目标（SLO）有较大影响。</li>
+<li>我们提出了<strong>虚拟化页面请求接口（VPRI），这是一种通过软硬件协作开发的新颖 IOPF 系统</strong>。<ul>
+<li>VPRI 不仅具有平台独立性，免除了地址转换的复杂性</li>
+<li>而且成本低廉，并设计用于最小化对 SLO 的影响。</li>
+</ul>
+</li>
+<li>我们的工作使得在阿里云中大规模部署 IOPF 功能成为可能，且对 SLO 的影响可以忽略不计。当与内存管理软件集成时，它显著提高了公共 IaaS 云中的内存利用率，有效克服了直通设备相关的静态内存绑定限制。<ul>
+<li>我们在现有 DPU 中不到六个月内实现了 VPRI，无需额外的硬件升级，有效解决了CSPs的成本问题。</li>
+<li>此外，它使之前发布的缺乏 ATS 和 PRI 功能的 Intel 和 AMD x86 系统具备了硬件 IOPF 能力，有效解决了兼容性问题。</li>
+<li>同时，VPRI 有效缓解了硬件 IOPF 对 SLO（服务级别目标）的影响，在数据中心启用内存承诺时，确保 SLO 保持在可接受范围内。</li>
+</ul>
+</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2025/09/29/os/sosp/2024/">https://xixi-shredp.github.io/2025/09/29/os/sosp/2024/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/09/29/os/xv6/boot/" title="xv6 boot 启动过程"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">xv6 boot 启动过程</div></div><div class="info-2"><div class="info-item-1">xv6 采用 qemu 作为运行平台，其 qemu 运行选项如下：  -machine virt: 机器类型设置为 RISC-V VirtIO board  virt 没有任何网络和存储设备，需要自己定义 当指定机器类型为 sifive_u 或 virt 时，有三种不同的 bios 选项: default/none/&lt;filename&gt;   -bios none: 设置 BIOS 文件名 default RISC-V qemu bios 的默认项，即自动加载默认的 OpenSBI firmware (包含在 QEMU 中)，用户只需要指定内核文件 none 表示 qemu 不会自动加载任何 firmware,由用户负责加载需要的所有的镜像 其他 则表示 firmware 文件名   -kernel $K/kernel: 设置内核映像 要求镜像是 Linux 内核映像或者是 multiboot 格式   -m 128M: guest memory 大小为 128MB -smp $(CPUS): 设置 CPU 核数 -nographic: 关闭图像输出，将串口 I&#x2...</div></div></div></a><a class="pagination-related" href="/2025/09/28/os/linux/0.11/boot/" title="Linux 0.11: Boot"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Linux 0.11: Boot</div></div><div class="info-2"><div class="info-item-1">平台要求：80x86 CPU  CPU 复位 BIOS 代码的入口应当在 0xFFFF0  调用 0x19 中断：将 0x07c00 - 0x07E00 代码从磁盘中复制到内存中 跳转到 0x07c00: boot/bootsect.s   引导硬盘将操作系统代码加载到内存中 检查记录机器硬件状态信息&#x2F;系统数据     x86 CPU 复位:    实地址模式(寻址空间 1MB) PC: 0xFFFF0 (CS: 0xFFFF, IP:0x0000)   实地址模式下的内存布局:    0x00000 - 0x003FF: 存放中断向量表 最多存放 256 个中断向量 (1KB * 16b) 16 位实模式地址规定，便于中断处理查找中断向量 由 BIOS 建立   0x00400 - 0x004FF: 存放 BIOS 数据 软件规定   0x07C00 - 0x07E00: 存放 Boot 扇区 硬件规定，与操作系统无关 由 boot/bootsect.s 生成   0x0E05B - 0x0FFFE: 存放中断服务程序 每个程序都由中断向量表中的地址对应   0x10...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">29</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Tiered-Memory-Management-Access-Latency-is-the-Key"><span class="toc-number">1.</span> <span class="toc-text">Tiered Memory Management: Access Latency is the Key!</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Fast-Flexible-and-Practical-Kernel-Extensions"><span class="toc-number">2.</span> <span class="toc-text">Fast, Flexible, and Practical Kernel Extensions</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Fast-Safe-IO-Memory-Protection"><span class="toc-number">3.</span> <span class="toc-text">Fast &amp; Safe IO Memory Protection</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#VPRI-Efficient-I-O-Page-Fault-Handling-via-Software-Hardware-Co-Design-for-IaaS-Clouds"><span class="toc-number">4.</span> <span class="toc-text">VPRI: Efficient I&#x2F;O Page Fault Handling via  Software-Hardware Co-Design for IaaS Clouds</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/06/os/generic/mm/" title="OS Virtual Memory Management">OS Virtual Memory Management</a><time datetime="2025-11-06T06:03:30.000Z" title="Created 2025-11-06 14:03:30">2025-11-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/06/os/linux/riscv/boot/" title="Linux RISC-V Boot 流程">Linux RISC-V Boot 流程</a><time datetime="2025-11-06T01:44:36.000Z" title="Created 2025-11-06 09:44:36">2025-11-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/04/os/linux/boot/" title="Linux Boot 过程">Linux Boot 过程</a><time datetime="2025-11-04T06:09:06.000Z" title="Created 2025-11-04 14:09:06">2025-11-04</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/04/os/generic/boot/init/" title="操作系统初始化">操作系统初始化</a><time datetime="2025-11-03T16:16:20.000Z" title="Created 2025-11-04 00:16:20">2025-11-04</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/03/os/generic/trap/" title="操作系统：Interupt, Exception, Syscall">操作系统：Interupt, Exception, Syscall</a><time datetime="2025-11-03T15:01:01.000Z" title="Created 2025-11-03 23:01:01">2025-11-03</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

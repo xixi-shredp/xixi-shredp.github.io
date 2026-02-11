@@ -1,0 +1,899 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>File System in xv6 | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="xv6 文件系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="File System in xv6">
+<meta property="og:url" content="https://xixi-shredp.github.io/2025/09/07/os/xv6/file_system/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="xv6 文件系统">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2025-09-07T09:30:53.000Z">
+<meta property="article:modified_time" content="2026-02-08T15:32:07.577Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="CPU, Computer Architechture, OS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "File System in xv6",
+  "url": "https://xixi-shredp.github.io/2025/09/07/os/xv6/file_system/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2025-09-07T09:30:53.000Z",
+  "dateModified": "2026-02-08T15:32:07.577Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2025/09/07/os/xv6/file_system/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'File System in xv6',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/default_top.jpg);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">29</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/default_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">File System in xv6</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">File System in xv6</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2025-09-07T09:30:53.000Z" title="Created 2025-09-07 17:30:53">2025-09-07</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-02-08T15:32:07.577Z" title="Updated 2026-02-08 23:32:07">2026-02-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/os/">os</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/os/xv6/">xv6</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="xv6-文件系统层次"><a href="#xv6-文件系统层次" class="headerlink" title="xv6 文件系统层次"></a>xv6 文件系统层次</h1><p>xv6 文件系统分为7层：</p>
+<p><img src="/images/os/xv6/file_system/fs_layout.svg" alt="xv6 文件系统层级"></p>
+<ol>
+<li><a href="#file_descriptor">File Descriptor</a><ul>
+<li>用于抽象 Unix 系统资源（管道，设备，文件等）</li>
+</ul>
+</li>
+<li><a href="#pathname">Pathname</a><ul>
+<li>提供层级式的路径名</li>
+</ul>
+</li>
+<li><a href="#directory">Directory</a><ul>
+<li>每个目录被实现为一种特殊的 inode</li>
+<li>包含一组目录项，每项包含一个文件名和 i-number</li>
+</ul>
+</li>
+<li><a href="#inode">Inode</a><ul>
+<li>提供单独的文件, 每个文件由一个 inode 表示</li>
+<li>每个 inode 有唯一的 i-number 和一些 blocks 来存储文件的数据</li>
+</ul>
+</li>
+<li><a href="#logging">Logging</a><ul>
+<li>允许更高层级将针对多个 blocks 的更新打包进一个 transaction</li>
+<li>并确保一个 transaction 内的块都会被原子地更新（确保崩溃一致性）</li>
+</ul>
+</li>
+<li><a href="#buffer_cache">Buffer Cache</a><ul>
+<li>缓存来自 disk 的 blocks ，并和 disk 同步对于他们的访问</li>
+<li>确保一次只有一个内核进程可以修改任何 block 上的数据</li>
+</ul>
+</li>
+<li><a href="#disk">Disk</a><ul>
+<li>在 virtio 硬件驱动上读写 blocks</li>
+</ul>
+</li>
+</ol>
+<h2 id="Disk"><a href="#Disk" class="headerlink" title="Disk"></a>Disk</h2><p><a id="disk"></a></p>
+<p>512 字节的 block 所组成的标号序列的设备</p>
+<p>操作系统使用的 block size 和 disk 实际实现的 block size 可能不同（但通常情况下一致）</p>
+<p>xv6 将读入内存的 block 放入结构体 struct buf</p>
+<h3 id="inode-block-和-content-block-在-Disk-中的存储"><a href="#inode-block-和-content-block-在-Disk-中的存储" class="headerlink" title="inode block 和 content block 在 Disk 中的存储"></a>inode block 和 content block 在 Disk 中的存储</h3><p>xv6 disk 分为几个 sections:</p>
+<p><img src="/images/os/xv6/file_system/block_in_disk.svg" alt="xv6 中 Blocks 在 Disk 上的分布"></p>
+<ol>
+<li>boot sector</li>
+<li>superblock 包含文件系统元数据<ul>
+<li>文件系统大小(blocks), data blocks 数量, inodes 数量, log blocks 数量</li>
+<li>通过 mkfs 程序写入</li>
+</ul>
+</li>
+<li>log blocks</li>
+<li>inode blocks<ul>
+<li>每个 block 内有多个 inodes</li>
+</ul>
+</li>
+<li>bitmap blocks 追踪哪些 data blocks 被使用</li>
+<li>data blocks<ul>
+<li>每个 data block 都在 bitmap 中被标记: free or hold</li>
+</ul>
+</li>
+</ol>
+<h3 id="Block-Allocator"><a href="#Block-Allocator" class="headerlink" title="Block Allocator"></a>Block Allocator</h3><p>in <code>kernel/fs.c</code></p>
+<p>block allocator 在磁盘中维护一个 bitmap, 每个 block 对应一个 bit (0: free, 1: in-use)</p>
+<blockquote>
+<p><code>mkfs</code> 会设置 bitmap : 包括 boot sector, superblock, log blocks, inode blocks 和 bitmap blocks 等对应的 bit</p>
+</blockquote>
+<p>提供 2 个 API:  </p>
+<ol>
+<li><code>balloc()</code><ul>
+<li>循环遍历所有 block (0 ~ sb.size), 一旦查到相应的 bitmap 中的 bit 为 0 则选择该 block 进行分配：bitmap 中 bit 置 1, block 清 0</li>
+<li>如果两个进程尝试同时分配 block 时，可能发生数据竞争：buffer cache 每次只允许一个进程访问 bitmap block</li>
+</ul>
+</li>
+<li><code>bfree()</code>: 找到要释放的 block 的 bitmap 对应的 bit 并置 0</li>
+</ol>
+<blockquote>
+<p><code>balloc()</code> 和 <code>bfree()</code> 必须在一个事务内部被调用，因为二者对 bitmap block 的写入均需要通过日志系统</p>
+</blockquote>
+<h2 id="Buffer-Cache"><a href="#Buffer-Cache" class="headerlink" title="Buffer Cache"></a>Buffer Cache</h2><p><a id="buffer_cache"></a></p>
+<p>两个任务：  </p>
+<ol>
+<li>同步对于 disk blocks 的访问，确保每个 block 在内存中只有一个 copy, 且一次只有一个内核线程可以使用该 copy</li>
+<li>缓存常用 blocks, 不需要反复从磁盘读 (功能同 cache 类似)</li>
+</ol>
+<p>接口：  </p>
+<ul>
+<li>bread: 获取一个 buf 结构体(slepp-locked)，包含相应 block 的一个 copy, 可以直接在内存中读写</li>
+<li>bwrite: 将一个修改过的 buf 写入 disk 中相应的位置</li>
+<li>brelse: 释放 buf (内核线程在 bwrite 后必须调用 brelse)</li>
+</ul>
+<p>每个 buf 有一个 sleep-lock 来确保每次只有一个内核线程可以访问 buf</p>
+<p>使用简单的 LRU 替换策略</p>
+<blockquote>
+<p>现代的 buffer cache 往往和虚拟内存系统结合起来，支持 memory-mapped files</p>
+</blockquote>
+<h3 id="实现-in-kernel-bio-c"><a href="#实现-in-kernel-bio-c" class="headerlink" title="实现 in kernel/bio.c"></a>实现 in <code>kernel/bio.c</code></h3><p>buffer cache 实现为所有 buffer 的双端链表</p>
+<p>每个 buffer 有2个状态域，valid 表明该 buffer 是否持有一个 block 的 copy, disk 表明 buffer 的内容已经被提交给 disk</p>
+<ul>
+<li>binit(): 将所有 buffer 组成的数组初始化为双端链表，之后所有对 buffer 的访问均通过 <code>bcache.head</code> 访问而非静态数组 <code>buf</code></li>
+<li>bread(): 调用 <code>bget()</code> 从给定 sector 获取一个 buffer<ul>
+<li>如果未找到，则从 disk 中读取 buffer: <code>virtio_disk_rw(b, 0)</code></li>
+<li>bget(): 扫描 buffer 链表<ul>
+<li>如果找到 buffer ,则给 buffer 上锁(sleep-lock)并返回</li>
+<li>如果未找到 buffer ,则选择一个未使用的 buffer 替换掉(refcnt &#x3D;&#x3D; 0)，同时标记 valid &#x3D; 0</li>
+<li>如果没有找到未使用的 buffer，则 panic (说明系统中有太多的进程同时运行, 也可以 sleep 进程等待 buffer 可用)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>bwrite(): 调用 <code>virtio_disk_rw(b, 1)</code> 将修改过的 buffer 写入 disk</li>
+<li>brelse(): 释放 sleeplock 并将 buffer 加入到 buffer 链表的前端(为了使未使用的 buffer 尽可能在链表前端, 以减少链表扫描的时间)</li>
+</ul>
+<blockquote>
+<p>一个更加优化的实现是：使用 hash table 实现查找，使用堆进行替换</p>
+</blockquote>
+<h2 id="Logging"><a href="#Logging" class="headerlink" title="Logging"></a>Logging</h2><p><a id="logging"></a></p>
+<p>主要解决的问题: <strong>崩溃一致性(原子性)</strong>  </p>
+<ul>
+<li>当多个文件系统的操作涉及对磁盘的多次写入，而部分写入在崩溃之后可能导致磁盘上的文件系统处于不一致的状态</li>
+<li>根据磁盘写入的顺序，崩溃可能会导致: <ol>
+<li>一个 inode 仍引用一个被标记为已释放的数据块<ul>
+<li>可能导致严重的问题：<br>之后文件系统可能将这个数据块分配给另外一个文件，导致两个文件指向同一个数据块</li>
+</ul>
+</li>
+<li>导致一个已被分配但未被引用的数据块<ul>
+<li>相对无害</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<h3 id="Log-Design"><a href="#Log-Design" class="headerlink" title="Log Design"></a>Log Design</h3><p>xv6 通过简单的日志实现:  </p>
+<ol>
+<li>syscall 不会直接写入磁盘上的数据结构，会先将写入的操作记录到磁盘上的日志 log</li>
+<li>syscall 将所有的操作写入 log 后，会再向磁盘写入一个特殊的 commit 表示提交一个完整的事务</li>
+<li>之后 syscall 将日志记录的所有写入操作复制到文件系统的实际的数据结构中，完成后清除日志</li>
+</ol>
+<p>系统崩溃恢复的过程：</p>
+<ul>
+<li>若日志完整（包含最后的那个特殊的 commit）则将写入内容复制到磁盘的对应区域</li>
+<li>否则，忽略日志，并清除</li>
+</ul>
+<blockquote>
+<p>除了日志系统外，也可以通过文件系统恢复程序来处理崩溃一致性，比如 UNIX 系统中的 fsck 程序，但是会比较耗时</p>
+</blockquote>
+<p>在磁盘中存储：  </p>
+<ul>
+<li>存储在一个已知的固定位置，该位置在 superblock 中指定<ul>
+<li>事务中单个 syscall 写入的总块数必须不能超出预留的日志区域<ul>
+<li>write syscall: 可能写入大量数据块，需要将一个大的写入操作拆分成多个小的写入操作<br>大文件写入涉及许多数据块，许多位图块和一个 inode 块<br>大文件删除涉及许多位图块和一个 inode 块  </li>
+<li>unlink syscall: xv6 中仅涉及一个 bitmap 块，不会造成问题</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>由一个 header block 和一系列需要更新的块副本（“logged block”）组成<ul>
+<li>header block: 包含一个扇区号数组，并包含 logged block 的数量<ul>
+<li>header block 中的 logged block 计数为零时，表示日志中没有事务</li>
+<li>否则为非零值，表示日志中包含一个完整的已提交事务，并带有指定数量的 logged block</li>
+<li>在事务提交时写入 header block </li>
+<li>在将 logged blocks 复制到文件系统后将 header block 的计数设置为零</li>
+<li>在事务中途崩溃会导致 header block 中的计数为零；而在提交后崩溃则会导致非零计数。</li>
+</ul>
+</li>
+<li>每个 logged blcok 对应一个扇区号</li>
+</ul>
+</li>
+</ul>
+<p>为允许多个文件系统的并发操作，日志系统会将多个 syscall 的写入操作合并到一个事务中。<br>为避免一次 syscall 跨越多个事务，事务的提交只会在没有 syscall 时进行。</p>
+<p>xv6 logging 的缺点：  </p>
+<ol>
+<li>commit 操作不能和其他 syscall 并发执行</li>
+<li>日志记录一整个 block ，尽管修改的 bytes 可能只占一小部分</li>
+<li>同步写入日志时，每次写入一个 block, 可能需要一整个磁盘旋转的时间</li>
+</ol>
+<h3 id="Group-Commit"><a href="#Group-Commit" class="headerlink" title="Group Commit"></a>Group Commit</h3><p>group commit: 将多个事务一起提交</p>
+<ul>
+<li>可以将固定成本均摊到多个事务中，减少磁盘操作的次数</li>
+<li>使磁盘系统可以并发处理多次写入请求</li>
+</ul>
+<blockquote>
+<p>xv6 virtio 驱动不支持 group commit, 但文件系统操作支持</p>
+</blockquote>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><p>in <code>kernel/log.c</code></p>
+<h4 id="任何对磁盘的写入均需使用日志"><a href="#任何对磁盘的写入均需使用日志" class="headerlink" title="任何对磁盘的写入均需使用日志"></a>任何对磁盘的写入均需使用日志</h4><p>典型的使用日志的一次完整的事务的流程：  </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">begin_op();</span><br><span class="line">...</span><br><span class="line">bp = bread(...);</span><br><span class="line">bp-&gt;data[...] = ...;</span><br><span class="line">log_write(bp);</span><br><span class="line">...</span><br><span class="line">end_op();</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><code>begin_op()</code>: 等待日志系统处理完之前的 commit 并且保证日志系统中有足够的空间容纳当前 syscall 要写入的数据, <code>log.outstading++;</code></li>
+<li><code>log_write()</code>: 在 header block 中记录写入扇区号（写入到扇区数组的末尾），并将要写入的 buf 固定到 buffer cache 中防止被踢出<ul>
+<li>对于多次针对同一个扇区的写入，支持写合并 (节省日志空间)</li>
+</ul>
+</li>
+<li><code>end_op()</code>: <code>log.outstading--;</code>， 当其减为 0 (所有 syscall 均已完成)，提交当前日志系统的事务:<code>commit()</code><ol>
+<li><code>write_log()</code>: 将事务中的每个要写入的 block 从 buffer cache 写入 logged block</li>
+<li><code>write_head()</code>: 将 header block 写入磁盘，此时开始提交(之后的操作发生崩溃将触发崩溃恢复)</li>
+<li><code>install_trans()</code>: 读取日志，将日志中要写入的块写入文件系统对应的位置</li>
+<li><code>write_head()</code>: 再次将 header block 写入磁盘(写入块数计数置 0)</li>
+</ol>
+</li>
+</ol>
+<h4 id="崩溃恢复"><a href="#崩溃恢复" class="headerlink" title="崩溃恢复"></a>崩溃恢复</h4><p>系统崩溃后重启恢复，因此在初始化时(<code>fsinit()-&gt;initlog()</code>)进行崩溃恢复: <code>recover_from_log()</code></p>
+<p><code>recover_from_log()</code>: </p>
+<ol>
+<li>读取 header block </li>
+<li>如果 header block 中计数不为 0 ，则将 logged block 写入文件系统对应位置<ul>
+<li>如果是崩溃恢复，会重复写入当前事务在崩溃前已写入的部分（but 无伤大雅）</li>
+</ul>
+</li>
+<li>写入 header block (计数置 0)</li>
+</ol>
+<h2 id="Inode"><a href="#Inode" class="headerlink" title="Inode"></a>Inode</h2><p><a id="inode"></a></p>
+<p>in <code>kernel/fs.c</code></p>
+<p>磁盘上存储的 inode 数据结构和内核中使用的内存中的 inode 数据结构不同。<br>内存中的数据结构还包括一些其他的额外信息。</p>
+<p>inode 引用的内容块不会被其他的 inode 再次引用</p>
+<h3 id="on-disk-inode-struct-dinode"><a href="#on-disk-inode-struct-dinode" class="headerlink" title="on-disk inode (struct dinode)"></a>on-disk inode (<code>struct dinode</code>)</h3><p>每个 inode 的大小相同，在磁盘上连续存储: inode blocks ，通过 i-number 索引 inode</p>
+<p>数据结构为 <code>struct dinode</code>, fileds:  </p>
+<ol>
+<li>type: 表示类型： free(0) &#x2F; file &#x2F; directory &#x2F; special file(device)</li>
+<li>nlink: 计数引用该 inode 的目录数 <ul>
+<li>用于判断该 inode 何时释放数据块和 inode 块</li>
+</ul>
+</li>
+<li>size: 表示的文件的字节数</li>
+<li>addrs: 文件内容占据的磁盘中的块号 (数组)<ul>
+<li>包含 <code>NDIRECT+1</code> 个元素: 前 NDIRECT 个元素用于保存 direct blocks, 最后一个元素是保存 indirect blocks 的块号数组的块号</li>
+<li>因此，一个文件的前 12KB (<code>NDIRECT * BSIZE</code>) 保存在 direct blocks, 后 256KB (<code>NINDIRECT * BSIZE</code>) 保存在 indirect blcoks 中</li>
+<li>块号为 0 表示未分配任何块</li>
+</ul>
+</li>
+</ol>
+<p><img src="/images/os/xv6/file_system/dinode.svg" alt="xv6 dinode 结构"></p>
+<p>提供给客户端的 API:  </p>
+<ol>
+<li><code>bmap()</code>: 返回 inode 的第 n 个数据块的磁盘块号，如果 inode 还未占用该数据块，则为其分配一个</li>
+<li><code>itrunc()</code>: 释放一个 inode 的内容块, 大小置为 0<ul>
+<li>首先释放所有的 direct blocks，然后释放 indirect block 指向的所有内容块 ，最后释放 indirect block 本身</li>
+</ul>
+</li>
+<li><code>readi()</code>: 读取 inode 数据块，复制到 dst</li>
+<li><code>writei()</code>: 写入 inode 数据块，可能会扩展文件大小</li>
+<li><code>stati()</code>: 读取 inode 元数据，复制到 stat 结构体</li>
+</ol>
+<h3 id="in-memory-inode-struct-inode"><a href="#in-memory-inode-struct-inode" class="headerlink" title="in-memory inode (struct inode)"></a>in-memory inode (<code>struct inode</code>)</h3><p>内核会在内存中保存所有 active inodes 到一个表 itable</p>
+<ul>
+<li>主要任务是：同步多个进程的访问</li>
+<li>也可以缓存对 cache 访问友好的 inode (buffer cache 也可以做到)</li>
+</ul>
+<p>内存中的 inode 数据结构 <code>struct inode</code> </p>
+<ul>
+<li>磁盘 inode 数据结构的拷贝</li>
+<li><code>strucy inode</code> 中的 ref 域指示当前引用该 inode 的指针数<ul>
+<li>只有在有指针引用该 inode 时 itable 才会存储该 inode </li>
+<li>引用 inode 的指针不具有独占性，所以一个 inode 可能被多个指针引用</li>
+</ul>
+</li>
+<li>inode 中的同步机制<ul>
+<li><code>itable.lock</code> 保证一个 inode 在 itable 中只出现一次，并且保护 inode.ref</li>
+<li>每个 inode 都有一个 lock 域 (sleeplock) ，确保对 inode 本身的访问和对应内容块的访问具有独占性</li>
+</ul>
+</li>
+</ul>
+<p>API:  </p>
+<ol>
+<li><code>iget()</code> 和 <code>iput()</code> 用于获取和释放指针（并修改引用计数）<ul>
+<li><code>iget()</code> 会扫描 itable，找到对应的 inode ，引用计数加一后返回该 inode 指针<br>如果没找到，会分配 itable 中的第一个空闲 entry 返回其指针</li>
+<li><code>iget()</code> 返回的指针指向的 inode 可能不引用任何有效的内容<br>需要先锁住 inode，然后从磁盘中读取 inode, 然后释放 inode 的锁</li>
+<li><code>iput()</code> 会将引用计数减 1<br>如果减到 0 后发现 nlink &#x3D;&#x3D; 0 即没有任何目录在引用该 inode ，则释放该 inode (type 置 0 并写入磁盘)以及其所引用的内容块(<code>itrunc()</code>)</li>
+<li><code>iput()</code> 可能会写入磁盘，所有对其的调用都需要包在一个事务中</li>
+</ul>
+</li>
+<li><code>ilock()</code> 和 <code>iunlock()</code> 用于获取和释放 inode 的锁<ul>
+<li>读写 inode 元数据或者其引用的内容块时，必须获取 inode 的锁</li>
+<li>inode 使用 sleep-lock , 类似于 buffer cache.</li>
+</ul>
+</li>
+<li><code>iupdate()</code> 将对 inode 的更新写入磁盘</li>
+<li><code>ialloc()</code>: 分配一个新的 inode<ul>
+<li>循环遍历磁盘中所有的 inode, 找到其中标记为 free 的 inode</li>
+<li>清空 inode 后将 type 写入磁盘，然后返回 inode 的一个指针:<code>iget()</code></li>
+<li>可以确保一次只有一个进程可以访问当前 inode : 通过对相应 buffer 的引用</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>与 buffer cache 的 sleeplock 不同的是，<code>iget()</code> 返回的 inode 是不带锁的，这是因为目录查找等操作需要针对多个 inode 操作，可能导致死锁。</p>
+</blockquote>
+<h4 id="可能存在的崩溃：释放文件时崩溃"><a href="#可能存在的崩溃：释放文件时崩溃" class="headerlink" title="可能存在的崩溃：释放文件时崩溃"></a>可能存在的崩溃：<strong>释放文件时崩溃</strong></h4><p>在 inode.nlink 减到 0 之后，<code>iput()</code> 并不会立即释放 inode 的内容块，需要等到所有的 inode.ref 也减到 0 ，如果操作系统在这段时间内发生崩溃，重启后会发现这个 inode 的内容块在磁盘中已分配，但不会有任何目录引用它</p>
+<p>后果：随着崩溃次数的增加，操作系统的磁盘可能被这样的块占满导致没有足够的磁盘空间</p>
+<p>解决方案：(<u>xv6 均未实现，因此 xv6 存在此种崩溃的可能</u>)  </p>
+<ol>
+<li>方案一：系统重启恢复时，检查所有标记为已分配 inode 和内容块但是没有目录引用的文件，将其释放<ul>
+<li>开销主要在重启时对文件系统的扫描</li>
+</ul>
+</li>
+<li>方案二：当一个文件的 inode.nlink &#x3D;&#x3D; 0 但是 inode.ref &gt; 0 时将其 inumber 记录到磁盘的 superblocks 中，当 ref 也降到 0 时从 superblock 中移除该 inumber ；恢复的时候系统只释放 superblock 中记录的 inode.<ul>
+<li>开销存在于操作系统运行期间的文件操作</li>
+</ul>
+</li>
+</ol>
+<h2 id="Directory"><a href="#Directory" class="headerlink" title="Directory"></a>Directory</h2><p><a id="directory"></a></p>
+<p>in <code>kernel/fs.c</code></p>
+<p>目录的内部实现类似于文件，其 <code>inode.type = T_DIR</code> ，其数据块是一系列目录 entries: <code>struct dirent</code> ，包含一个目录名和 inumber:  </p>
+<ul>
+<li>目录名最多 <code>DIRSIZ</code> 个字节 (默认 14)</li>
+<li>inumber &#x3D; 0 表示 entry 未分配</li>
+</ul>
+<p>API:  </p>
+<ol>
+<li><code>dirlookup()</code>: 使用给定的目录名搜索指定的目录 inode<ul>
+<li>如果找到，用 <code>iget()</code> 返回对应 inode 的指针</li>
+</ul>
+</li>
+<li><code>dirlink()</code>: 将给定目录名和 inumber 写入给定目录的目录项<ul>
+<li>首先查找目录项中是否已有给定的目录名，如果有，返回错误(<code>iput()</code> for <code>iget()</code> in <code>dirlookup()</code>)</li>
+<li>主循环遍历目录项查找未分配的 dirent: <code>readi()</code> ，找到后赋值写入磁盘: <code>writei()</code></li>
+</ul>
+</li>
+</ol>
+<h2 id="Pathname"><a href="#Pathname" class="headerlink" title="Pathname"></a>Pathname</h2><p><a id="pathname"></a></p>
+<p>in <code>kernel/fs.c</code></p>
+<p>API:  </p>
+<ol>
+<li><code>namei()</code>: 根据路径名返回相应的 inode</li>
+<li><code>nameiparent()</code>: 返回路径名最后一级的父目录的inode</li>
+</ol>
+<p><code>namei()</code> 和 <code>nameiparent()</code> 均通过 <code>namex()</code> 实现：  </p>
+<ol>
+<li>确定路径解析的起始位置<ul>
+<li>以 “&#x2F;“ 开头则从根目录解析；否则从当前目录开始解析</li>
+</ul>
+</li>
+<li>使用 <code>skipelem()</code> 逐个处理路径中的每一层:  <ol>
+<li>对 inode 加锁</li>
+<li>检查其是否为目录<ul>
+<li>如果不是，查找失败。（对 ip 加锁并非因为 ip-&gt;type 可能发生变化——它不会变化——而是因为在调用 ilock 之前，无法保证 ip-&gt;type 已从磁盘加载。）</li>
+</ul>
+</li>
+<li>如果调用是 <code>nameiparent</code>，并且这是路径的最后一个元素，则提前终止循环: 释放 inode 的锁并返回</li>
+<li>使用 <code>dirlookup()</code> 查找路径元素。当路径元素查找完毕时，循环结束，返回最后一级的 inode</li>
+</ol>
+</li>
+</ol>
+<p><code>namex()</code> 操作比较耗时，因为涉及多个磁盘操作。且其每次迭代查找时只锁单个 inode ，为的是可以尽可能支持并发操作。</p>
+<h2 id="File-Descriptor"><a href="#File-Descriptor" class="headerlink" title="File Descriptor"></a>File Descriptor</h2><p><a id="file_descriptor"></a></p>
+<p>in <code>kernel/file.c</code></p>
+<blockquote>
+<p>Unix 操作系统中，大多数资源都可以用文件表示，包括设备、管道以及真实的管道</p>
+</blockquote>
+<p>xv6 中，每个进程都有一个表保存所有当前进程打开的所有的文件描述符: <code>struct file</code>, 是一个 <u> inode 或者一个 pipe</u> 加 I&#x2F;O offset 的包装</p>
+<p><code>open</code> 系统调用会创建一个新的文件描述符:  </p>
+<ul>
+<li>多个进程独立的打开同一个文件时，不同的实例(文件描述符)会有不同的 offset</li>
+<li>一个文件可能在一个进程的文件描述符表中出现多次(<code>dup</code>)，或者在多个进程的表中出现(<code>fork</code>)</li>
+</ul>
+<p>所有打开的文件都会保存到一个全局的文件表 ftable, API：  </p>
+<ol>
+<li><code>filealloc()</code>: 分配一个文件<ul>
+<li>扫描 ftable, 查找未被引用的文件: <code>ref == 0</code> , 并返回一个新的引用</li>
+</ul>
+</li>
+<li><code>filedup()</code>: 创建一个文件的复制引用<ul>
+<li>增加引用计数</li>
+</ul>
+</li>
+<li><code>fileclose()</code>: 释放一个对文件的引用<ul>
+<li>减少引用计数</li>
+<li>当引用计数减为 0 时根据文件类型释放相应的 pipe 或 inode</li>
+</ul>
+</li>
+<li><code>fileread()</code>, <code>filewrite()</code>: 读写文件数据<ul>
+<li>检查打开模式</li>
+<li>调用底层 inode 或 pipe 的读写实现</li>
+<li>对于 inode: 在 offset 的基础上访问并增加偏移, 同时调用 <code>ilock</code> -&gt; <code>readi/writei</code> -&gt; <code>iunlock</code></li>
+</ul>
+</li>
+<li><code>filestat()</code>: 仅允许用于 inode ，并调用 <code>stati()</code></li>
+</ol>
+<hr>
+<p><img src="/images/os/xv6/file_system/call_graph.svg" alt="xv6 file system 结构"></p>
+<h1 id="Syscalls-与-文件系统-的交互"><a href="#Syscalls-与-文件系统-的交互" class="headerlink" title="Syscalls 与 文件系统 的交互"></a>Syscalls 与 文件系统 的交互</h1><p>in <code>kernel/sysfile.c</code></p>
+<ol>
+<li><code>sys_link</code> &#x2F; <code>sys_unlink</code>: 编辑目录，创建或删除对于 inode 的引用<br>  <code>sys_link</code>: 为现有的 inode 增加一个引用&#x2F;新的名字<ol>
+<li>如果 old 存在且非目录，增加 inode.nlink 计数</li>
+<li>调用 <code>nameiparent</code> 找到 new 的父目录和 basename</li>
+<li>创建一个指向 old 的新目录项</li>
+</ol>
+</li>
+<li><code>sys_open</code>: <ol>
+<li>获取 inode<ul>
+<li>如果使用 O_CREATE flag：则创建一个新的普通文件: <a href="#create"><code>create()</code></a> (带 inode 锁)</li>
+<li>否则调用 <code>namei</code> 返回对应路径名的 inode 并加锁</li>
+</ul>
+</li>
+<li>为 inode 分配一个文件(<code>filealloc</code>)和文件描述符(<code>fdalloc</code>) 并初始化</li>
+</ol>
+</li>
+<li><code>sys_mkdir</code>: 创建一个新的目录  </li>
+<li><code>sys_mkmod</code>: 创建一个新的设备文件</li>
+</ol>
+<p><code>sys_open</code>, <code>sys_mkdir</code>, <code>sys_mkmod</code> 均通过 <code>create</code> 实现：<br><a id="create"><code>create()</code></a>: 为一个新的 inode 创建一个新的名字并返回（带 inode 锁）</p>
+<ol>
+<li>调用 <code>nameiparent</code> 获取父目录的 inode</li>
+<li>调用 <code>dirlookup</code> 检查名字是否已存在<ul>
+<li>存在名称是一个普通文件：视为成功并返回该文件的 inode</li>
+<li>若不是普通文件：返回错误 </li>
+<li>若不存在：调用 <code>ialloc</code> 分配一个新的 inode<ul>
+<li>若创建的是目录，则需要为其初始化 “.” 和 “..” 两个目录项</li>
+<li>将这个新的 inode 创建到父目录的目录项中</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>日志事务简化了这些系统调用的实现，因为系统调用一次可能更新多个磁盘块，使用事务将所有更新包在一起，使其原子性地执行，避免中途崩溃导致文件系统不安全</p>
+</blockquote>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2025/09/07/os/xv6/file_system/">https://xixi-shredp.github.io/2025/09/07/os/xv6/file_system/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/09/08/Arch/cache/replacement/overview/" title="Cache Replacement Policy Overview"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Cache Replacement Policy Overview</div></div><div class="info-2"><div class="info-item-1">替换策略的主要目标：提高 hit rate 策略分类：（基于 cacheline 插入的粒度）  粗粒度策略：当 cacheline 插入 cache 时平等地对待所有 cachelines ，仅仅根据 cacheline 在 cache 中的行为来区别这些 cachelines 细粒度策略：当 cacheline 插入 cache 时区别对待不同的 cacheline ，除此之外还会观察 cacheline 在 cache 中的行为（需要 cache 访问模式的历史信息）  在 cacheline 生命周期中替换策略的作用点：   Insertion Policy: 新的 cacheline 被插入 cache 时如何初始化该 cacheline 的状态 Promotion Policy: 某个 cacheline hit 时如何更新其状态 Aging Policy: 当一个竞争性的 cacheline 插入 cache 或在 cache 中 hit 时如何更新其他 cachelines 的状态 Eviction Policy: 给定固定数量的 cachelines 选择，踢出...</div></div></div></a><a class="pagination-related" href="/2025/09/06/Arch/cache/LLC/basic/" title="Last-Level Cache in Cache Hierarchy"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Last-Level Cache in Cache Hierarchy</div></div><div class="info-2"><div class="info-item-1"> 访存往往是系统瓶颈 多核处理器会给访存系统带来更大压力：在芯片引脚数固定的情况下，需要传输的数据量急剧增多  访存系统设计的目标：最小化片外访存数 访存系统效率的影响因素：片上 caches 的访问延时和 hit rate LLC 设计的趋势：  占据处理器芯片一半的面积 采用多 bank 设计，分散在各个芯片之间 访问时延取决于需要在片间传输的距离 LLC 策略需要减少长距离的通信（可以使用开销较低的片上网络）  cache hierarchy 的主要分类：  shared vs. private centralized vs. distributed uniform vs. non-uniform access  根据 cache level 的不同，有的 level 采用 private 和 uniform access 设计，有的 level 采用 shared 和 non-uniform access 设计 cache hierarchy 的发展趋势：从两级 (L1, L2) 扩展到三级 (L1, L2, L3&#x2F;LLC) ，且 LLC 的 hit rate,...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">29</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#xv6-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%B1%82%E6%AC%A1"><span class="toc-number">1.</span> <span class="toc-text">xv6 文件系统层次</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Disk"><span class="toc-number">1.1.</span> <span class="toc-text">Disk</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#inode-block-%E5%92%8C-content-block-%E5%9C%A8-Disk-%E4%B8%AD%E7%9A%84%E5%AD%98%E5%82%A8"><span class="toc-number">1.1.1.</span> <span class="toc-text">inode block 和 content block 在 Disk 中的存储</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Block-Allocator"><span class="toc-number">1.1.2.</span> <span class="toc-text">Block Allocator</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Buffer-Cache"><span class="toc-number">1.2.</span> <span class="toc-text">Buffer Cache</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0-in-kernel-bio-c"><span class="toc-number">1.2.1.</span> <span class="toc-text">实现 in kernel&#x2F;bio.c</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Logging"><span class="toc-number">1.3.</span> <span class="toc-text">Logging</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Log-Design"><span class="toc-number">1.3.1.</span> <span class="toc-text">Log Design</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Group-Commit"><span class="toc-number">1.3.2.</span> <span class="toc-text">Group Commit</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.3.3.</span> <span class="toc-text">代码实现</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BB%BB%E4%BD%95%E5%AF%B9%E7%A3%81%E7%9B%98%E7%9A%84%E5%86%99%E5%85%A5%E5%9D%87%E9%9C%80%E4%BD%BF%E7%94%A8%E6%97%A5%E5%BF%97"><span class="toc-number">1.3.3.1.</span> <span class="toc-text">任何对磁盘的写入均需使用日志</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B4%A9%E6%BA%83%E6%81%A2%E5%A4%8D"><span class="toc-number">1.3.3.2.</span> <span class="toc-text">崩溃恢复</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Inode"><span class="toc-number">1.4.</span> <span class="toc-text">Inode</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#on-disk-inode-struct-dinode"><span class="toc-number">1.4.1.</span> <span class="toc-text">on-disk inode (struct dinode)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#in-memory-inode-struct-inode"><span class="toc-number">1.4.2.</span> <span class="toc-text">in-memory inode (struct inode)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8F%AF%E8%83%BD%E5%AD%98%E5%9C%A8%E7%9A%84%E5%B4%A9%E6%BA%83%EF%BC%9A%E9%87%8A%E6%94%BE%E6%96%87%E4%BB%B6%E6%97%B6%E5%B4%A9%E6%BA%83"><span class="toc-number">1.4.2.1.</span> <span class="toc-text">可能存在的崩溃：释放文件时崩溃</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Directory"><span class="toc-number">1.5.</span> <span class="toc-text">Directory</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Pathname"><span class="toc-number">1.6.</span> <span class="toc-text">Pathname</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#File-Descriptor"><span class="toc-number">1.7.</span> <span class="toc-text">File Descriptor</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Syscalls-%E4%B8%8E-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F-%E7%9A%84%E4%BA%A4%E4%BA%92"><span class="toc-number">2.</span> <span class="toc-text">Syscalls 与 文件系统 的交互</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/06/os/generic/mm/" title="OS Virtual Memory Management">OS Virtual Memory Management</a><time datetime="2025-11-06T06:03:30.000Z" title="Created 2025-11-06 14:03:30">2025-11-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/06/os/linux/riscv/boot/" title="Linux RISC-V Boot 流程">Linux RISC-V Boot 流程</a><time datetime="2025-11-06T01:44:36.000Z" title="Created 2025-11-06 09:44:36">2025-11-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/04/os/linux/boot/" title="Linux Boot 过程">Linux Boot 过程</a><time datetime="2025-11-04T06:09:06.000Z" title="Created 2025-11-04 14:09:06">2025-11-04</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/04/os/generic/boot/init/" title="操作系统初始化">操作系统初始化</a><time datetime="2025-11-03T16:16:20.000Z" title="Created 2025-11-04 00:16:20">2025-11-04</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/03/os/generic/trap/" title="操作系统：Interupt, Exception, Syscall">操作系统：Interupt, Exception, Syscall</a><time datetime="2025-11-03T15:01:01.000Z" title="Created 2025-11-03 23:01:01">2025-11-03</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

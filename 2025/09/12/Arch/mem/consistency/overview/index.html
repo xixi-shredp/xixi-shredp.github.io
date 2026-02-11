@@ -1,0 +1,627 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Memory Consistency And Cache Coherence | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="一致性简介：Memory Consistency 和 Cache Coherence">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Memory Consistency And Cache Coherence">
+<meta property="og:url" content="https://xixi-shredp.github.io/2025/09/12/Arch/mem/consistency/overview/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="一致性简介：Memory Consistency 和 Cache Coherence">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2025-09-12T08:56:23.000Z">
+<meta property="article:modified_time" content="2026-02-08T15:32:07.574Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="CPU, Computer Architechture, OS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Memory Consistency And Cache Coherence",
+  "url": "https://xixi-shredp.github.io/2025/09/12/Arch/mem/consistency/overview/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2025-09-12T08:56:23.000Z",
+  "dateModified": "2026-02-08T15:32:07.574Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2025/09/12/Arch/mem/consistency/overview/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Memory Consistency And Cache Coherence',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/default_top.jpg);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">29</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/default_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Memory Consistency And Cache Coherence</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Memory Consistency And Cache Coherence</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2025-09-12T08:56:23.000Z" title="Created 2025-09-12 16:56:23">2025-09-12</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-02-08T15:32:07.574Z" title="Updated 2026-02-08 23:32:07">2026-02-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/">Arch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/mem/">mem</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/mem/consistency/">consistency</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="Consistency-A-K-A-Memory-Consistency-Memory-Consistency-Model-or-Memory-Model"><a href="#Consistency-A-K-A-Memory-Consistency-Memory-Consistency-Model-or-Memory-Model" class="headerlink" title="Consistency (A.K.A., Memory Consistency, Memory Consistency Model, or Memory Model)"></a>Consistency (A.K.A., Memory Consistency, Memory Consistency Model, or Memory Model)</h1><p>定义:<br>在共享内存上执行的多线程程序所被允许的访存行为的规范。</p>
+<p>对程序员可见</p>
+<h2 id="共享内存行为"><a href="#共享内存行为" class="headerlink" title="共享内存行为"></a>共享内存行为</h2><p>问题:  </p>
+<ul>
+<li>乱序 CPU 可能对访存顺序重新排序，这样的重排对于单核本身而言执行结果是正确的，但在多核中可能与其他核的访存顺序在并发执行时存在矛盾</li>
+<li>并发执行的结果存在不确定性</li>
+</ul>
+<p>这些不确定的执行结果可能是非预期的，但均没有违反 coherence 定义的 SWMR 不变性。</p>
+<p>共享内存行为应当定义所有线程的所有执行。</p>
+<h2 id="内存一致性模型"><a href="#内存一致性模型" class="headerlink" title="内存一致性模型"></a>内存一致性模型</h2><table>
+<thead>
+<tr>
+<th>Consistency Model</th>
+<th>Feature</th>
+<th>Implement</th>
+<th>Case</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Sequential Consistency (SC)</td>
+<td>最严格，最符合直觉</td>
+<td>严格定序</td>
+<td>MIPS R10K</td>
+</tr>
+<tr>
+<td>Total Store Order (TSO)</td>
+<td>性能有提升</td>
+<td>使用 FIFO 保证写顺序</td>
+<td>x86 and historical SPARC systems</td>
+</tr>
+<tr>
+<td>relaxed&#x2F;weak memory consistency models (XC)</td>
+<td>性能更高，实现更简单</td>
+<td>FENCE 指令实现同步</td>
+<td>IBM Power</td>
+</tr>
+</tbody></table>
+<ul>
+<li>TSO 在执行模型和实现上均是 SC 的子集，因此 TSO 比 SC 更松散 (relaxed&#x2F;weaker)</li>
+</ul>
+<h2 id="与-Coherence-的区别"><a href="#与-Coherence-的区别" class="headerlink" title="与 Coherence 的区别"></a>与 Coherence 的区别</h2><p><img src="/images/Arch/mem/consistency/overview/consistency-model.svg" alt="Consistency Model"></p>
+<ul>
+<li>Consistency 规定程序访存行为</li>
+<li>Coherence 提供内存抽象 (black box)</li>
+</ul>
+<h2 id="Good-Memory-Consistency-Model-3P-1P"><a href="#Good-Memory-Consistency-Model-3P-1P" class="headerlink" title="Good Memory Consistency Model (3P + 1P)"></a>Good Memory Consistency Model (3P + 1P)</h2><ol>
+<li>Programmability 可编程性：应当使多线程编程更容易</li>
+<li>Performance 性能：在合理的功耗面积的约束下可以达到高性能</li>
+<li>Portability 可移植性：可以被广泛采用，具有后向兼容性，可以翻译为其他模型</li>
+<li>Precision 精确性：足够精确的定义（数学语言）</li>
+</ol>
+<h1 id="Coherence-A-K-A-Cache-Coherence"><a href="#Coherence-A-K-A-Cache-Coherence" class="headerlink" title="Coherence (A.K.A., Cache Coherence)"></a>Coherence (A.K.A., Cache Coherence)</h1><p>Cache 一致性，硬件用于实现 Memory Consistency 的手段，对程序员不可见</p>
+<h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><p>实现视角的定义:<br><a href="#invariants">满足 SWMR Invariant 和 Data-Value Invarient</a></p>
+<p>程序员视角的定义:  </p>
+<ol>
+<li>类似 Sequential consistency (SC) 的定义: 以每个执行线程的程序顺序为准在单个内存地址上执行多个线程的访存</li>
+<li>两个不变性的定义: <ul>
+<li>liveness invariant: 每个 store 最终对所有的核可见</li>
+<li>safety invariant: 对同一内存地址的写入必须串行化</li>
+</ul>
+</li>
+<li>Hennessy and Patterson 定义, 三个不变性:<ul>
+<li>对地址 A 的 load 访问获取该核先前对 A 的 store, 除非有其他核在这之间有对 A store </li>
+<li>对地址 A 的 load 访问获取其他核对 A 的 store, 要求该 store 和该 load 之间间隔的时间足够长，且二者之间没有发生过其他 store</li>
+<li>对同一地址的 store 必须串行化</li>
+</ul>
+</li>
+</ol>
+<p>问题场景:<br>多个线程对同一内存地址(存在多个副本)的访问中至少有一个是写</p>
+<p>目的:<br>使 cache 在共享内存中的行为同在单核系统中一致。具体而言，实现的一致性协议需要使一个线程对某个 cache 的写可以被其他线程看到（广播到所有 cache ）</p>
+<p><img src="/images/Arch/mem/consistency/overview/coherence_box.svg" alt="coherence box"></p>
+<p>不同的 Cache 一致性协议实现对于广播的时机不同:  </p>
+<ol>
+<li><a href="#consistency_agnostic_coherence">consistency-agnostic coherence</a><ul>
+<li>同步广播：写请求在返回给 core 之前对其他所有 core 可见</li>
+</ul>
+</li>
+<li>Consistency-directed coherence<ul>
+<li>异步广播: 写请求可以在对其他所有 core 可见之前返回（其他 core 可以观察到写之前的值）</li>
+<li>由 Consistency 管理写请求的顺序以保证正确性 </li>
+<li>主要用于 GPGPU 中并取得较高的性能提升</li>
+</ul>
+</li>
+</ol>
+<h2 id="Consistency-Agnostic-Coherence"><a href="#Consistency-Agnostic-Coherence" class="headerlink" title="Consistency-Agnostic Coherence"></a>Consistency-Agnostic Coherence</h2><p><a id="consistency_agnostic_coherence"></a></p>
+<p>其行为类似对原子存储的访问 (without cache)</p>
+<ul>
+<li>最常见的一致性协议： MOESI</li>
+<li>一致性协议的硬件实现</li>
+<li>Snooping 一致性协议<ul>
+<li>硬件实现简单： cache 控制器争夺共享总线并广播请求</li>
+<li>可扩展性差，现代总线过多导致比较复杂</li>
+<li>cases: Sun UltraEnterprise E10000, IBM Power5</li>
+</ul>
+</li>
+<li>Directory 一致性协议<ul>
+<li>可扩展性更高</li>
+<li>每个 cache 存储一部分地址空间的内容，没有副本, cache 之间通过数据包通信（只有一个目的 cache ）</li>
+<li>cases: SGI Origin 2000, AMD HyperTransport, HyperTransport Assist, and Intel QuickPath Interconnect (QPI)</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>Token Coherence<ul>
+<li>每个内存地址拥有一定的 token (token 数等于核心数), 当一个核拥有所有的 token 时才可以对该内存地址进行写访问，拥有一个或多个 token 才可以进行读访问</li>
+</ul>
+</li>
+</ul>
+<p>Coherence Invariants 需要满足的不变性要求：(二者共同保证了同步传播)<br><a id="invariants"></a></p>
+<ol>
+<li>Single-Writer, Multiple-Reader (SWMR) Invariant: 在任意时间对同一内存地址的访问中最多有一个写，且在写访问时不允许其他的读访问</li>
+<li>Data-Value Invariant: 对于一个内存地址的访问，该值从任意时间段开始到下一次写之间的时间段内保持不变</li>
+</ol>
+<p>维持 Coherence Invariants: Coherence Protocols -&gt; invalidate protocols  </p>
+<ul>
+<li>如果一个核试图读一个内存地址<ul>
+<li>向其他核发送信息获取该内存的当前值</li>
+<li>确保其他核的该内存的副本没有处于写状态</li>
+</ul>
+</li>
+<li>如果一个核试图写一个内存地址<ul>
+<li>如果该核还没有该内存有效的只读 cache 副本，则向其他核发送信息获取该内存的当前值</li>
+<li>确保其他核该内存的副本没有处于写访问或读访问</li>
+</ul>
+</li>
+</ul>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>Coherence Protocols 实现的粒度:<br>一般而言以 cache block 为基本粒度，但是理论上可以有更细(硬件代价更高昂)或者更粗(性能更差)的粒度</p>
+<p>cache protocol 需要实现的结构:: (coherence controller)<br>组成一个分布式系统，互相交换信息 (for each cache block) 。每一个控制器本质上是一个有限状态机的集合，每个状态机管理一个 cache block 的状态，并且接受和处理事件。</p>
+<ul>
+<li>在 cache 端，为 <a href="#cache_controller">cache controller</a></li>
+<li>在 LLC&#x2F;memory 端，为 <a href="#memory_controller">memory_controller</a></li>
+</ul>
+<h3 id="cache-controller"><a href="#cache-controller" class="headerlink" title="cache controller"></a>cache controller</h3><p><a id="cache_controller"></a></p>
+<p><img src="/images/Arch/mem/consistency/overview/cache_controller.svg" alt="Cache Controller"></p>
+<ul>
+<li>core side: 接受来自核的访存请求，返回数据值</li>
+<li>network side: 发送和接受一致性请求(通过互联网络与系统其他的控制器交互)</li>
+</ul>
+<h3 id="memory-controller"><a href="#memory-controller" class="headerlink" title="memory controller"></a>memory controller</h3><p><a id="memory_controller"></a></p>
+<p><img src="/images/Arch/mem/consistency/overview/memory_controller.svg" alt="Memory Controller"></p>
+<ul>
+<li>只有 network 端</li>
+<li>不会发送一致性请求和接受一致性响应</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2025/09/12/Arch/mem/consistency/overview/">https://xixi-shredp.github.io/2025/09/12/Arch/mem/consistency/overview/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/09/12/Arch/mem/consistency/SC/" title="Sequential Consistency (SC)"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Sequential Consistency (SC)</div></div><div class="info-2"><div class="info-item-1">定义第一次提出的定义 L. Lamport. How to make a multiprocessor computer that correctly executes multiprocess programs. IEEE Transactions on Computers, C-28(9):690–91, September 1979. DOI: 10.1109&#x2F;tc.1979.1675439. 22, 35  单处理器 sequential: 执行的结果与按照程序指定的顺序执行的结果相同 多处理器 sequentially consistent:任何执行的结果都相当于以某种顺序依次执行所有处理器（核心）的操作，并且每个单独的处理器（核心）的操作按照其程序指定的顺序出现在该序列中  memory order: 程序指定的所有操作的顺序 SC 模型严格遵守 memory order 以公理的形式定义 D. L. Weaver and T. Germond, Eds. SPARC Architecture Manual (Version 9). PTR Prentice...</div></div></div></a><a class="pagination-related" href="/2025/09/10/os/generic/boot/bios_uefi/" title="BIOS and UEFI"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">BIOS and UEFI</div></div><div class="info-2"><div class="info-item-1"> 整理参考自：知乎 TrustZero：一文搞懂UEFI  BIOS当我们提到BIOS时，根据上下文的不同，它可能代表不同的含义：  BIOS标准：这是一个广泛的概念，指的是一种在计算机启动时初始化硬件并加载操作系统引导程序的标准接口。 具体的BIOS实现——即特定于主板的固件： 这是由主板制造商编写或授权的代码。 当计算机开机时，硬件被设置为开始执行BIOS。这是CPU需要知道的全部内容，即CPU不需要了解驱动器、文件系统或操作系统。BIOS负责初始化硬件，加载引导加载程序（如GRUB或Windows Boot Manager），然后引导加载程序负责加载并启动操作系统。    简而言之，BIOS是计算机启动过程中的一个重要环节，它负责在操作系统加载之前初始化硬件，并为操作系统的启动提供必要的环境。而UEFI（统一可扩展固件接口）是BIOS的现代替代品，提供了更多的功能和更好的安全性。 BIOS 标准BIOS 标准定义了以下内容：  一个硬编码的内存位置，计算机在开机时 CPU 将从该位置开始执行 BIOS 代码。 磁盘位置，操作系统制造商可以在这些位置放置其引导加载程序以启动其...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">29</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Consistency-A-K-A-Memory-Consistency-Memory-Consistency-Model-or-Memory-Model"><span class="toc-number">1.</span> <span class="toc-text">Consistency (A.K.A., Memory Consistency, Memory Consistency Model, or Memory Model)</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B1%E4%BA%AB%E5%86%85%E5%AD%98%E8%A1%8C%E4%B8%BA"><span class="toc-number">1.1.</span> <span class="toc-text">共享内存行为</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.2.</span> <span class="toc-text">内存一致性模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8E-Coherence-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-number">1.3.</span> <span class="toc-text">与 Coherence 的区别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Good-Memory-Consistency-Model-3P-1P"><span class="toc-number">1.4.</span> <span class="toc-text">Good Memory Consistency Model (3P + 1P)</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Coherence-A-K-A-Cache-Coherence"><span class="toc-number">2.</span> <span class="toc-text">Coherence (A.K.A., Cache Coherence)</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9A%E4%B9%89"><span class="toc-number">2.1.</span> <span class="toc-text">定义</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Consistency-Agnostic-Coherence"><span class="toc-number">2.2.</span> <span class="toc-text">Consistency-Agnostic Coherence</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.3.</span> <span class="toc-text">实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#cache-controller"><span class="toc-number">2.3.1.</span> <span class="toc-text">cache controller</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#memory-controller"><span class="toc-number">2.3.2.</span> <span class="toc-text">memory controller</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/06/os/generic/mm/" title="OS Virtual Memory Management">OS Virtual Memory Management</a><time datetime="2025-11-06T06:03:30.000Z" title="Created 2025-11-06 14:03:30">2025-11-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/06/os/linux/riscv/boot/" title="Linux RISC-V Boot 流程">Linux RISC-V Boot 流程</a><time datetime="2025-11-06T01:44:36.000Z" title="Created 2025-11-06 09:44:36">2025-11-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/04/os/linux/boot/" title="Linux Boot 过程">Linux Boot 过程</a><time datetime="2025-11-04T06:09:06.000Z" title="Created 2025-11-04 14:09:06">2025-11-04</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/04/os/generic/boot/init/" title="操作系统初始化">操作系统初始化</a><time datetime="2025-11-03T16:16:20.000Z" title="Created 2025-11-04 00:16:20">2025-11-04</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/03/os/generic/trap/" title="操作系统：Interupt, Exception, Syscall">操作系统：Interupt, Exception, Syscall</a><time datetime="2025-11-03T15:01:01.000Z" title="Created 2025-11-03 23:01:01">2025-11-03</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

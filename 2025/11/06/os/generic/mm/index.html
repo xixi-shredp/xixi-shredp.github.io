@@ -1,0 +1,735 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>OS Virtual Memory Management | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="操作系统虚拟内存管理简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OS Virtual Memory Management">
+<meta property="og:url" content="https://xixi-shredp.github.io/2025/11/06/os/generic/mm/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="操作系统虚拟内存管理简介">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2025-11-06T06:03:30.000Z">
+<meta property="article:modified_time" content="2026-02-08T15:32:07.576Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="CPU, Computer Architechture, OS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "OS Virtual Memory Management",
+  "url": "https://xixi-shredp.github.io/2025/11/06/os/generic/mm/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2025-11-06T06:03:30.000Z",
+  "dateModified": "2026-02-08T15:32:07.576Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2025/11/06/os/generic/mm/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'OS Virtual Memory Management',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/default_top.jpg);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">29</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/default_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">OS Virtual Memory Management</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">OS Virtual Memory Management</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2025-11-06T06:03:30.000Z" title="Created 2025-11-06 14:03:30">2025-11-06</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-02-08T15:32:07.576Z" title="Updated 2026-02-08 23:32:07">2026-02-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/os/">os</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/os/generic/">generic</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="历史"><a href="#历史" class="headerlink" title="历史"></a>历史</h1><h2 id="最早期的计算机系统"><a href="#最早期的计算机系统" class="headerlink" title="最早期的计算机系统"></a>最早期的计算机系统</h2><ul>
+<li>硬件: 物理内存容量小</li>
+<li>软件<ul>
+<li>单个应用程序 + （简单）操作系统</li>
+<li>直接面对物理内存编程</li>
+<li>各自使用物理内存的一部分</li>
+</ul>
+</li>
+</ul>
+<h2 id="多道编程时代"><a href="#多道编程时代" class="headerlink" title="多道编程时代"></a>多道编程时代</h2><ul>
+<li>多用户多程序: 计算机很昂贵，多人同时使用（远程连接）</li>
+<li>分时复用 CPU 资源: 保存恢复寄存器速度很快</li>
+<li>分时复用物理内存资源: 将全部内存写入磁盘开销太高</li>
+<li>多个进程同时使用、各占一部分物理内存: 没有安全性（隔离性）</li>
+</ul>
+<h2 id="IBM-360-内存隔离-Protection-Key-机制"><a href="#IBM-360-内存隔离-Protection-Key-机制" class="headerlink" title="IBM 360 内存隔离: Protection Key 机制"></a>IBM 360 内存隔离: Protection Key 机制</h2><ul>
+<li>内存被划分为一个个大小为 2KB 的内存块（Block）</li>
+<li>每个内存块有一个 4-bit 的 key，保存在寄存器中</li>
+<li>1MB 内存需要 256 个保存 key 的寄存器，占 256-Byte<ul>
+<li>内存变大，则需要改 CPU 以增加 key 寄存器</li>
+</ul>
+</li>
+<li>每个进程对应一个 key<ul>
+<li>CPU 用另一个专门的寄存器，保存当前运行进程的 key</li>
+<li>不同进程的 key 不同</li>
+</ul>
+</li>
+<li>当一个进程访问一块内存时<ul>
+<li>CPU 检查进程的 key 与内存的 key 是否匹配</li>
+<li>不匹配则拒绝内存访问</li>
+</ul>
+</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>不具有可扩展性，随着内存扩大，需要的 key 寄存器太多，无法实现<ul>
+<li>可以将 key 放到内存中实现</li>
+</ul>
+</li>
+<li>加载内存的定位问题: 绝对内存寻址在不同进程上的行为不同 <ul>
+<li>这个问题本质上来源于直接使用物理地址寻址</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>直接使用物理地址寻址的问题：</p>
+<ul>
+<li>干扰性：一个应用会因其他应用的加载而受到影响</li>
+<li>扩展性：一旦物理地址范围确定，则很难使用更大范围的内存</li>
+<li>安全性：一个应用可通过自身的内存地址，猜测其他应用的位置</li>
+</ul>
+<h1 id="硬件虚拟地址寻址机制"><a href="#硬件虚拟地址寻址机制" class="headerlink" title="硬件虚拟地址寻址机制"></a>硬件虚拟地址寻址机制</h1><h2 id="分段"><a href="#分段" class="headerlink" title="分段"></a>分段</h2><p>分段机制常见于 x86 平台: 现代操作系统通常不再依赖分段</p>
+<ul>
+<li>x86 ISA 中 GDT 和 LDT</li>
+</ul>
+<h3 id="虚拟地址"><a href="#虚拟地址" class="headerlink" title="虚拟地址"></a>虚拟地址</h3><ul>
+<li>虚拟地址分为：段号 + 段内地址<ul>
+<li>段号：由操作系统决定</li>
+<li>段内地址：由编译器生成</li>
+</ul>
+</li>
+</ul>
+<h3 id="虚拟地址转换"><a href="#虚拟地址转换" class="headerlink" title="虚拟地址转换"></a>虚拟地址转换</h3><p>维护一个段表（由操作系统配置）<br>翻译时由 CPU 负责查表并转换</p>
+<h3 id="分段机制的问题"><a href="#分段机制的问题" class="headerlink" title="分段机制的问题:"></a>分段机制的问题:</h3><ul>
+<li>对物理内存连续性的要求: 物理内存也必须以段为单位进行分配</li>
+<li>存在问题：内存利用率<ul>
+<li>外部碎片：段与段之间留下碎片空间</li>
+<li>内部碎片：段内部预留未使用的碎片空间</li>
+</ul>
+</li>
+</ul>
+<h2 id="分页"><a href="#分页" class="headerlink" title="分页"></a>分页</h2><h3 id="虚拟地址-1"><a href="#虚拟地址-1" class="headerlink" title="虚拟地址"></a>虚拟地址</h3><ul>
+<li>虚拟地址空间划分成连续的、等长的虚拟页</li>
+<li>物理内存也被划分成连续的、等长的物理页</li>
+<li>虚拟页和物理页的页长相等</li>
+<li>虚拟地址分为：虚拟页号 + 页内偏移</li>
+<li>使用页表记录虚拟页号到物理页号的映射</li>
+</ul>
+<p>不同 ISA 的页表基地址：</p>
+<ul>
+<li>RISC-V: satp 寄存器</li>
+<li>x86-64: CR3 寄存器</li>
+<li>AARCH64(Arm): 两个寄存器：TTBR0_EL1 &amp; TTBR1_EL1<ul>
+<li>根据虚拟地址第63位选择</li>
+<li>以Linux为例<ul>
+<li>应用程序（地址首位为0）：使用 TTBR0_EL1</li>
+<li>操作系统（地址首位为1）：使用 TTBR1_EL1</li>
+</ul>
+</li>
+<li>系统调用中不需要切换页表<ul>
+<li>RISC-V 和 x86 都使用单个页表基地址寄存器，在系统调用过程需要切换页表基地址寄存器</li>
+<li>将内核映射到虚拟地址高位可以避免 TLB flush</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="分页机制的特点"><a href="#分页机制的特点" class="headerlink" title="分页机制的特点"></a>分页机制的特点</h3><ul>
+<li>物理内存离散分配<ul>
+<li>任意虚拟页可以映射到任意物理页</li>
+<li>大大降低对物理内存连续性的要求</li>
+</ul>
+</li>
+<li>主存资源易于管理，利用率更高<ul>
+<li>按照固定页大小分配物理内存</li>
+<li>能大大降低外部碎片和内部碎片</li>
+</ul>
+</li>
+<li>被现代处理器和操作系统广泛采用</li>
+</ul>
+<h3 id="TLB-优化"><a href="#TLB-优化" class="headerlink" title="TLB 优化"></a>TLB 优化</h3><h4 id="降低-TLB-flush-开销"><a href="#降低-TLB-flush-开销" class="headerlink" title="降低 TLB flush 开销"></a>降低 TLB flush 开销</h4><p>新的硬件特性 ASID（RISC-V）： Address Space ID</p>
+<ul>
+<li>OS 为不同进程分配8位或16位 ASID (SATP 的第 44-59 位)</li>
+<li>TLB 的每一项也会缓存 ASID</li>
+<li>地址翻译时，硬件会将 TLB entry 的 ASID 与 SATP 的 ASID 对比<ul>
+<li>若不匹配，则 TLB miss</li>
+</ul>
+</li>
+</ul>
+<p>使用了 ASID 之后:</p>
+<ul>
+<li>切换页表（即切换进程）后，不再需要刷掉 TLB，提高性能</li>
+<li>但修改页表映射后，仍需刷掉 TLB</li>
+</ul>
+<h4 id="多核场景下的-TLB-实现"><a href="#多核场景下的-TLB-实现" class="headerlink" title="多核场景下的 TLB 实现"></a>多核场景下的 TLB 实现</h4><ul>
+<li>OS 修改页表后，需要清空其它核的 TLB 吗？<ul>
+<li>需要，因为一个进程可能在多个核上运行</li>
+</ul>
+</li>
+<li>OS 如何知道需要清空哪些核的 TLB？<ul>
+<li>操作系统知道进程调度信息</li>
+</ul>
+</li>
+<li>OS如何清空其它核的TLB？<ul>
+<li>x86_64: 发送 IPI 中断某个核，通知它主动清空</li>
+<li>AARCH64: 可在 local CPU 上清空其它核 TLB<ul>
+<li>调用的 ARM 指令: TLBI ASIDE1IS</li>
+</ul>
+</li>
+<li>RISC-V：SFENCE.VMA<ul>
+<li>rs1 针对页表，指示了页表哪个虚拟地址对应的转换被修改了</li>
+<li>rs2 给出了被修改页表的进程的地址空间标识符 (ASID)</li>
+<li>• SBI call + IPI 实现 remote sfence</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="操作系统对虚拟内存的管理"><a href="#操作系统对虚拟内存的管理" class="headerlink" title="操作系统对虚拟内存的管理"></a>操作系统对虚拟内存的管理</h1><h2 id="段"><a href="#段" class="headerlink" title="段"></a>段</h2><p>OS 采用段来管理虚拟地址</p>
+<ul>
+<li>段内连续，段与段之间非连续</li>
+<li>合法虚拟地址段：代码、数据、堆、栈</li>
+<li>非法虚拟地址段：未映射<br>一旦访问，则触发 segfault</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">+---------+</span><br><span class="line">|         | --------------+</span><br><span class="line">|         |               |</span><br><span class="line">+---------+               |</span><br><span class="line">|  Stack  |               |</span><br><span class="line">+---------+               |</span><br><span class="line">|         |               |</span><br><span class="line">|         |  ----------+  |</span><br><span class="line">|         |            |  |</span><br><span class="line">+---------+</span><br><span class="line">|  Heap   |        Unmapped</span><br><span class="line">+---------+</span><br><span class="line">|         |         |  |  |</span><br><span class="line">|         | --------+  |  |</span><br><span class="line">+---------+            |  |</span><br><span class="line">| RO data |            |  |</span><br><span class="line">+---------+            |  |</span><br><span class="line">|         | -----------+  |</span><br><span class="line">+---------+               |</span><br><span class="line">|  code   |               |</span><br><span class="line">+---------+               |</span><br><span class="line">|         | --------------+</span><br><span class="line">+---------+</span><br></pre></td></tr></table></figure>
+
+<h2 id="VMA"><a href="#VMA" class="headerlink" title="VMA"></a>VMA</h2><p>在 Linux 中通过 vm_area_struct（VMA）结构体管理记录进程的合法虚拟地址空间</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">+---------+               +--------------------- -+</span><br><span class="line">|         |               | start: 0x7ffcfbc67000 |</span><br><span class="line">|         |           +---| end  : 0x7ffcfbc88000 |  VMA0</span><br><span class="line">+---------+           |   | perm : R, W           |--+</span><br><span class="line">|  Stack  |&lt;----------+   +-----------------------+  |</span><br><span class="line">+---------+                                          |</span><br><span class="line">|         |               +--------------------- -+  |</span><br><span class="line">|         |               | start: 0x144f000      |&lt;-+</span><br><span class="line">|         |           +---| end  : 0x1470000      |  VMA1</span><br><span class="line">+---------+           |   | perm : R, W           |--+</span><br><span class="line">|  Heap   |&lt;----------+   +-----------------------+  |</span><br><span class="line">+---------+                                          |</span><br><span class="line">|         |               +--------------------- -+  |</span><br><span class="line">|         |           +---| start: 0x600000       |&lt;-+</span><br><span class="line">+---------+           |   | end  : 0x601000       |  VMA2</span><br><span class="line">| RO data |&lt;----------+   | perm : R              |--+</span><br><span class="line">+---------+               +-----------------------+  |</span><br><span class="line">|         |                                          |</span><br><span class="line">+---------+               +--------------------- -+  |</span><br><span class="line">|  code   |&lt;----------+   | start: 0x400000       |&lt;-+</span><br><span class="line">+---------+           |   | end  : 0x401000       |  VMA3</span><br><span class="line">|         |           +---| perm : R, X           |</span><br><span class="line">+---------+               +-----------------------+</span><br></pre></td></tr></table></figure>
+
+<p>VMA 的添加:</p>
+<ol>
+<li>OS 在创建应用程序时分配<ul>
+<li>数据（对应 ELF 段）</li>
+<li>代码（对应 ELF 段）</li>
+<li>栈（初始无内容）</li>
+</ul>
+</li>
+<li>应用程序主动向 OS 发出请求<ul>
+<li>brk()（扩大、缩小堆区域）<ul>
+<li>可选策略： OS 也可以在创建应用时分配初始的堆 VMA</li>
+</ul>
+</li>
+<li>mmap()<ul>
+<li>申请空的虚拟内存区域 (匿名映射)</li>
+<li>申请映射文件数据的虚拟内存区域</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p>VMA 和作用：便于操作系统更快速高效的完成地址的检查（使用页表则慢的多）</p>
+<ul>
+<li>不落在 VMA 区域的访存，则为非法</li>
+</ul>
+<h2 id="物理页面的分配"><a href="#物理页面的分配" class="headerlink" title="物理页面的分配"></a>物理页面的分配</h2><p>操作系统何时分配物理页:</p>
+<ol>
+<li>立即映射：每个虚拟页都对应了一个物理内存页</li>
+<li>延迟映射(<strong>延迟映射&#x2F;按需调页, DEMAND PAGING</strong>)：有些虚拟页不对应任何物理内存页<ul>
+<li>对应的数据在磁盘上</li>
+<li>没有对应的数据（初始化为0）</li>
+<li>通过缺页异常处理函数映射</li>
+<li>优势：节约内存资源</li>
+<li>劣势：缺页异常导致访问延迟增加</li>
+<li>权衡优化(预取 Prefault): 每次 page fault 载入连续的多个页，减少 fault 次数</li>
+</ul>
+</li>
+</ol>
+<h1 id="OS-内存管理中的其他机制"><a href="#OS-内存管理中的其他机制" class="headerlink" title="OS 内存管理中的其他机制"></a>OS 内存管理中的其他机制</h1><ol>
+<li>共享内存: 多个进程共享一段物理内存</li>
+<li>写时拷贝（copy-on-write）: 共享读，写触发 page fault 处理时拷贝</li>
+<li>内存去重（memory deduplication）<ul>
+<li>基于 copy-on-write 在内存中扫描发现具有相同内容的物理页面时执行去重</li>
+<li>操作系统发起，对用户态透明</li>
+<li>例：Linux KSM,  kernel same-page merging</li>
+</ul>
+</li>
+<li>内存压缩<ul>
+<li>当内存资源不充足的时候， 选择将一些“最近不太会使用”的内存页进行数据压缩，从而释放出空闲内存</li>
+<li>Windows 10<ul>
+<li>压缩后的数据仍然存放在内存中</li>
+<li>当访问被压缩的数据时，操作系统将其解压即可</li>
+</ul>
+</li>
+<li>Linux<ul>
+<li>zswap：换页过程中磁盘的缓存</li>
+<li>将准备换出的数据压缩并先写入 zswap 区域 （内存）</li>
+<li>好处：减少甚至避免磁盘I&#x2F;O；增加设备寿命</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>大页的使用<ul>
+<li>好处<ul>
+<li>减少TLB缓存项的使用，提高 TLB 命中率</li>
+<li>减少页表的级数，提升遍历页表的效率</li>
+</ul>
+</li>
+<li>案例<ul>
+<li>提供API允许应用程序进行显示的大页分配</li>
+<li>透明大页（Transparent Huge Pages) 机制</li>
+</ul>
+</li>
+<li>弊端<ul>
+<li>未使用整个大页而造成物理内存资源浪费</li>
+<li>增加管理内存的复杂度</li>
+</ul>
+</li>
+<li>不同 ISA 对页面大小的支持不同<ul>
+<li>RISC-V: 1G, 2M, 4K</li>
+<li>x86: 4K</li>
+<li>AARCH64<ul>
+<li>TCR_EL1 可以配置 3 种：4K, 16K, 64K</li>
+<li>4K + 大页：2M&#x2F;1G</li>
+<li>16K + 大页：32M</li>
+<li>64K + 大页：512M</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2025/11/06/os/generic/mm/">https://xixi-shredp.github.io/2025/11/06/os/generic/mm/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2025/11/06/os/linux/riscv/boot/" title="Linux RISC-V Boot 流程"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Linux RISC-V Boot 流程</div></div><div class="info-2"><div class="info-item-1">硬件初始化两种启动方式：  定制化的主板（常见的 RISC-V 开发板，通常不再扩展其他设备） 通用主板（常见如 PC，通常需要再插入其他设备）  嵌入式设备启动  需要初始化具体主板相关硬件如 GPIO 和内存等 从 devicetree 获知有哪些设备 操作系统中需要很多设备相关的驱动 通常与设备强相关 ROM 通常是闭源的 早期启动流程通常是厂商提供的代码   缺点：对可插拔外设的兼容性 如 RISC-V 嵌入式设备支持 PCIe 外设，需要操作系统内核包含具体硬件上的 PCIe 控制器驱动    RISC-V嵌入式平台常见组合:  ROM code（在ROM）：主板厂商私有 Bootloader（在SD卡或 SPI flash）：如u-boot（非必须） Linux kernel（在SD卡）  以常用的基于 U-Boot 和 OpenSBI 的启动流程为例:  从 ROM 中开始执行代码 SoC 芯片内部包含一块 ROM 保存了一些简单的驱动 从 SD 卡或 flash 加载 U-Boot SPL 到一块小内存中（单独的 SRAM 或 L2 cache-as-RAM）  ...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">29</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8E%86%E5%8F%B2"><span class="toc-number">1.</span> <span class="toc-text">历史</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%80%E6%97%A9%E6%9C%9F%E7%9A%84%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F"><span class="toc-number">1.1.</span> <span class="toc-text">最早期的计算机系统</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%9A%E9%81%93%E7%BC%96%E7%A8%8B%E6%97%B6%E4%BB%A3"><span class="toc-number">1.2.</span> <span class="toc-text">多道编程时代</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#IBM-360-%E5%86%85%E5%AD%98%E9%9A%94%E7%A6%BB-Protection-Key-%E6%9C%BA%E5%88%B6"><span class="toc-number">1.3.</span> <span class="toc-text">IBM 360 内存隔离: Protection Key 机制</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%A1%AC%E4%BB%B6%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E5%AF%BB%E5%9D%80%E6%9C%BA%E5%88%B6"><span class="toc-number">2.</span> <span class="toc-text">硬件虚拟地址寻址机制</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E6%AE%B5"><span class="toc-number">2.1.</span> <span class="toc-text">分段</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80"><span class="toc-number">2.1.1.</span> <span class="toc-text">虚拟地址</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2"><span class="toc-number">2.1.2.</span> <span class="toc-text">虚拟地址转换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%86%E6%AE%B5%E6%9C%BA%E5%88%B6%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-number">2.1.3.</span> <span class="toc-text">分段机制的问题:</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E9%A1%B5"><span class="toc-number">2.2.</span> <span class="toc-text">分页</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80-1"><span class="toc-number">2.2.1.</span> <span class="toc-text">虚拟地址</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%86%E9%A1%B5%E6%9C%BA%E5%88%B6%E7%9A%84%E7%89%B9%E7%82%B9"><span class="toc-number">2.2.2.</span> <span class="toc-text">分页机制的特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TLB-%E4%BC%98%E5%8C%96"><span class="toc-number">2.2.3.</span> <span class="toc-text">TLB 优化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%99%8D%E4%BD%8E-TLB-flush-%E5%BC%80%E9%94%80"><span class="toc-number">2.2.3.1.</span> <span class="toc-text">降低 TLB flush 开销</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A4%9A%E6%A0%B8%E5%9C%BA%E6%99%AF%E4%B8%8B%E7%9A%84-TLB-%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.2.3.2.</span> <span class="toc-text">多核场景下的 TLB 实现</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%AF%B9%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%9A%84%E7%AE%A1%E7%90%86"><span class="toc-number">3.</span> <span class="toc-text">操作系统对虚拟内存的管理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%AE%B5"><span class="toc-number">3.1.</span> <span class="toc-text">段</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#VMA"><span class="toc-number">3.2.</span> <span class="toc-text">VMA</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%89%A9%E7%90%86%E9%A1%B5%E9%9D%A2%E7%9A%84%E5%88%86%E9%85%8D"><span class="toc-number">3.3.</span> <span class="toc-text">物理页面的分配</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#OS-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%AD%E7%9A%84%E5%85%B6%E4%BB%96%E6%9C%BA%E5%88%B6"><span class="toc-number">4.</span> <span class="toc-text">OS 内存管理中的其他机制</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/06/os/generic/mm/" title="OS Virtual Memory Management">OS Virtual Memory Management</a><time datetime="2025-11-06T06:03:30.000Z" title="Created 2025-11-06 14:03:30">2025-11-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/06/os/linux/riscv/boot/" title="Linux RISC-V Boot 流程">Linux RISC-V Boot 流程</a><time datetime="2025-11-06T01:44:36.000Z" title="Created 2025-11-06 09:44:36">2025-11-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/04/os/linux/boot/" title="Linux Boot 过程">Linux Boot 过程</a><time datetime="2025-11-04T06:09:06.000Z" title="Created 2025-11-04 14:09:06">2025-11-04</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/04/os/generic/boot/init/" title="操作系统初始化">操作系统初始化</a><time datetime="2025-11-03T16:16:20.000Z" title="Created 2025-11-04 00:16:20">2025-11-04</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/03/os/generic/trap/" title="操作系统：Interupt, Exception, Syscall">操作系统：Interupt, Exception, Syscall</a><time datetime="2025-11-03T15:01:01.000Z" title="Created 2025-11-03 23:01:01">2025-11-03</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
