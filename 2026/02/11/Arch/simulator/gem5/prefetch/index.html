@@ -1,0 +1,688 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Gem5 Prefetcher | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Gem5 version: v25.1.0.0   TODO List:   Berti: 可以探索，不同 workload 对 DeltaList 和 HistoryTable 的容量需求是否不同?  BOP: L1DCache 使用虚拟地址进行预测?(统计跨页预取)  组合预取器的效果?   Gem5 预取器协议所有预取器的基类为 prefetch::Base 预取请求由 PrefetchI">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Gem5 Prefetcher">
+<meta property="og:url" content="https://xixi-shredp.github.io/2026/02/11/Arch/simulator/gem5/prefetch/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="Gem5 version: v25.1.0.0   TODO List:   Berti: 可以探索，不同 workload 对 DeltaList 和 HistoryTable 的容量需求是否不同?  BOP: L1DCache 使用虚拟地址进行预测?(统计跨页预取)  组合预取器的效果?   Gem5 预取器协议所有预取器的基类为 prefetch::Base 预取请求由 PrefetchI">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2026-02-11T15:56:47.000Z">
+<meta property="article:modified_time" content="2026-02-19T14:46:49.676Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="CPU, Computer Architechture, OS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Gem5 Prefetcher",
+  "url": "https://xixi-shredp.github.io/2026/02/11/Arch/simulator/gem5/prefetch/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2026-02-11T15:56:47.000Z",
+  "dateModified": "2026-02-19T14:46:49.676Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2026/02/11/Arch/simulator/gem5/prefetch/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Gem5 Prefetcher',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/default_top.jpg);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">49</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">30</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/default_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Gem5 Prefetcher</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Gem5 Prefetcher</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-02-11T15:56:47.000Z" title="Created 2026-02-11 23:56:47">2026-02-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-02-19T14:46:49.676Z" title="Updated 2026-02-19 22:46:49">2026-02-19</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/">Arch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/simulator/">simulator</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/simulator/gem5/">gem5</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><blockquote>
+<p>Gem5 version: <code>v25.1.0.0</code></p>
+</blockquote>
+<blockquote>
+<p>TODO List:</p>
+<ul>
+<li><input disabled="" type="checkbox"> Berti: 可以探索，不同 workload 对 DeltaList 和 HistoryTable 的容量需求是否不同?</li>
+<li><input disabled="" type="checkbox"> BOP: L1DCache 使用虚拟地址进行预测?(统计跨页预取)</li>
+<li><input disabled="" type="checkbox"> 组合预取器的效果?</li>
+</ul>
+</blockquote>
+<h1 id="Gem5-预取器协议"><a href="#Gem5-预取器协议" class="headerlink" title="Gem5 预取器协议"></a>Gem5 预取器协议</h1><p>所有预取器的基类为 <code>prefetch::Base</code></p>
+<p>预取请求由 <code>PrefetchInfo</code> 类定义，在 <code>Base::probeNotify()</code> 中根据 cache 请求构建预取请求并通过 <code>notify()</code> 将预取请求下发到 cache</p>
+<p><code>Base</code> 会根据 <code>useVirtualAddresses</code> 参数决定构建的 <code>PrefetchInfo</code> 中预取使用的地址是虚拟地址(<code>pkt-&gt;req-&gt;getVaddr()</code>)还是物理地址(<code>pkt-&gt;req-&gt;getPaddr()</code>)<br>(<code>useVirtualAddresses</code> 默认 False)</p>
+<blockquote>
+<p>一般而言，只有 L1DCache 有可能使用虚拟地址进行预取，其他 level cache 只能使用物理地址进行预取</p>
+<p>L1DCache 使用虚拟地址预取的好处在于可以实现跨页的预取，当 workload 可能跨页时其物理地址可能并不连续，可能影响 prefetch pattern</p>
+</blockquote>
+<h2 id="Queued-Prefetcher"><a href="#Queued-Prefetcher" class="headerlink" title="Queued Prefetcher"></a>Queued Prefetcher</h2><p>继承自 <code>Queued</code> 的预取器实现均需要实现以下虚函数:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">notifyFill</span><span class="params">(<span class="type">const</span> CacheAccessProbeArg &amp;arg)</span></span>;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">calculatePrefetch</span><span class="params">(<span class="type">const</span> PrefetchInfo &amp;pfi,</span></span></span><br><span class="line"><span class="params"><span class="function">                        std::vector&lt;AddrPriority&gt; &amp;addresses,</span></span></span><br><span class="line"><span class="params"><span class="function">                        <span class="type">const</span> CacheAccessor &amp;cache)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><code>calculatePrefetch</code> 是由 <code>Queued</code> 定义的纯虚函数，用于将计算得到的预取请求地址 push 入 <code>addresses</code> 的数组中，由 <code>Queued</code> 根据 <code>addresses</code> 数组中的地址生成 cache 请求并发出 (in <code>Queued::notify()</code>)</li>
+<li><code>notifyFill</code> 是由 <code>Base</code> 定义的纯虚函数，用于在 cache fill 时通知预取器做出相应的动作 (hook)</li>
+</ol>
+<h2 id="BOP-预取器实现"><a href="#BOP-预取器实现" class="headerlink" title="BOP 预取器实现"></a>BOP 预取器实现</h2><p>属于 offset prefetcher</p>
+<blockquote>
+<p>in <code>src/mem/cache/prefetch/bop.[hh|cc]</code></p>
+</blockquote>
+<p><code>BOP</code> 也继承于 <code>Queued</code>，因此需要实现 <code>calculatePrefetch</code> 和 <code>notifyFill</code>.</p>
+<p>参数：</p>
+<ul>
+<li><code>scoreMax</code>: 训练过程中 <code>bestScore</code> 一旦超出该限制，则视为一个训练周期结束</li>
+<li><code>roundMax</code>: 最大训练轮数，<code>round</code> 一旦超出该限制，则视为一个训练周期结束</li>
+<li><code>badScore</code>: bestScore 超过该阈值时，则可以发射预取请求</li>
+<li><code>degree</code>: 每次预取时预取几个 bestOffset 的步幅</li>
+</ul>
+<p>硬件实现：</p>
+<ul>
+<li>Recent Requests Table: <code>rrLeft</code>, <code>rrRight</code> （容量均为 <code>p.rr_size</code>）</li>
+<li>Offsets List: <code>offsetsList</code> (容量为 <code>p.offset_list_size</code>)<ul>
+<li>其中所有的偏移量是固定的，在初始化时计算好，所有偏移量分解质因数后因数均不超过 5</li>
+</ul>
+</li>
+<li>Delay Queue: <code>delayQueue</code> （optional, 容量为 <code>p.delay_queue_size</code>）</li>
+<li>训练硬件寄存器<ul>
+<li><code>bestScore</code>: 单个训练周期中训练出的最大分数</li>
+<li><code>phaseBestOffset</code>: 单个训练周期中 <code>bestScore</code> 对应的 offset</li>
+<li><code>round</code>: 单个训练周期内的训练轮数</li>
+<li><code>bestOffset</code>: 当前训练好的 offset (每个训练周期结束更新)</li>
+<li><code>issuePrefetchRequests</code>: 是否发送预取请求(每个训练周期结束更新，只有训练周期结束时 <code>bestOffset</code> 超出 <code>badScore</code> 阈值才会置位)</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>offset List 越大意味着单个训练周期越长</p>
+</blockquote>
+<h3 id="BOP-calculatePrefetch"><a href="#BOP-calculatePrefetch" class="headerlink" title="BOP::calculatePrefetch"></a><code>BOP::calculatePrefetch</code></h3><ol>
+<li>根据请求地址计算出 tag</li>
+<li>如果启用了 delayQueue (<code>delayQueueEnabled</code>): 将地址插入 delayQueue <code>insertIntoDelayQueue()</code><br>  否则将地址直接插入 <code>rrLeft</code> ：<code>insertIntoRR()</code></li>
+<li>学习 best offset: <code>bestOffsetLearning()</code></li>
+<li>如果此时满足发送预取请求的条件(<code>issuePrefetchRequests</code>): 以学习的 <code>bestOffset</code> 作为步幅发送 degree 次预取请求<br> (bestOffset 以 block size 为粒度, degree 需大于 1)</li>
+</ol>
+<h4 id="BOP-insertIntoDelayQueue"><a href="#BOP-insertIntoDelayQueue" class="headerlink" title="BOP::insertIntoDelayQueue"></a>BOP::insertIntoDelayQueue</h4><p>如果请求超出 <code>delayQueueSize</code> ，则忽略，不作任何处理<br>否则:  </p>
+<ul>
+<li>将当前预取地址插入 delayQueue, 延时设置为 <code>process_tick = curTick() + delayTicks</code></li>
+<li>如果 <code>delayQueueEvent</code> 未被调度，则在 process_tick 调度该事件</li>
+</ul>
+<p>delayQueueEvent 被调度到时执行 <code>BOP::delayQueueEventWrapper()</code>:</p>
+<ol>
+<li>将 delayQueue 中所有 ticks 满足的 entry 都插入到 <code>rrLeft</code></li>
+<li>然后如果 delayQueue 非空，则调度下一个 delayQueueEntry 的 event</li>
+</ol>
+<h4 id="BOP-insertIntoRR"><a href="#BOP-insertIntoRR" class="headerlink" title="BOP::insertIntoRR"></a>BOP::insertIntoRR</h4><p>根据 way 和 tag 将 addr 插入 Recent Requests Table</p>
+<p>索引方式为：</p>
+<ul>
+<li>对于 Left Side, <code>index = cacheline_addr ^ (cacheline_addr &gt;&gt; log_rr)</code> </li>
+<li>对于 Right Side, <code>index = cacheline_addr ^ (cacheline_addr &gt;&gt; (2 * log_rr))</code></li>
+</ul>
+<p>index 最终还需 wrap 到 RR Entries 内</p>
+<h4 id="BOP-bestOffsetLearning"><a href="#BOP-bestOffsetLearning" class="headerlink" title="BOP::bestOffsetLearning"></a>BOP::bestOffsetLearning</h4><ol>
+<li>根据当前的 <code>offsetsListIterator</code> 计算出 RR Table 的 lookup tag: <code>testRR()</code><ul>
+<li>如果 RR Table Hit, 则将该 offsetsList Entry 的 Score++, </li>
+<li>如果该 Entry 的 Score 超过 <code>bestScore</code>，则<br>将 <code>bestScore</code> 改为当前 Entry 对应的 score, <code>phaseBestOffset</code> 改为当前 Entry 对应的 offset</li>
+</ul>
+</li>
+<li>然后将 <code>offsetsListIterator++</code> 下一次调用该函数则检查下一个 RR Table Entry<ul>
+<li>如果 <code>offsetsListIterator</code> 指针指到 <code>offsetsList</code> 的末端, 则<br>将指针再指回 <code>offsetsList</code> 的头部，并记录 <code>round++</code></li>
+</ul>
+</li>
+<li>如果训练出的 <code>bestScore</code> 超出 <code>scoreMax</code> 或者训练的 round 超出 <code>roundMax</code>，则进入新的训练周期：<ul>
+<li>round 归零</li>
+<li>如果 <code>bestScore</code> 超出 <code>badScore</code> (使能预取的 score)，则<br>将 <code>bestOffset</code> 设置为 <code>phaseBestOffset</code>, <code>issuePrefetchRequests</code> 置位 true<br>否则：<code>issuePrefetchRequests</code> 置位 false</li>
+<li>重置训练中间结果: <ul>
+<li><code>offsetsList</code> 中所有 Entry 的 score 置 0: <code>resetScores()</code></li>
+<li><code>bestScore</code> 和 <code>phaseBestOffset</code> 置 0</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="BOP-notifyFill"><a href="#BOP-notifyFill" class="headerlink" title="BOP::notifyFill"></a><code>BOP::notifyFill</code></h3><p>如果此时允许发送预取请求（<code>issuePrefetchRequests</code>）:将 (cache fill 的地址 - bestOffset) 的值插入 <code>rrRight</code> </p>
+<h2 id="Berti-预取器实现-from-xs-gem5"><a href="#Berti-预取器实现-from-xs-gem5" class="headerlink" title="Berti 预取器实现 (from xs-gem5)"></a>Berti 预取器实现 (from xs-gem5)</h2><p>属于 delta prefetcher</p>
+<blockquote>
+<p>in <code>src/mem/cache/prefetch/berti.[hh|cc]</code></p>
+</blockquote>
+<p>Gem5 并没有 Berti 的相关实现，最原始的 Berti 只有 ChampSim 和 xs-gem5 的开源实现</p>
+<p><code>BertiPrefetcher</code> 继承于 <code>Queued</code>，因此需要实现 <code>calculatePrefetch</code> 和 <code>notifyFill</code>.</p>
+<p>相比于原论文，<br>xs-gem5 在实现 Berti 时将 DeltaList 合并到 HistoryTable 中，二者共用 pc 作为 tag，但也意味着二者容量必须一致<br>（<u>可以探索，不同 workload 对 DeltaList 和 HistoryTable 的容量需求是否不同?</u>）</p>
+<p>其中，HistoryTable 每个 Entry 中:</p>
+<ul>
+<li>可以存储多个地址: 容量为 <code>maxAddrListSize</code>，采用 FIFO 替换策略</li>
+<li>额外增加了一位 hysteresis 用于保护 entry 防止刚进入就被替换出去<br>（entry 第一次被替换时只会清除该位，不会做实际的替换，第二次替换才会做实际的替换）</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">HistoryTableEntry:</span><br><span class="line">                      +------------+----------+             +---------+--------+---------+</span><br><span class="line">                 +---&gt;|   Vaddr0   |Timestamp0|          +-&gt;| covCtr0 | delta0 | status0 |</span><br><span class="line">      hysteresis |    +------------+----------+          |  +---------+--------+---------+</span><br><span class="line">          |      |                                       |</span><br><span class="line">+--------+-+---+------------+------------+   +------------+----------+----------+   +----------+</span><br><span class="line">| pc tag |h|ctr|HistoryInfo0|HistoryInfo1|...|HistoryInfox|DeltaInfo0|DeltaInfo1|...|DeltaInfoy|</span><br><span class="line">+--------+-+---+------------+------------+   +------------+----------+----------+   +----------+</span><br></pre></td></tr></table></figure>
+
+<h3 id="BertiPrefetcher-calculatePrefetch"><a href="#BertiPrefetcher-calculatePrefetch" class="headerlink" title="BertiPrefetcher::calculatePrefetch"></a><code>BertiPrefetcher::calculatePrefetch</code></h3><ol>
+<li>将触发预取请求的地址插入 <code>trainBlockFilter</code>: <code>trainBlockFilter.insert(blockIndex(pfi.getAddr()), 0);</code> </li>
+<li>如果触发预取请求的地址在 cache 中 hit : 以 pc 为 tag 查找 history table 如果也 hit : <ul>
+<li><a href="#searchtimelydeltas"><code>searchTimelyDeltas()</code>: 在给定的 HistoryTableEntry 中找到及时的 deltas 并更新 DeltaList Entry</a></li>
+<li><code>statsBerti.trainOnHit++</code></li>
+</ul>
+</li>
+<li>更新 history table: <code>updateHistoryTable(pfi);</code></li>
+<li>如果 history table 中有 entry 训练完毕<ul>
+<li>如果定义采用激进的预取方式(<code>aggressivePF</code>)：将 <code>entry-&gt;deltas</code> 中所有非 <code>NO_PREF</code> 状态的 delta 候选项都发送一次预取请求</li>
+<li>否则，只针对 bestDelta 进行预取</li>
+</ul>
+</li>
+</ol>
+<p>预取请求的发送通过 <code>sendPFWithFilter()</code> 将预取请求的地址填入 <code>addresses</code> 数组</p>
+<p>预取地址的计算还会根据 <code>useByteAddr</code> 的设置来确定 delta 是按字节的 delta 预取还是按 cacheblk 的 delta 预取</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Addr pf_addr = useByteAddr ? pfi.<span class="built_in">getAddr</span>() + delta</span><br><span class="line">              : (<span class="built_in">blockIndex</span>(pfi.<span class="built_in">getAddr</span>()) + delta) &lt;&lt; lBlkSize;</span><br></pre></td></tr></table></figure>
+
+<h4 id="searchTimelyDeltas-在给定的-HistoryTableEntry-中找到及时的-deltas-并更新-DeltaList-Entry"><a href="#searchTimelyDeltas-在给定的-HistoryTableEntry-中找到及时的-deltas-并更新-DeltaList-Entry" class="headerlink" title="searchTimelyDeltas() 在给定的 HistoryTableEntry 中找到及时的 deltas 并更新 DeltaList Entry"></a><code>searchTimelyDeltas()</code> 在给定的 HistoryTableEntry 中找到及时的 deltas 并更新 DeltaList Entry</h4><p><a id="searchTimelyDeltas"></a></p>
+<p>确定 delta 的最小绝对值：<code>delta_thres</code>: <code>UseByteAddr ? lBlkSize : 8</code></p>
+<ol>
+<li>遍历当前 HistoryTableEntry 的所有 HistoryInfo<ul>
+<li>计算出触发预取地址到 HistoryInfo Vaddr 的 delta ，如果 delta 低于最小阈值则忽略当前 HistoryInfo</li>
+<li>计算当前 HistoryInfo 的预取请求是否已满足预取延时<br>不满足意味着 HistoryInfo 如果触发过预取请求，此时也不可能完成，因此也忽略该 HistoryInfo</li>
+<li>将所有未忽略的 deltas 加入  <code>new_deltas</code> list （超过 <code>maxDeltafound</code> 的 delta 也忽略）</li>
+</ul>
+</li>
+<li>该 HistoryTableEntry 的 <code>counter++</code></li>
+<li>遍历 <code>new_deltas</code> 中的所有 delta <ul>
+<li>检查是否和当前 pc 对应的 DeltaList Entry 中的 delta 有对应 (coverageCounter 要求非 0):  </li>
+<li>如果有对应：对应 delta 的 coverageCounter++</li>
+<li>如果没有对应: 找到 DeltaList Entry 中 coverageCounter 最小的 delta 替换:<br>替换初始值：<code>coverageCounter = 1; status = NO_PREF</code></li>
+</ul>
+</li>
+<li>检查该 HistoryTableEntry 的 <code>counter</code>:<ul>
+<li>如果大于 6 (代表训练延时): 更新 Status <code>entry.updateStatus()</code><ul>
+<li><code>coverageCounter &lt; 2</code>: <code>status -&gt; NO_PREF</code></li>
+<li><code>2 &lt;= coverageCounter &lt; 4</code>: <code>status -&gt; L2_PREF</code></li>
+<li><code>coverageCounter &gt; 4</code>: <code>status -&gt; L1_PREF</code></li>
+<li>同时确定 <code>bestDelta</code> : <code>coverageCounter</code> 最大的 <code>delta</code></li>
+</ul>
+</li>
+<li>如果大于 16: 重置 DeltaList coverageCounter 但保留 status: <code>entry.resetConfidence(false);</code></li>
+</ul>
+</li>
+</ol>
+<h4 id="updateHistoryTable"><a href="#updateHistoryTable" class="headerlink" title="updateHistoryTable()"></a><code>updateHistoryTable()</code></h4><p>确定训练地址：<code>useByteAddr ? pfi.getAddr() : blockIndex(pfi.getAddr())</code></p>
+<p>lookup HistoryTable:</p>
+<ul>
+<li>Hit<ul>
+<li>更新 HistoryTableEntry 替换策略的元数据: <code>historyTable.accessEntry(entry);</code></li>
+<li>lookup HistoryInfo : 是否有地址和训练地址匹配<ul>
+<li>Hit：忽略此次更新</li>
+<li>Miss：将训练地址 push 进 HistoryInfo FIFO<br>如果 FIFO 已满(最大 <code>maxAddrListSize</code>)：替换第一个 entry 并置位当前 entry 的 hysteresis</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Miss<ul>
+<li>如果 entry 的 hysteresis 有置位，清除 hysteresis 位不做任何替换</li>
+<li>如果 entry 的 hysteresis 未置位<ul>
+<li>如果 当前 entry 可以进行预取 (entry-&gt;bestDelta.status !&#x3D; NO_PREF):<br>将当前 entry 的 bestDelta 记入 evictedDeltas</li>
+<li>根据 HistoryTable 的替换策略将训练地址和预取来源 pc 等信息写入到 HistoryTable 中</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>注：只有 HistoryTable Hit 才会返回相应的 HistoryTableEntry ，否则返回 nullptr</p>
+<h4 id="sendPFWithFilter-经过-filter-之后发送预取请求"><a href="#sendPFWithFilter-经过-filter-之后发送预取请求" class="headerlink" title="sendPFWithFilter() 经过 filter 之后发送预取请求"></a><code>sendPFWithFilter()</code> 经过 filter 之后发送预取请求</h4><p><a id="sendPFWithFilter"></a></p>
+<ul>
+<li>如果预取地址在 <code>filter</code> 中，则不发送此次预取请求（仍在训练中）</li>
+<li>否则：<ul>
+<li>更新 <code>topDeltas</code>: <code>topDeltas[blk_delta] = topDeltas.count(blk_delta) ? topDeltas[blk_delta] + 1 : 1;</code></li>
+<li>将该预取地址插入 <code>filter</code>: <code>filter-&gt;insert(addr, 0);</code></li>
+<li>将预取地址插入 <code>addresses</code> 数组：<code>addresses.push_back(AddrPriority(addr, prio));</code></li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>此处 clone 的 xs-gem5 最新分支 commit 为 11a1b6f013bdf3fdc34e7dc45fbbb1755605eb63 ，其中 filter 和其他预取器共用 sendPFFilter，此处可以单独实现</p>
+<p><u>可以评估组合预取器的效果?</u></p>
+</blockquote>
+<h3 id="BertiPrefetcher-notifyFill"><a href="#BertiPrefetcher-notifyFill" class="headerlink" title="BertiPrefetcher::notifyFill"></a><code>BertiPrefetcher::notifyFill</code></h3><ol>
+<li>对于指令预取请求，没有 Vaddr 或 PC 的请求，不作任何处理，直接返回</li>
+<li>对于预取请求引发的 refill ，不做任何处理，直接返回</li>
+<li>在 HistoryTable 中查找是否有该 fill 请求对应的 entry: 没有则不做任何处理，直接返回</li>
+<li><a href="#searchTimelyDeltas"><code>searchTimelyDeltas</code> 在给定的 HistoryTableEntry 中找到及时的 deltas 并更新 DeltaList Entry</a></li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2026/02/11/Arch/simulator/gem5/prefetch/">https://xixi-shredp.github.io/2026/02/11/Arch/simulator/gem5/prefetch/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/02/12/Arch/simulator/gem5/iew/" title="Gem5: Dispatch"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Gem5: Dispatch</div></div><div class="info-2"><div class="info-item-1">当前 Gem5 (v25.1.0.0) 开始支持分布式发射队列: Dispatch 阶段(IEW::dispatch())，根据 Dispatch 阶段当前状态 dispatchStatus[tid] 决定下一步动作：  Running &#x2F; Idle: 分派指令到 insts 数组：dispatchInsts(tid) Unblocking: 分派指令到 skidBuffer dispatchInsts(tid) 并将来自 Rename 阶段的指令写入 SkidBuffer skidInsert(tid) 并 unblock(tid) 其余状态不做任何动作  分派指令实际执行时：(IEW::dispatchInsts): 循环遍历宽度以内可分派的所有指令  如果遇到指令被冲刷(inst-&gt;isSquashed()): 则 continue 处理下一条指令 如果当前指令对应的发射队列 InstQueue 满了(instQueue.isFull(inst)):阻塞整个 Dispatch 阶段: block(tid); 退出循环 如果当前指令是访存指令或原子指令，对应的...</div></div></div></a><a class="pagination-related" href="/2025/11/06/os/generic/mm/" title="OS Virtual Memory Management"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">OS Virtual Memory Management</div></div><div class="info-2"><div class="info-item-1">历史最早期的计算机系统 硬件: 物理内存容量小 软件 单个应用程序 + （简单）操作系统 直接面对物理内存编程 各自使用物理内存的一部分    多道编程时代 多用户多程序: 计算机很昂贵，多人同时使用（远程连接） 分时复用 CPU 资源: 保存恢复寄存器速度很快 分时复用物理内存资源: 将全部内存写入磁盘开销太高 多个进程同时使用、各占一部分物理内存: 没有安全性（隔离性）  IBM 360 内存隔离: Protection Key 机制 内存被划分为一个个大小为 2KB 的内存块（Block） 每个内存块有一个 4-bit 的 key，保存在寄存器中 1MB 内存需要 256 个保存 key 的寄存器，占 256-Byte 内存变大，则需要改 CPU 以增加 key 寄存器   每个进程对应一个 key CPU 用另一个专门的寄存器，保存当前运行进程的 key 不同进程的 key 不同   当一个进程访问一块内存时 CPU 检查进程的 key 与内存的 key 是否匹配 不匹配则拒绝内存访问    缺点：  不具有可扩展性，随着内存扩大，需要的 key 寄存器太多，无法实现 可...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">49</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">30</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Gem5-%E9%A2%84%E5%8F%96%E5%99%A8%E5%8D%8F%E8%AE%AE"><span class="toc-number">1.</span> <span class="toc-text">Gem5 预取器协议</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Queued-Prefetcher"><span class="toc-number">1.1.</span> <span class="toc-text">Queued Prefetcher</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#BOP-%E9%A2%84%E5%8F%96%E5%99%A8%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.2.</span> <span class="toc-text">BOP 预取器实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#BOP-calculatePrefetch"><span class="toc-number">1.2.1.</span> <span class="toc-text">BOP::calculatePrefetch</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#BOP-insertIntoDelayQueue"><span class="toc-number">1.2.1.1.</span> <span class="toc-text">BOP::insertIntoDelayQueue</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#BOP-insertIntoRR"><span class="toc-number">1.2.1.2.</span> <span class="toc-text">BOP::insertIntoRR</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#BOP-bestOffsetLearning"><span class="toc-number">1.2.1.3.</span> <span class="toc-text">BOP::bestOffsetLearning</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#BOP-notifyFill"><span class="toc-number">1.2.2.</span> <span class="toc-text">BOP::notifyFill</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Berti-%E9%A2%84%E5%8F%96%E5%99%A8%E5%AE%9E%E7%8E%B0-from-xs-gem5"><span class="toc-number">1.3.</span> <span class="toc-text">Berti 预取器实现 (from xs-gem5)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#BertiPrefetcher-calculatePrefetch"><span class="toc-number">1.3.1.</span> <span class="toc-text">BertiPrefetcher::calculatePrefetch</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#searchTimelyDeltas-%E5%9C%A8%E7%BB%99%E5%AE%9A%E7%9A%84-HistoryTableEntry-%E4%B8%AD%E6%89%BE%E5%88%B0%E5%8F%8A%E6%97%B6%E7%9A%84-deltas-%E5%B9%B6%E6%9B%B4%E6%96%B0-DeltaList-Entry"><span class="toc-number">1.3.1.1.</span> <span class="toc-text">searchTimelyDeltas() 在给定的 HistoryTableEntry 中找到及时的 deltas 并更新 DeltaList Entry</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#updateHistoryTable"><span class="toc-number">1.3.1.2.</span> <span class="toc-text">updateHistoryTable()</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#sendPFWithFilter-%E7%BB%8F%E8%BF%87-filter-%E4%B9%8B%E5%90%8E%E5%8F%91%E9%80%81%E9%A2%84%E5%8F%96%E8%AF%B7%E6%B1%82"><span class="toc-number">1.3.1.3.</span> <span class="toc-text">sendPFWithFilter() 经过 filter 之后发送预取请求</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#BertiPrefetcher-notifyFill"><span class="toc-number">1.3.2.</span> <span class="toc-text">BertiPrefetcher::notifyFill</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/12/Arch/simulator/gem5/iew/" title="Gem5: Dispatch">Gem5: Dispatch</a><time datetime="2026-02-12T09:49:07.000Z" title="Created 2026-02-12 17:49:07">2026-02-12</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/11/Arch/simulator/gem5/prefetch/" title="Gem5 Prefetcher">Gem5 Prefetcher</a><time datetime="2026-02-11T15:56:47.000Z" title="Created 2026-02-11 23:56:47">2026-02-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/06/os/generic/mm/" title="OS Virtual Memory Management">OS Virtual Memory Management</a><time datetime="2025-11-06T06:03:30.000Z" title="Created 2025-11-06 14:03:30">2025-11-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/06/os/linux/riscv/boot/" title="Linux RISC-V Boot 流程">Linux RISC-V Boot 流程</a><time datetime="2025-11-06T01:44:36.000Z" title="Created 2025-11-06 09:44:36">2025-11-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/11/04/os/linux/boot/" title="Linux Boot 过程">Linux Boot 过程</a><time datetime="2025-11-04T06:09:06.000Z" title="Created 2025-11-04 14:09:06">2025-11-04</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
