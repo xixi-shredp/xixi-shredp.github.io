@@ -1,0 +1,691 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Address-Correlating Prefetchers | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="地址关联数据预取器介绍">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Address-Correlating Prefetchers">
+<meta property="og:url" content="https://xixi-shredp.github.io/2026/02/20/Arch/cache/prefetch/data-pf/addr-correlated/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="地址关联数据预取器介绍">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2026-02-20T04:58:57.000Z">
+<meta property="article:modified_time" content="2026-02-22T07:36:39.513Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="CPU, Computer Architechture, OS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Address-Correlating Prefetchers",
+  "url": "https://xixi-shredp.github.io/2026/02/20/Arch/cache/prefetch/data-pf/addr-correlated/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2026-02-20T04:58:57.000Z",
+  "dateModified": "2026-02-22T07:36:39.513Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2026/02/20/Arch/cache/prefetch/data-pf/addr-correlated/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Address-Correlating Prefetchers',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/default_top.jpg);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">52</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">32</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/default_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Address-Correlating Prefetchers</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Address-Correlating Prefetchers</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-02-20T04:58:57.000Z" title="Created 2026-02-20 12:58:57">2026-02-20</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-02-22T07:36:39.513Z" title="Updated 2026-02-22 15:36:39">2026-02-22</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/">Arch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/cache/">cache</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/cache/prefetch/">prefetch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/cache/prefetch/data-pf/">data-pf</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><blockquote>
+<ul>
+<li>最早揭示数据访问的地址相关性：<br>J-L. Baer, J-L., and G. R. Sager. “Dynamic Improvement of Locality in Virtual Memory Systems.” IEEE Transactions on Software Engineering, v. 1, 1976. DOI: 10.1109&#x2F; TSE.1976.233801. 17</li>
+<li>最早提出成对地址关联的预取器 correlation-based prefetcher：  <ul>
+<li>M. J. Charney and A. P. Reeves. “Generalized Correlation-Based Hardware Prefetching.” Technical Report EE-CEG-95-1, School of Electrical Engineering, Cornell University, Feb. 1995. 17</li>
+<li>M. J. Charney. Correlation-Based Hardware Prefetching, 1996. Ph.D. diss., Cornell University, 1996. 17</li>
+</ul>
+</li>
+<li>将地址关联从成对扩展到组和访问序列之间的关联<ul>
+<li>T. M. Chilimbi and M. Hirzel. “Dynamic Hot Data Stream Prefetching for General-Purpose Programs.” In Proc. of the Conference on Programming Language Design and Implementation, 2002. DOI: 10.1145&#x2F;512529.512554. 17, 19, 20, 24, 36</li>
+<li>T. F. Wenisch, S. Somogyi, N. Hardavellas, J. Kim, A. Ailamaki, and B. Falsafi. “Temporal Streaming of Shared Memory.” In Proc. of the 32nd Annual International Symposium on Computer Architecture, June 2005. DOI: 10.1109&#x2F;ISCA.2005.50. 17, 20, 22</li>
+</ul>
+</li>
+<li>时间关联 (temporal correlation) 预取器的提出：<br>T. F. Wenisch, S. Somogyi, N. Hardavellas, J. Kim, A. Ailamaki, and B. Falsafi. “Temporal Streaming of Shared Memory.” In Proc. of the 32nd Annual International Symposium on Computer Architecture, June 2005. DOI: 10.1109&#x2F;ISCA.2005.50. 17, 20, 22</li>
+</ul>
+</blockquote>
+<h2 id="基于-Jump-Pointer-进行预取"><a href="#基于-Jump-Pointer-进行预取" class="headerlink" title="基于 Jump Pointer 进行预取"></a>基于 Jump Pointer 进行预取</h2><blockquote>
+<ul>
+<li>C.-K. Luk and T. C. Mowry. “Compiler Based Prefetching for Recursive Data Structures.” In Proc. of the 7th International Conference on Architectural Support for Programming  Languages and Operating Systems, 1996. DOI: 10.1145&#x2F;237090.237190. 17, 36</li>
+<li>A. Roth, A. Moshovos, and G. S. Sohi. “Dependence Based Prefetching for Linked Data  Structures.” In Proc. of the 8th International Conference on Architectural Support for Programming Languages and Operating Systems, 1998. DOI: 10.1145&#x2F;291069.291034. 17, 33</li>
+<li>A. Roth and G. S. Sohi. “Effective Jump Pointer Prefetching for Linked Data Structures.”  In Proc. of the 26th Annual International Symposium on Computer Architecture, 1999. DOI:  10.1109&#x2F;ISCA.1999.765944. 17, 33</li>
+<li>J. Collins, S. Sair, B. Calder, and D. M. Tullsen. “Pointer Cache Assisted Prefetching.” In  Proc. of the 35th Annual ACM&#x2F;IEEE International Symposium on Microarchitecture, 2002.  DOI: 10.1109&#x2F;MICRO.2002.1176239. 17</li>
+</ul>
+</blockquote>
+<ul>
+<li>依赖 Jump Pointer 的预取器通常需要软件或编译器支持对指针进行 Hint</li>
+<li>对于特定的数据结构遍历(如链表) 可能非常有效</li>
+<li>关键缺点: Jump Pointer 的距离难以调整, 指针本身的存储开销也可能很高</li>
+</ul>
+<p>遍历的距离必须仔细权衡,以提供足够的预测,同时又不会跳过太多元素。跳转指针,且</p>
+<h3 id="Content-Directed-Prefetcher"><a href="#Content-Directed-Prefetcher" class="headerlink" title="Content Directed Prefetcher"></a>Content Directed Prefetcher</h3><p>Content Directed Prefetchers 不使用 Hint , 尝试解引用并预取任何可能构成有效虚拟地址的 Load Value</p>
+<blockquote>
+<ul>
+<li>R. Cooksey, S. Jourdan, and D. Grunwald. “A Stateless, Content-Directed Data Prefetching Mechanism.” In Proc. of the 10th International Conference on Architectural Support for Programming Languages and Operating Systems, 2002. DOI: 10.1145&#x2F;605397.605427. 18</li>
+<li>E. Ebrahimi, O. Mutlu, and Y. N. Patt. “Techniques for Bandwidth-Efficient Prefetching of Linked Data Structures in Hybrid Prefetching Systems.” In Proc. of the 15th International Symposium on High Performance Computer Architecture, 2009. DOI: 10.1109&#x2F; HPCA.2009.4798232. 18</li>
+</ul>
+</blockquote>
+<h2 id="Pair-Wise-Correlation-Predictors-成对关联预取器"><a href="#Pair-Wise-Correlation-Predictors-成对关联预取器" class="headerlink" title="Pair-Wise Correlation Predictors 成对关联预取器"></a>Pair-Wise Correlation Predictors 成对关联预取器</h2><p>本质上是一个查找表: 将一个地址映射到访问序列中紧随其后的另一个地址</p>
+<ul>
+<li>可以捕获顺序和步幅关系，以及指针地址与指针指向的地址之间的关系</li>
+<li>问题：<ol>
+<li>依赖于访问的重复性（时间局部性），本质是训练一个地址映射查找表，无法预取未访问的地址(而 stride 预取则可以预取未访问过的地址)</li>
+<li>映射表的空间需求大：每个访问地址都需要一个 entry，存储需求与工作集成正比</li>
+</ol>
+</li>
+</ul>
+<h3 id="Markov-Prefetcher"><a href="#Markov-Prefetcher" class="headerlink" title="Markov Prefetcher"></a>Markov Prefetcher</h3><blockquote>
+<ul>
+<li>D. Joseph and D. Grunwald. “Prefetching Using Markov Predictors.” In Proc. of the 24th Annual International Symposium on Computer Architecture, 1997. DOI: 10.1145&#x2F;264107.264207. 18, 19</li>
+<li>D. Joseph and D. Grunwald. “Prefetching Using Markov Predictors.” IEEE Transactions on Computers, v. 48 no. 2, 1999. DOI: 10.1109&#x2F;12.752653. 18</li>
+</ul>
+</blockquote>
+<p><img src="/2026/02/20/Arch/cache/prefetch/data-pf/addr-correlated/markov.svg" alt="Markov Predictor"></p>
+<ul>
+<li>为每个地址映射多个后继地址 (牺牲准确率以提高覆盖率)<br>每个 Entry 包含<ul>
+<li>Tag 匹配查找</li>
+<li>N 个预取后继地址候选项: (N 的典型配置为 4)<br>预取后继地址<br>置信度 (用于选择预取和替换)<br>替换策略元数据（典型为 LRU）</li>
+</ul>
+</li>
+<li>查找表最初实现为 1MB (现代 workload 往往需要更大的查找表)</li>
+</ul>
+<p>参考自一阶 Markov 过程，每个状态对应一个 Load Data Addr，后续地址的 Confidence 和 LRU 元数据代表转移概率</p>
+<p>存在的问题:</p>
+<ol>
+<li>预取前瞻性和内存级并行性受限，预取器仅尝试预测下一次缺失<ul>
+<li>从触发地址到访问后继地址之间的时间太短，不足以隐藏所预取数据的访问延迟</li>
+<li>改进：  <ol>
+<li><a href="#markov_ext1">提高 Prefetch Depth</a>  </li>
+<li>为每次预取操作选择一个更早的触发事件: <a href="#DBCP">Dead Block Correlation Prefetcher</a></li>
+</ol>
+</li>
+</ul>
+</li>
+<li>覆盖率受限于片上查找表的容量<ul>
+<li>改进：</li>
+</ul>
+</li>
+</ol>
+<h4 id="改进-1-提高-Prefetch-Depth-以提高预取前瞻性"><a href="#改进-1-提高-Prefetch-Depth-以提高预取前瞻性" class="headerlink" title="改进 1: 提高 Prefetch Depth 以提高预取前瞻性"></a>改进 1: 提高 Prefetch Depth 以提高预取前瞻性</h4><p><a id="markov_ext1"></a></p>
+<blockquote>
+<ul>
+<li>使用初始预测地址递归查找映射表发起更深的预取:<br>T. M. Chilimbi and M. Hirzel. “Dynamic Hot Data Stream Prefetching for General-Purpose Programs.” In Proc. of the Conference on Programming Language Design and Implementation, 2002. DOI: 10.1145&#x2F;512529.512554. 17, 19, 20, 24, 36</li>
+<li>折叠查找表：  <ul>
+<li>Y. Solihin, J. Lee, and J. Torrellas. “Using a User-Level Memory Thread for Correlation Prefetching.” In Proc. of the 29th Annual International Symposium on Computer Architecture, May 2002. DOI: 10.1109&#x2F;ISCA.2002.1003576. 20, 22</li>
+<li>Y. Solihin, J. Lee, and J. Torrellas. “Correlation Prefetching with a User-Level Memory Thread.” IEEE Transactions on Parallel and Distributed Systems, v. 14, no. 6, 2003. DOI: 10.1109&#x2F;TPDS.2003.1206504. 20</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<ol>
+<li>通过使用初始预测地址递归查找映射表发起更深的预取<ul>
+<li>困难 1 : 较高的查找延迟, 急剧增加对查找表的带宽需求</li>
+<li>困难 2 : 可能的预取候选数量会随预取深度呈几何级数增长<br>(需要一种适当的策略来限制这种增长,以维持准确率)</li>
+</ul>
+</li>
+<li>折叠查找表：每个 entry 存储一个后继地址序列（而不是多个候选的后继地址）<ul>
+<li>需要一个合适的策略来选择记录哪些后继流 (最近或概率最高的后继地址)</li>
+<li>解决了查找延迟&#x2F;带宽问题</li>
+<li>困难 1：使查找表更新更复杂, 一个地址可能记录在多个 entries 中</li>
+<li>困难 2: 这样的表组织必须将最大预取深度固定为后续地址存储的长度<ul>
+<li>存储长度太少, 预测序列将被截断,牺牲了潜在的覆盖率和前瞻性</li>
+<li>存储长度过高，浪费存储空间，准确率可能会下降</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>研究表明，重复访存序列的长度变化范围可达数个数量级:</p>
+<ul>
+<li>T. M. Chilimbi and M. Hirzel. “Dynamic Hot Data Stream Prefetching for General-Purpose Programs.” In Proc. of the Conference on Programming Language Design and Implementation, 2002. DOI: 10.1145&#x2F;512529.512554. 17, 19, 20, 24, 36</li>
+<li>T. F. Wenisch, S. Somogyi, N. Hardavellas, J. Kim, A. Ailamaki, and B. Falsafi. “Temporal Streaming of Shared Memory.” In Proc. of the 32nd Annual International Symposium on Computer Architecture, June 2005. DOI: 10.1109&#x2F;ISCA.2005.50. 17, 20, 22</li>
+<li>Y. Solihin, J. Lee, and J. Torrellas. “Using a User-Level Memory Thread for Correlation Prefetching.” In Proc. of the 29th Annual International Symposium on Computer Architecture, May 2002. DOI: 10.1109&#x2F;ISCA.2002.1003576. 20, 22</li>
+<li>M. Ferdman and B. Falsafi. “Last-Touch Correlated Data Streaming.” In IEEE International Symposium on Performance Analysis of Systems and Software, 2007. DOI: 10.1109&#x2F; ISPASS.2007.363741. 20, 21, 22</li>
+<li>T.F. Wenisch, M. Ferdman, A. Ailamaki, B. Falsafi, and A. Moshovos. “Temporal Streams in Commercial Server Applications.” In Proc. of the IEEE International Symposium on Workload Characterization, 2008. DOI: 10.1109&#x2F;IISWC.2008.4636095. 20, 22, 32</li>
+</ul>
+<p>乱序 CPU 的内存级并行研究：<br>Y. Chou, B. Fahs, and S. Abraham. “Microarchitecture Optimizations for Exploiting Memory-Level Parallelism.” In Proc. of the 31st Annual International Symposium on Computer Architecture, 2004. DOI: 10.1145&#x2F;1028176.1006708. 20</p>
+</blockquote>
+<p>访存序列的规律：</p>
+<ul>
+<li>重复访存序列的长度变化范围可达数个数量级</li>
+<li>一个访存序列开始时的前几次 misses 一般无法实现及时的预取 —— 触发 miss 在时间上过于接近后续块的访问<ul>
+<li>记录和预取这些地址: 浪费存储空间，并延迟对序列中更深层有用块的预取  </li>
+<li>省略前几个地址，并从预取能带来延迟优势的第一个 Miss 开始定义序列更合理</li>
+<li>在乱序 CPU 中：指令窗口经常导致多个片外 misses 并发发出，导致第一次 miss 时后续的很多 misses 也已并发发出<br>（每组中平均发出的 misses 称为应用程序的内存级并行性）</li>
+</ul>
+</li>
+</ul>
+<h5 id="Epoch-Based-Correlation-Prefetcher-基于周期的关联预取-EBCP-机制"><a href="#Epoch-Based-Correlation-Prefetcher-基于周期的关联预取-EBCP-机制" class="headerlink" title="Epoch-Based Correlation Prefetcher: 基于周期的关联预取 (EBCP) 机制"></a>Epoch-Based Correlation Prefetcher: 基于周期的关联预取 (EBCP) 机制</h5><blockquote>
+<p>Y. Chou. “Low-Cost Epoch-Based Correlation Prefetching for Commercial Applications.” In Proc. of the 40th Annual ACM&#x2F;IEEE International Symposium on Microarchitecture, 2007. DOI: 10.1109&#x2F;MICRO.2007.39. 20</p>
+</blockquote>
+<p>每个并行组内的第一个 miss 被用作触发地址，并用于查找后续组中的 misses ，从而跳过同一个组内在遇到触发 miss 时可能已经在处理中的 misses</p>
+<h4 id="改进-2-Dead-Block-Correlation-Prefetcher-死块关联预取器-提高预取前瞻性"><a href="#改进-2-Dead-Block-Correlation-Prefetcher-死块关联预取器-提高预取前瞻性" class="headerlink" title="改进 2: Dead Block Correlation Prefetcher 死块关联预取器 (提高预取前瞻性)"></a>改进 2: Dead Block Correlation Prefetcher 死块关联预取器 (提高预取前瞻性)</h4><p><a id="DBCP"></a></p>
+<blockquote>
+<p>Dead Cache Block:  </p>
+<ul>
+<li>T. R. Puzak. Analysis of Cache Replacement-Algorithms, 1985. Ph.D. diss., Univ. Massachusetts, Amherst,1985. 20</li>
+<li>A. Mendelson, D. Thiebaut, and D. K. Pradhan. “Modeling Live and Dead Lines in Cache Memory Systems.” IEEE Transactions on Computers, v. 42, no. 1. DOI: 10.1109&#x2F;12.192209. 20</li>
+<li>D. A. Wood, M. D. Hill, and R. E. Kessler. “A Model for Estimating Trace-Sample Miss Ratios.” In Proc. of the 1991 ACM SIGMETRICS Conference on Measurement and Modeling of Computer Systems, 1991. DOI: 10.1145&#x2F;107971.107981. 20</li>
+</ul>
+</blockquote>
+<p>优化点：</p>
+<ul>
+<li>cacheline 在 cache 中度过的大部分时间处于 Dead 状态(仍被缓存，但在 invalidation 或 eviction 前不会被再次访问) (占据存储空间，却无法提供 cache hit)</li>
+<li>预取器可以用预取的 cacheline 替换 dead block，而完全没有缓存污染的风险</li>
+</ul>
+<blockquote>
+<p>死块关联预取器 (DBCP):</p>
+<ul>
+<li>A.-C. Lai, C. Fide, and B. Falsafi. “Dead-Block Prediction and Dead-Block Correlating Prefetchers.” In Proc. of the 28th Annual International Symposium on Computer Architecture, 2001. DOI: 10.1145&#x2F;379240.379259. 19, 20, 21</li>
+<li>M. Ferdman and B. Falsafi. “Last-Touch Correlated Data Streaming.” In IEEE International Symposium on Performance Analysis of Systems and Software, 2007. DOI: 10.1109&#x2F; ISPASS.2007.363741. 20, 21, 22</li>
+<li>H. Liu, M. Ferdman, J. Huh, and D. Burger. “Cache Bursts: A New Approach for Eliminating Dead Blocks and Increasing Cache Efficiency.” In Proc. of the 41st Annual ACM&#x2F;IEEE International Symposium on Microarchitecture, 2008. DOI: 10.1109&#x2F; MICRO.2008.4771793. 20, 21</li>
+</ul>
+<p>基于代码关联预测 dead block:</p>
+<ul>
+<li>A.-C. Lai, C. Fide, and B. Falsafi. “Dead-Block Prediction and Dead-Block Correlating Prefetchers.” In Proc. of the 28th Annual International Symposium on Computer Architecture, 2001. DOI: 10.1145&#x2F;379240.379259. 19, 20, 21</li>
+<li>M. Ferdman and B. Falsafi. “Last-Touch Correlated Data Streaming.” In IEEE International Symposium on Performance Analysis of Systems and Software, 2007. DOI: 10.1109&#x2F; ISPASS.2007.363741. 20, 21, 22</li>
+<li>H. Liu, M. Ferdman, J. Huh, and D. Burger. “Cache Bursts: A New Approach for Eliminating Dead Blocks and Increasing Cache Efficiency.” In Proc. of the 41st Annual ACM&#x2F;IEEE International Symposium on Microarchitecture, 2008. DOI: 10.1109&#x2F; MICRO.2008.4771793. 20, 21</li>
+</ul>
+<p>基于计时机制预测 dead block:</p>
+<ul>
+<li>Z. Hu, S. Kaxiras, and M. Martonosi. “Timekeeping in the Memory System: Predicting and Optimizing Memory Behavior.” In Proc. of the 29th Annual International Symposium on Computer Architecture, 2002. DOI: 10.1109&#x2F;ISCA.2002.1003579. 20, 21</li>
+</ul>
+</blockquote>
+<p>Dead Block Correlation Prefetcher(DBCP) 试图预测对 cacheline 的最后一次访问，然后利用这次访问作为触发点,预取将替换 dead block 。从某种意义上说, DBCP 最大化了前瞻性,因为它在 <u>cache 中存储空间变得可用以接收预取块的最早时刻</u> 发出预取</p>
+<p>预测一个 cacheline 何时变为 dead block:</p>
+<ol>
+<li>基于代码关联 code correlation 预测<ul>
+<li>旨在识别 cacheline 在被踢出前最后一次访问它的指令 (导致该块变为 dead block 的那次访问)</li>
+<li>基于观察: cacheline 每次进入 cache 时，往往会被相同的 Load&#x2F;Store 序列访问: 从分配该 cacheline 的第一次 miss 开始到该 cacheline 变为 dead block 的最后一次访问</li>
+<li>优势: 为一个 cacheline 学习到的访问序列可以应用于预测其他地址的 death event</li>
+</ul>
+</li>
+<li>基于计时机制 time keeping 预测<ul>
+<li>旨在预测 cacheline 死亡前的时间,而非指示其死亡的具体访问</li>
+<li>基于观察：一个 cacheline 的生存期(以时钟周期衡量)每次进入缓存时往往相似</li>
+<li>Markov Prefetch Table 会扩展一个额外字段，指示该 cacheline 上次进入 cache 时的生存期。然后经过一个适当的安全裕度(例如,先前生存期的两倍)后,该块被预测为 dead block</li>
+</ul>
+</li>
+</ol>
+<h4 id="改进-3-应对片上存储面积的限制"><a href="#改进-3-应对片上存储面积的限制" class="headerlink" title="改进 3: 应对片上存储面积的限制"></a>改进 3: 应对片上存储面积的限制</h4><blockquote>
+<ul>
+<li>Tag Correlating Prefetcher:<br>Z. Hu, M. Martonosi, and S. Kaxiras. “TCP: Tag Correlating Prefetchers.” In Proc. of the 9th IEEE Symposium on High-Performance Computer Architecture, 2003. DOI: 10.1109&#x2F; HPCA.2003.1183549. 21</li>
+<li>Correlation Table 迁移到片外:<ul>
+<li>T. F. Wenisch, S. Somogyi, N. Hardavellas, J. Kim, A. Ailamaki, and B. Falsafi. “Temporal Streaming of Shared Memory.” In Proc. of the 32nd Annual International Symposium on Computer Architecture, June 2005. DOI: 10.1109&#x2F;ISCA.2005.50. 17, 20, 22</li>
+<li>Y. Solihin, J. Lee, and J. Torrellas. “Using a User-Level Memory Thread for Correlation Prefetching.” In Proc. of the 29th Annual International Symposium on Computer Architecture, May 2002. DOI: 10.1109&#x2F;ISCA.2002.1003576. 20, 22</li>
+<li>M. Ferdman and B. Falsafi. “Last-Touch Correlated Data Streaming.” In IEEE International Symposium on Performance Analysis of Systems and Software, 2007. DOI: 10.1109&#x2F; ISPASS.2007.363741. 20, 21, 22</li>
+<li>T. F. Wenisch, M. Ferdman, A. Ailamaki, B. Falsafi, A. Moshovos. “Practical Off-Chip Meta-Data for Temporal Memory Streaming.”In Proc. of the 15th International Symposium on High Performance Computer Architecture, 2009. DOI: 10.1109&#x2F;HPCA.2009.4798239. 22, 25</li>
+<li>A. Jain and C. Lin. “Linearizing Irregular Memory Accesses for Improved Correlated Prefetching.” In Proc. of the 46th Annual ACM&#x2F;IEEE International Symposium on Microarchitecture, 2013. DOI: 10.1145&#x2F;2540708.2540730. 22, 25</li>
+<li>通过 Temporal Streaming 分摊元数据访问成本：<br>T. F. Wenisch, M. Ferdman, A. Ailamaki, B. Falsafi, A. Moshovos. “Practical Off-Chip Meta-Data for Temporal Memory Streaming.”In Proc. of the 15th International Symposium on High Performance Computer Architecture, 2009. DOI: 10.1109&#x2F;HPCA.2009.4798239. 22, 25</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<ol>
+<li>改进片上 correlation table 的存储效率: Tag Correlating Prefetcher<ul>
+<li>每个 Entry 仅存储 Tag 而非完整的 cacheline 地址</li>
+<li>容量提升有限</li>
+</ul>
+</li>
+<li>将 correlation table 迁移到主存中<ul>
+<li>覆盖率提高</li>
+<li>预取元数据访问延迟增加（甚至和预取所需 cacheline 时间一致）</li>
+<li>在此基础上必须提高前瞻性以隐藏元数据访问延时(除<a href="#markov_ext1">改进 1</a>，<a href="#DBCP">改进 2</a> 外，还可以通过时间流 Temporal Streaming 分摊片外元数据访问成本)</li>
+</ul>
+</li>
+</ol>
+<h3 id="Global-History-Buffer"><a href="#Global-History-Buffer" class="headerlink" title="Global History Buffer"></a>Global History Buffer</h3><p>todo…</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2026/02/20/Arch/cache/prefetch/data-pf/addr-correlated/">https://xixi-shredp.github.io/2026/02/20/Arch/cache/prefetch/data-pf/addr-correlated/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/02/22/Arch/cache/prefetch/inst-pf/overview/" title="ICache Prefetcher"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">ICache Prefetcher</div></div><div class="info-2"><div class="info-item-1">l1i cache 硬件预取器简介</div></div></div></a><a class="pagination-related" href="/2026/02/20/Arch/cache/prefetch/data-pf/stride/" title="Stride/Stream Data Cache Prefetcher"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Stride/Stream Data Cache Prefetcher</div></div><div class="info-2"><div class="info-item-1">Stride 数据预取简介</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">52</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">32</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E-Jump-Pointer-%E8%BF%9B%E8%A1%8C%E9%A2%84%E5%8F%96"><span class="toc-number">1.</span> <span class="toc-text">基于 Jump Pointer 进行预取</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Content-Directed-Prefetcher"><span class="toc-number">1.1.</span> <span class="toc-text">Content Directed Prefetcher</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Pair-Wise-Correlation-Predictors-%E6%88%90%E5%AF%B9%E5%85%B3%E8%81%94%E9%A2%84%E5%8F%96%E5%99%A8"><span class="toc-number">2.</span> <span class="toc-text">Pair-Wise Correlation Predictors 成对关联预取器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Markov-Prefetcher"><span class="toc-number">2.1.</span> <span class="toc-text">Markov Prefetcher</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%94%B9%E8%BF%9B-1-%E6%8F%90%E9%AB%98-Prefetch-Depth-%E4%BB%A5%E6%8F%90%E9%AB%98%E9%A2%84%E5%8F%96%E5%89%8D%E7%9E%BB%E6%80%A7"><span class="toc-number">2.1.1.</span> <span class="toc-text">改进 1: 提高 Prefetch Depth 以提高预取前瞻性</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Epoch-Based-Correlation-Prefetcher-%E5%9F%BA%E4%BA%8E%E5%91%A8%E6%9C%9F%E7%9A%84%E5%85%B3%E8%81%94%E9%A2%84%E5%8F%96-EBCP-%E6%9C%BA%E5%88%B6"><span class="toc-number">2.1.1.1.</span> <span class="toc-text">Epoch-Based Correlation Prefetcher: 基于周期的关联预取 (EBCP) 机制</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%94%B9%E8%BF%9B-2-Dead-Block-Correlation-Prefetcher-%E6%AD%BB%E5%9D%97%E5%85%B3%E8%81%94%E9%A2%84%E5%8F%96%E5%99%A8-%E6%8F%90%E9%AB%98%E9%A2%84%E5%8F%96%E5%89%8D%E7%9E%BB%E6%80%A7"><span class="toc-number">2.1.2.</span> <span class="toc-text">改进 2: Dead Block Correlation Prefetcher 死块关联预取器 (提高预取前瞻性)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%94%B9%E8%BF%9B-3-%E5%BA%94%E5%AF%B9%E7%89%87%E4%B8%8A%E5%AD%98%E5%82%A8%E9%9D%A2%E7%A7%AF%E7%9A%84%E9%99%90%E5%88%B6"><span class="toc-number">2.1.3.</span> <span class="toc-text">改进 3: 应对片上存储面积的限制</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Global-History-Buffer"><span class="toc-number">2.2.</span> <span class="toc-text">Global History Buffer</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/22/Arch/cache/prefetch/inst-pf/overview/" title="ICache Prefetcher">ICache Prefetcher</a><time datetime="2026-02-22T09:37:20.000Z" title="Created 2026-02-22 17:37:20">2026-02-22</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/20/Arch/cache/prefetch/data-pf/addr-correlated/" title="Address-Correlating Prefetchers">Address-Correlating Prefetchers</a><time datetime="2026-02-20T04:58:57.000Z" title="Created 2026-02-20 12:58:57">2026-02-20</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/20/Arch/cache/prefetch/data-pf/stride/" title="Stride/Stream Data Cache Prefetcher">Stride/Stream Data Cache Prefetcher</a><time datetime="2026-02-20T03:01:32.000Z" title="Created 2026-02-20 11:01:32">2026-02-20</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/12/Arch/simulator/gem5/iew/" title="Gem5: Dispatch">Gem5: Dispatch</a><time datetime="2026-02-12T09:49:07.000Z" title="Created 2026-02-12 17:49:07">2026-02-12</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/11/Arch/simulator/gem5/prefetch/" title="Gem5 Prefetcher">Gem5 Prefetcher</a><time datetime="2026-02-11T15:56:47.000Z" title="Created 2026-02-11 23:56:47">2026-02-11</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
