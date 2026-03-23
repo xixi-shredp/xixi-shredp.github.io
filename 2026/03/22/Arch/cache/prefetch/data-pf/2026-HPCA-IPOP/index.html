@@ -1,0 +1,717 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>2026 HPCA: I-POP: Ignite Positive Prefetchers | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="2026 HPCA 论文阅读：I-POP 多预取器管理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="2026 HPCA: I-POP: Ignite Positive Prefetchers">
+<meta property="og:url" content="https://xixi-shredp.github.io/2026/03/22/Arch/cache/prefetch/data-pf/2026-HPCA-IPOP/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="2026 HPCA 论文阅读：I-POP 多预取器管理">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2026-03-22T15:41:34.000Z">
+<meta property="article:modified_time" content="2026-03-23T03:24:46.214Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="2026">
+<meta property="article:tag" content="HPCA">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "2026 HPCA: I-POP: Ignite Positive Prefetchers",
+  "url": "https://xixi-shredp.github.io/2026/03/22/Arch/cache/prefetch/data-pf/2026-HPCA-IPOP/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2026-03-22T15:41:34.000Z",
+  "dateModified": "2026-03-23T03:24:46.214Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2026/03/22/Arch/cache/prefetch/data-pf/2026-HPCA-IPOP/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '2026 HPCA: I-POP: Ignite Positive Prefetchers',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background: linear-gradient(180deg, black, black, #23064D);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">66</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">43</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">2026 HPCA: I-POP: Ignite Positive Prefetchers</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">2026 HPCA: I-POP: Ignite Positive Prefetchers</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-03-22T15:41:34.000Z" title="Created 2026-03-22 23:41:34">2026-03-22</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-03-23T03:24:46.214Z" title="Updated 2026-03-23 11:24:46">2026-03-23</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/">Arch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/cache/">cache</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/cache/prefetch/">prefetch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/cache/prefetch/data-pf/">data-pf</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>整体上，这篇论文不是在发明一个新的 prefetcher，而是在解决一个更“系统级”的问题：<strong>多个 prefetcher 同时存在时，怎样动态决定谁该开、谁该关、谁该更激进</strong></p>
+<h1 id="背景与问题"><a href="#背景与问题" class="headerlink" title="背景与问题"></a>背景与问题</h1><p>现代处理器往往不会只放一个 prefetcher，而是同时放多个不同类型的 prefetcher，因为不同 prefetcher 擅长捕捉不同访问模式。</p>
+<p>这样做能扩大 miss coverage，但也会把 useless prefetch 的副作用一起放大，包括：</p>
+<ul>
+<li>占用 DRAM 带宽</li>
+<li>增加片上&#x2F;片外共享资源竞争</li>
+<li>引发 cache pollution</li>
+<li>最终反而拉低 IPC</li>
+</ul>
+<p>作者用实验说明:</p>
+<ol>
+<li>不做管理的多-prefetcher 系统，在某些 workload 上<strong>最多会比 baseline 差 24.3%</strong></li>
+<li>有效管理后，相对 unmanaged 的系统<strong>最多能提升 22.6%</strong></li>
+</ol>
+<p>结论是：<strong>多 prefetcher 需要被管理</strong></p>
+<hr>
+<h2 id="现有工作-已有的-multi-prefetcher-management"><a href="#现有工作-已有的-multi-prefetcher-management" class="headerlink" title="现有工作: 已有的 multi-prefetcher management"></a>现有工作: 已有的 multi-prefetcher management</h2><h3 id="1-Static-Schemes"><a href="#1-Static-Schemes" class="headerlink" title="1. Static Schemes"></a>1. Static Schemes</h3><p>例：DOL、IPCP</p>
+<p>预先给 prefetcher 固定优先级</p>
+<p>问题：</p>
+<ol>
+<li><strong>没有反馈调节机制</strong><ul>
+<li>如果某个 prefetcher 开始降低性能，也不会自动收敛</li>
+</ul>
+</li>
+<li><strong>prefetcher 选择静态</strong><ul>
+<li>对于某些 PC 表面上像 stride 模式，但更复杂的 SMS 型 prefetcher 实际上能做得更好；静态优先级仍会强行选 PC-Stride，于是造成次优</li>
+</ul>
+</li>
+</ol>
+<h3 id="2-RL-based-Schemes"><a href="#2-RL-based-Schemes" class="headerlink" title="2. RL-based Schemes"></a>2. RL-based Schemes</h3><p>例：Bandit, Alecto</p>
+<p>利用强化学习的方法进行预取器管理（管理粒度是 phase，即每 1000 次访问）</p>
+<ul>
+<li>phase start: 根据 rewards 评估不同的预取器组合，选择一种</li>
+<li>phase end: 观测到的 IPC 作为当前预取器组合的 reward</li>
+</ul>
+<p>问题：</p>
+<ol>
+<li><strong>adjustment lag</strong><ul>
+<li>当访问模式变化以及 DRAM 带宽变化时，当前最佳 prefetcher 组合也会变化</li>
+<li>这种策略不能立刻切换，而是要经过一段奖励重新积累的过程</li>
+</ul>
+</li>
+<li><strong>状态&#x2F;动作空间爆炸</strong><ul>
+<li>N 个 prefetcher， 每个 Prefetcher 有 S 个状态，总组合数是 $S^N$</li>
+<li>而且每个 phase 还要做带平方根和对数的运算，硬件代价偏高</li>
+</ul>
+</li>
+</ol>
+<p>这篇论文还构造了一个 “phase-level ideal manager”，结果表明 Bandit 和 Alecto 分别比理想方案低 <strong>7.7%</strong> 和 <strong>7.0%</strong></p>
+<h3 id="3-Performance-counter-based-Schemes"><a href="#3-Performance-counter-based-Schemes" class="headerlink" title="3. Performance-counter-based Schemes"></a>3. Performance-counter-based Schemes</h3><p>例：Sandbox, Alecto</p>
+<p>主要考虑的性能指标：</p>
+<ul>
+<li>accuracy</li>
+<li>score<br>并基于固定阈值 (Alecto) 或 top-K (Sandbox) 决策方式选择启用哪些预取器</li>
+</ul>
+<p>问题：都<strong>没有真正度量 prefetch 对 IPC 的净影响</strong></p>
+<ul>
+<li>一个 prefetcher 即使 accuracy 不高，也可能仍然对于 IPC 有帮助</li>
+<li>反过来 accuracy 很高，也可能因为带宽竞争或污染把系统拖慢</li>
+</ul>
+<p>论文统计了这些指标和 IPC 的 Spearman 相关性，结果是：</p>
+<ul>
+<li>accuracy 平均相关性只有 <strong>0.21</strong></li>
+<li>score 平均相关性只有 <strong>0.55</strong></li>
+<li>而且在不少 workload 上甚至与 IPC <strong>负相关</strong></li>
+</ul>
+<ul>
+<li>同样的 accuracy，在不同 workload 上可能对应性能提升，也可能对应性能下降</li>
+<li>同样的 accuracy，在不同 DRAM 带宽下，性能也能差很多</li>
+</ul>
+<hr>
+<h1 id="核心思想：提出-Prefetch-Effectiveness（PE）"><a href="#核心思想：提出-Prefetch-Effectiveness（PE）" class="headerlink" title="核心思想：提出 Prefetch Effectiveness（PE）"></a>核心思想：提出 Prefetch Effectiveness（PE）</h1><p>这篇论文提出了一个更接近“性能因果”的 runtime metric：<strong>PE</strong></p>
+<p>$$<br>PE &#x3D; I_{UPF} - I_{POLL} - I_{LAT}<br>$$</p>
+<p>作者认为，一个 prefetcher 对性能的净影响，本质上应该是：<strong>收益 - 损失</strong></p>
+<ul>
+<li>(I_{UPF})：useful prefetch 带来的收益</li>
+<li>(I_{POLL})：cache pollution 带来的损失</li>
+<li>(I_{LAT})：共享资源竞争导致 demand latency 增加的损失</li>
+</ul>
+<h2 id="1-useful-prefetch-的收益-I-UPF"><a href="#1-useful-prefetch-的收益-I-UPF" class="headerlink" title="1. useful prefetch 的收益 $I_{UPF}$"></a>1. useful prefetch 的收益 $I_{UPF}$</h2><p>作者的基本观点是：一个 useful prefetch 的价值，约等于它替 demand miss 节省掉的 miss latency</p>
+<p>问题：如果对每个 prefetch 单独精确记账，硬件代价会太大</p>
+<p>论文采用近似法，把 useful prefetch 分成两类：</p>
+<ul>
+<li>原本会由 LLC 满足的</li>
+<li>原本会由 DRAM 满足的</li>
+</ul>
+<p>于是：</p>
+<p>$$<br>I_{UPF} &#x3D; N_{UPF}^{LLC}\cdot L_{LLC} + N_{UPF}^{DRAM}\cdot L_{DRAM}<br>$$</p>
+<p>其中 $N_{UPF}^{LLC}$ 和 $N_{UPF}^{DRAM}$ 是 useful prefetch 数量，$L_{LLC}$、$L_{DRAM}$ 是这两类 miss 的平均访问延迟</p>
+<p>给不同层级 miss 按照 latency 加权赋予了不同价值 (latency 越高，prefetch 的价值越高)</p>
+<h3 id="2-cache-pollution-的损失-I-POLL"><a href="#2-cache-pollution-的损失-I-POLL" class="headerlink" title="2. cache pollution 的损失 $I_{POLL}$"></a>2. cache pollution 的损失 $I_{POLL}$</h3><p>如果 prefetch 把有用数据挤出 cache，之后 demand 因此 miss 了，那么这个额外 miss 也要按延迟成本记录：</p>
+<p>$$<br>I_{POLL} &#x3D; N_{POLL}^{LLC}\cdot L_{LLC} + N_{POLL}^{DRAM}\cdot L_{DRAM}<br>$$</p>
+<p>论文指出，在它们的评估配置里，pollution 占总负效应的 <strong>26.9%</strong>，并不小</p>
+<h3 id="3-竞争导致的延迟损失-I-LAT"><a href="#3-竞争导致的延迟损失-I-LAT" class="headerlink" title="3. 竞争导致的延迟损失 $I_{LAT}$"></a>3. 竞争导致的延迟损失 $I_{LAT}$</h3><p>作者认为，prefetch 的损害不止是污染，它还会让 demand 请求在共享资源上等更久</p>
+<p>问题：没法直接测“如果没有 prefetch，这个 demand 本来会多快”</p>
+<p>作者提出了一个近似但硬件友好的方法：<br><strong>当一个 prefetch 数据返回时，如果系统里还有 in-flight demand request，那么认为这个 prefetch 对 demand 造成了潜在延迟损失</strong></p>
+<p>并把损失拆成 3 类资源竞争：</p>
+<ul>
+<li>片上互连竞争 $T_{NoC}$</li>
+<li>DRAM command&#x2F;data bus 竞争 $T_{Bus}$</li>
+<li>DRAM bank conflict $T_{Bank}$</li>
+</ul>
+<p>最后：<br>$$<br>I_{LAT}&#x3D;N_{Delay}\cdot T_{NoC}+N_{Bus}\cdot T_{Bus}+N_{Bank}\cdot T_{Bank}<br>$$</p>
+<hr>
+<p>论文总结了 PE 相比于 accuracy 的两个优势：</p>
+<ol>
+<li>PE 和 IPC 更相关<ul>
+<li>实验证明，PE 与 IPC speedup 在 <strong>99% workload</strong> 上是正相关的，平均相关性 <strong>0.85</strong></li>
+</ul>
+</li>
+<li>PE 自带决策语义<ul>
+<li>PE &gt; 0：净收益为正，应该保留</li>
+<li>PE ≤ 0：净收益非正，应该关掉</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h1 id="I-POP-硬件设计"><a href="#I-POP-硬件设计" class="headerlink" title="I-POP 硬件设计"></a>I-POP 硬件设计</h1><p>I-POP 由两个大模块构成：</p>
+<h3 id="1-Metric-Collector"><a href="#1-Metric-Collector" class="headerlink" title="1. Metric Collector"></a>1. Metric Collector</h3><p>负责收集 PE 所需的信息并按 phase 计算各 prefetcher 的 PE</p>
+<p>有两个表：</p>
+<ul>
+<li><strong>PfHT</strong>（Prefetch Holding Table）：跟踪 useful prefetch<ul>
+<li>prefetched data fill 到 cache 时，填充对应元数据</li>
+<li>后续 demand hit 到这个地址时，记录为 useful prefetch</li>
+</ul>
+</li>
+<li><strong>PoHT</strong>（Pollution Holding Table）：跟踪 pollution<ul>
+<li>如果某个 demand line 因 prefetch fill 被替换，就记录到 PoHT</li>
+<li>之后如果 demand miss 又访问到这个地址，就记作 pollution</li>
+</ul>
+</li>
+</ul>
+<p>同时 MSHR Entry 增加一些 Fields：</p>
+<ul>
+<li>timestamp：测量 request latency</li>
+<li>Access-DRAM：区分该 miss 是最低需要访问 LLC 还是 DRAM</li>
+<li>Prefetch-ID bits：标记这个 miss &#x2F; prefetch 与哪些 prefetcher 相关</li>
+</ul>
+<h3 id="2-Control-Engine"><a href="#2-Control-Engine" class="headerlink" title="2. Control Engine"></a>2. Control Engine</h3><p>根据每个 prefetcher 的 PE 做两件事：</p>
+<ul>
+<li>on&#x2F;off 决策</li>
+<li>aggressiveness 调节</li>
+</ul>
+<p>每个 prefetcher 定义了三类状态：</p>
+<ul>
+<li>$ON_i$：开启，且有不同 aggressiveness level</li>
+<li>$OFF_j$：关闭，但至少还要再关几个 phase</li>
+<li>$WA$：等待重新激活</li>
+</ul>
+<p>决策逻辑：</p>
+<ul>
+<li>如果 <strong>PE &gt; 0</strong>：保持开启</li>
+<li>如果 <strong>PE ≤ 0</strong>：立即转入关闭</li>
+<li>如果 DRAM 竞争较多：降低那个“PE 最低”的可调 prefetcher 的 aggressiveness</li>
+<li>如果 DRAM 竞争较少：提高那个“PE 最高”的可调 prefetcher 的 aggressiveness</li>
+<li>如果某个 prefetcher 的 aggressiveness 被降低后，如果 DRAM 竞争激烈，可以重新调高</li>
+</ul>
+<p>这个设计：</p>
+<ul>
+<li>不是简单二值开关，也不是全局搜索所有组合 (RL-based Schemes)</li>
+<li><strong>每个 prefetcher 先按自身 PE 决定开关，再用全局 DRAM + 各自 PE 做轻量级协调</strong></li>
+</ul>
+<hr>
+<h1 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h1><h2 id="Setup"><a href="#Setup" class="headerlink" title="Setup"></a>Setup</h2><p>论文用 ChampSim 做评估</p>
+<p>单核实验：共 <strong>76 个</strong> workload ，来自：</p>
+<ul>
+<li>SPEC17</li>
+<li>GAP</li>
+<li>Ligra</li>
+</ul>
+<p>多核实验: 构造了 50 组 heterogeneous SPEC17 workload</p>
+<p>系统设置：</p>
+<ol>
+<li>4 个 state-of-the-art prefetcher<br> (参考自 AMD Zen3 和 Arm Neoverse V2 的多类型预取器组织方式)</li>
+<li>I-POP</li>
+</ol>
+<ul>
+<li>phase 长度:  <strong>1K L2 demand requests</strong></li>
+<li>PfHT 和 PoHT 都是 <strong>512-entry</strong></li>
+<li>状态机中 OFF 有 3 级，ON 有 5 级</li>
+</ul>
+<hr>
+<h2 id="1-总体性能"><a href="#1-总体性能" class="headerlink" title="1. 总体性能"></a>1. 总体性能</h2><ul>
+<li>相对 baseline（带基本 throttling 的 PC-Stride），I-POP 平均提升 <strong>9.7%</strong></li>
+<li>相对 Bandit，单核提升 <strong>4.2%</strong></li>
+<li>相对 Alecto，单核提升 <strong>3.5%</strong></li>
+<li>在 16-core 系统中，相对 Bandit &#x2F; Alecto 分别高 <strong>6.6% &#x2F; 8.6%</strong></li>
+</ul>
+<h2 id="2-coverage-与-overprediction"><a href="#2-coverage-与-overprediction" class="headerlink" title="2. coverage 与 overprediction"></a>2. coverage 与 overprediction</h2><p>I-POP 的 coverage 最高</p>
+<h2 id="3-DRAM-Traffic"><a href="#3-DRAM-Traffic" class="headerlink" title="3. DRAM Traffic"></a>3. DRAM Traffic</h2><ul>
+<li>相比 DOL &#x2F; Bandit &#x2F; Sandbox，DRAM traffic 分别少 <strong>38.2% &#x2F; 40.2% &#x2F; 53.1%</strong></li>
+<li>比 Alecto 高 <strong>9.2%</strong> <ul>
+<li>Alecto 更保守</li>
+<li>I-POP 额外带来的 traffic，换来了更高 coverage 和更高 IPC</li>
+</ul>
+</li>
+</ul>
+<h2 id="4-能耗"><a href="#4-能耗" class="headerlink" title="4. 能耗"></a>4. 能耗</h2><p>I-POP 比 DOL、Bandit、Sandbox 稍省能，但比 Alecto 高 <strong>2.0%</strong></p>
+<p>解释：I-POP 不是极端保守的方案，只要净收益为正就保留。所以在一些 prefetch 普遍有效的 workload 上，它会比 Alecto 更激进，能耗也略高</p>
+<h2 id="5-多级预取场景"><a href="#5-多级预取场景" class="headerlink" title="5. 多级预取场景"></a>5. 多级预取场景</h2><ul>
+<li>I-POP 用于管理 L2 prefetcher</li>
+<li>在 L1D 为 Next-line、PC-Stride 或 IPCP 时，I-POP 相对于 Alecto 有 <strong>2.1%–2.5%</strong> 的优势</li>
+</ul>
+<p>说明： PE 对“已有上层噪声”的环境仍然稳健</p>
+<h2 id="6-与单体强-prefetcher-比较"><a href="#6-与单体强-prefetcher-比较" class="headerlink" title="6. 与单体强 prefetcher 比较"></a>6. 与单体强 prefetcher 比较</h2><ul>
+<li>比 Berti 高 <strong>5.2%</strong></li>
+<li>比 PMP 高 <strong>8.5%</strong></li>
+<li>比 Pythia 高 <strong>4.1%</strong></li>
+<li>比 SPP+PPF 高 <strong>2.6%</strong></li>
+</ul>
+<p>结论：<br><strong>管理好多 prefetcher 的组合，有时比再造一个更强的单 prefetcher 更划算</strong></p>
+<h2 id="7-多种-prefetcher-组合下的泛化性"><a href="#7-多种-prefetcher-组合下的泛化性" class="headerlink" title="7. 多种 prefetcher 组合下的泛化性"></a>7. 多种 prefetcher 组合下的泛化性</h2><ul>
+<li>用 8 个代表性 prefetcher 组成 16 种不同组合</li>
+<li>I-POP 在所有组合上都持续优于 Bandit 和 Alecto，平均分别高 <strong>4.4%</strong> 和 <strong>2.6%</strong></li>
+</ul>
+<p>结论：I-POP 对大部分预取器都具有普适性</p>
+<hr>
+<h1 id="局限与可讨论点"><a href="#局限与可讨论点" class="headerlink" title="局限与可讨论点"></a>局限与可讨论点</h1><ol>
+<li>PE 仍然是近似，不是真正因果测量<ul>
+<li>比如 $I_{LAT}$ 的计算，本质是根据资源占用时间来估计 demand 的损失</li>
+</ul>
+</li>
+<li>phase-based 控制仍有粒度限制 (本质还是 phase 级控制，不是 per-access 控制)<ul>
+<li>每 1K L2 demands 更新一次 (比 RL-based Schemes 更快)</li>
+<li>极短 phase 变化下仍可能滞后</li>
+</ul>
+</li>
+<li>wrong-path 的讨论不足<ul>
+<li>论文基于 ChampSim，是 trace-driven，不包含 wrong-path execution</li>
+<li>并没有验证 wrong-path 的影响</li>
+</ul>
+</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2026/03/22/Arch/cache/prefetch/data-pf/2026-HPCA-IPOP/">https://xixi-shredp.github.io/2026/03/22/Arch/cache/prefetch/data-pf/2026-HPCA-IPOP/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/HPCA/">HPCA</a><a class="post-meta__tags" href="/tags/2026/">2026</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/03/23/Arch/cache/prefetch/data-pf/2026-ASPLOS-PFLLM/" title="2026 ASPLOS: PF-LLM: Large Language Model Hinted Hardware Prefetching"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">2026 ASPLOS: PF-LLM: Large Language Model Hinted Hardware Prefetching</div></div><div class="info-2"><div class="info-item-1">2026 ASPLOS 论文阅读：PF-LLM</div></div></div></a><a class="pagination-related" href="/2026/03/22/Arch/frontend/mop/patent-US12253951B1/" title="ventana-US12253951B1: Microprocessor with branch target buffer whose entries include fetch block hotness counters used for selective filtering of macro-op cache allocations"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">ventana-US12253951B1: Microprocessor with branch target buffer whose entries include fetch block hotness counters used for selective filtering of macro-op cache allocations</div></div><div class="info-2"><div class="info-item-1">ventana 专利简介：BTB 决定 Fetch Block 是否进入 Mop Cache</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/03/19/Arch/bpu/2026-HPCA-LLBPX/" title="2026 HPCA: The Last-Level Branch Predictor Revisited"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-19</div><div class="info-item-2">2026 HPCA: The Last-Level Branch Predictor Revisited</div></div><div class="info-2"><div class="info-item-1">2026 HPCA 论文阅读：The Last-Level Branch Predictor Revisited</div></div></div></a><a class="pagination-related" href="/2026/03/23/Arch/cache/prefetch/data-pf/2026-ASPLOS-PFLLM/" title="2026 ASPLOS: PF-LLM: Large Language Model Hinted Hardware Prefetching"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-23</div><div class="info-item-2">2026 ASPLOS: PF-LLM: Large Language Model Hinted Hardware Prefetching</div></div><div class="info-2"><div class="info-item-1">2026 ASPLOS 论文阅读：PF-LLM</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">66</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">43</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%83%8C%E6%99%AF%E4%B8%8E%E9%97%AE%E9%A2%98"><span class="toc-number">1.</span> <span class="toc-text">背景与问题</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8E%B0%E6%9C%89%E5%B7%A5%E4%BD%9C-%E5%B7%B2%E6%9C%89%E7%9A%84-multi-prefetcher-management"><span class="toc-number">1.1.</span> <span class="toc-text">现有工作: 已有的 multi-prefetcher management</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Static-Schemes"><span class="toc-number">1.1.1.</span> <span class="toc-text">1. Static Schemes</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-RL-based-Schemes"><span class="toc-number">1.1.2.</span> <span class="toc-text">2. RL-based Schemes</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Performance-counter-based-Schemes"><span class="toc-number">1.1.3.</span> <span class="toc-text">3. Performance-counter-based Schemes</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3%EF%BC%9A%E6%8F%90%E5%87%BA-Prefetch-Effectiveness%EF%BC%88PE%EF%BC%89"><span class="toc-number">2.</span> <span class="toc-text">核心思想：提出 Prefetch Effectiveness（PE）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-useful-prefetch-%E7%9A%84%E6%94%B6%E7%9B%8A-I-UPF"><span class="toc-number">2.1.</span> <span class="toc-text">1. useful prefetch 的收益 $I_{UPF}$</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-cache-pollution-%E7%9A%84%E6%8D%9F%E5%A4%B1-I-POLL"><span class="toc-number">2.1.1.</span> <span class="toc-text">2. cache pollution 的损失 $I_{POLL}$</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E7%AB%9E%E4%BA%89%E5%AF%BC%E8%87%B4%E7%9A%84%E5%BB%B6%E8%BF%9F%E6%8D%9F%E5%A4%B1-I-LAT"><span class="toc-number">2.1.2.</span> <span class="toc-text">3. 竞争导致的延迟损失 $I_{LAT}$</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#I-POP-%E7%A1%AC%E4%BB%B6%E8%AE%BE%E8%AE%A1"><span class="toc-number">3.</span> <span class="toc-text">I-POP 硬件设计</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Metric-Collector"><span class="toc-number">3.1.</span> <span class="toc-text">1. Metric Collector</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Control-Engine"><span class="toc-number">3.2.</span> <span class="toc-text">2. Control Engine</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C"><span class="toc-number">4.</span> <span class="toc-text">实验</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Setup"><span class="toc-number">4.1.</span> <span class="toc-text">Setup</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%80%BB%E4%BD%93%E6%80%A7%E8%83%BD"><span class="toc-number">4.2.</span> <span class="toc-text">1. 总体性能</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-coverage-%E4%B8%8E-overprediction"><span class="toc-number">4.3.</span> <span class="toc-text">2. coverage 与 overprediction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-DRAM-Traffic"><span class="toc-number">4.4.</span> <span class="toc-text">3. DRAM Traffic</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E8%83%BD%E8%80%97"><span class="toc-number">4.5.</span> <span class="toc-text">4. 能耗</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%A4%9A%E7%BA%A7%E9%A2%84%E5%8F%96%E5%9C%BA%E6%99%AF"><span class="toc-number">4.6.</span> <span class="toc-text">5. 多级预取场景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E4%B8%8E%E5%8D%95%E4%BD%93%E5%BC%BA-prefetcher-%E6%AF%94%E8%BE%83"><span class="toc-number">4.7.</span> <span class="toc-text">6. 与单体强 prefetcher 比较</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E5%A4%9A%E7%A7%8D-prefetcher-%E7%BB%84%E5%90%88%E4%B8%8B%E7%9A%84%E6%B3%9B%E5%8C%96%E6%80%A7"><span class="toc-number">4.8.</span> <span class="toc-text">7. 多种 prefetcher 组合下的泛化性</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%B1%80%E9%99%90%E4%B8%8E%E5%8F%AF%E8%AE%A8%E8%AE%BA%E7%82%B9"><span class="toc-number">5.</span> <span class="toc-text">局限与可讨论点</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/23/Arch/cache/prefetch/data-pf/2026-ASPLOS-PFLLM/" title="2026 ASPLOS: PF-LLM: Large Language Model Hinted Hardware Prefetching">2026 ASPLOS: PF-LLM: Large Language Model Hinted Hardware Prefetching</a><time datetime="2026-03-23T04:20:06.000Z" title="Created 2026-03-23 12:20:06">2026-03-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/22/Arch/cache/prefetch/data-pf/2026-HPCA-IPOP/" title="2026 HPCA: I-POP: Ignite Positive Prefetchers">2026 HPCA: I-POP: Ignite Positive Prefetchers</a><time datetime="2026-03-22T15:41:34.000Z" title="Created 2026-03-22 23:41:34">2026-03-22</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/22/Arch/frontend/mop/patent-US12253951B1/" title="ventana-US12253951B1: Microprocessor with branch target buffer whose entries include fetch block hotness counters used for selective filtering of macro-op cache allocations">ventana-US12253951B1: Microprocessor with branch target buffer whose entries include fetch block hotness counters used for selective filtering of macro-op cache allocations</a><time datetime="2026-03-22T09:45:06.000Z" title="Created 2026-03-22 17:45:06">2026-03-22</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/19/Arch/bpu/2026-HPCA-LLBPX/" title="2026 HPCA: The Last-Level Branch Predictor Revisited">2026 HPCA: The Last-Level Branch Predictor Revisited</a><time datetime="2026-03-19T10:22:27.000Z" title="Created 2026-03-19 18:22:27">2026-03-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/19/Arch/bpu/2024-MICRO-LLBP/" title="2024 MICRO: The Last-Level Branch Predictor">2024 MICRO: The Last-Level Branch Predictor</a><time datetime="2026-03-19T03:24:31.000Z" title="Created 2026-03-19 11:24:31">2026-03-19</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
