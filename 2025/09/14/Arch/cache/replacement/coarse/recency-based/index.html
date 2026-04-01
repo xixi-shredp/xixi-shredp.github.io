@@ -7,7 +7,7 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
 <meta property="article:published_time" content="2025-09-14T06:12:04.000Z">
-<meta property="article:modified_time" content="2026-02-19T14:17:40.246Z">
+<meta property="article:modified_time" content="2026-03-25T06:45:21.393Z">
 <meta property="article:author" content="xixi">
 <meta property="article:tag" content="CPU, Computer Architechture, OS">
 <meta name="twitter:card" content="summary">
@@ -18,7 +18,7 @@
   "url": "https://xixi-shredp.github.io/2025/09/14/Arch/cache/replacement/coarse/recency-based/",
   "image": "https://xixi-shredp.github.io/img/avatar.jpg",
   "datePublished": "2025-09-14T06:12:04.000Z",
-  "dateModified": "2026-02-19T14:17:40.246Z",
+  "dateModified": "2026-03-25T06:45:21.393Z",
   "author": [
     {
       "@type": "Person",
@@ -157,9 +157,297 @@
 }</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
   title: 'Recency-Based Cache Replacement Policies',
   isHighlightShrink: false,
-  isToc: false,
+  isToc: true,
   pageType: 'post'
-}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background: linear-gradient(180deg, black, black, #23064D);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">66</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">43</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Recency-Based Cache Replacement Policies</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Recency-Based Cache Replacement Policies</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2025-09-14T06:12:04.000Z" title="Created 2025-09-14 14:12:04">2025-09-14</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-02-19T14:17:40.246Z" title="Updated 2026-02-19 22:17:40">2026-02-19</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/">Arch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/cache/">cache</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/cache/replacement/">replacement</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/cache/replacement/coarse/">coarse</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2025/09/14/Arch/cache/replacement/coarse/recency-based/">https://xixi-shredp.github.io/2025/09/14/Arch/cache/replacement/coarse/recency-based/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/09/14/Arch/cache/coherence/overview/" title="Cache Coherence Protocols"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Cache Coherence Protocols</div></div><div class="info-2"><div class="info-item-1">cache 一致性协议简介</div></div></div></a><a class="pagination-related" href="/2025/09/12/Arch/mem/consistency/relaxed/" title="Relaxed(Weaker) Memory Consistency Model"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Relaxed(Weaker) Memory Consistency Model</div></div><div class="info-2"><div class="info-item-1">Relaxed(Weaker) Memory Consistency Model 松散内存模型简介</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">66</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">43</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/23/Arch/cache/prefetch/data-pf/2026-ASPLOS-PFLLM/" title="2026 ASPLOS: PF-LLM: Large Language Model Hinted Hardware Prefetching">2026 ASPLOS: PF-LLM: Large Language Model Hinted Hardware Prefetching</a><time datetime="2026-03-23T04:20:06.000Z" title="Created 2026-03-23 12:20:06">2026-03-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/22/Arch/cache/prefetch/data-pf/2026-HPCA-IPOP/" title="2026 HPCA: I-POP: Ignite Positive Prefetchers">2026 HPCA: I-POP: Ignite Positive Prefetchers</a><time datetime="2026-03-22T15:41:34.000Z" title="Created 2026-03-22 23:41:34">2026-03-22</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/22/Arch/frontend/mop/patent-US12253951B1/" title="ventana-US12253951B1: Microprocessor with branch target buffer whose entries include fetch block hotness counters used for selective filtering of macro-op cache allocations">ventana-US12253951B1: Microprocessor with branch target buffer whose entries include fetch block hotness counters used for selective filtering of macro-op cache allocations</a><time datetime="2026-03-22T09:45:06.000Z" title="Created 2026-03-22 17:45:06">2026-03-22</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/19/Arch/bpu/2026-HPCA-LLBPX/" title="2026 HPCA: The Last-Level Branch Predictor Revisited">2026 HPCA: The Last-Level Branch Predictor Revisited</a><time datetime="2026-03-19T10:22:27.000Z" title="Created 2026-03-19 18:22:27">2026-03-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/19/Arch/bpu/2024-MICRO-LLBP/" title="2024 MICRO: The Last-Level Branch Predictor">2024 MICRO: The Last-Level Branch Predictor</a><time datetime="2026-03-19T03:24:31.000Z" title="Created 2026-03-19 11:24:31">2026-03-19</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background: linear-gradient(180deg, black, black, #23064D);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">73</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">44</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Recency-Based Cache Replacement Policies</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Recency-Based Cache Replacement Policies</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2025-09-14T06:12:04.000Z" title="Created 2025-09-14 14:12:04">2025-09-14</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-03-25T06:45:21.393Z" title="Updated 2026-03-25 14:45:21">2026-03-25</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/">Arch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/cache/">cache</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/cache/replacement/">replacement</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/cache/replacement/coarse/">coarse</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="LRU-1970"><a href="#LRU-1970" class="headerlink" title="LRU (1970)"></a>LRU (1970)</h1><p>概念上维护一个 recency stack,栈顶是 MRU 项，栈底是 LRU 项<br>实现上可以精确维护一个 stack 或者给每个 line 维护一个计数器实现(1998)</p>
+<table>
+<thead>
+<tr>
+<th>Insertion</th>
+<th>Promotion</th>
+<th>Aging</th>
+<th>Victim Selection</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MRU position</td>
+<td>MRU position</td>
+<td>Move 1 position towards LRU</td>
+<td>LRU position</td>
+</tr>
+</tbody></table>
+<p>在两种场景下性能较差:</p>
+<ol>
+<li>访存范围超出 cache size ，会出现 cache 颠簸 thrashing</li>
+<li>扫描模式下，LRU 项更容易被使用</li>
+</ol>
+<h1 id="MRU"><a href="#MRU" class="headerlink" title="MRU"></a>MRU</h1><p>类似于 LRU，但 replace 时踢出 MRU 项<br>目的是为了解决访存范围超出 cache size 时出现的 cache thrashing 问题，因为 MRU 策略会尽可能将访存范围的某一部分保留在 cache 中</p>
+<table>
+<thead>
+<tr>
+<th>Insertion</th>
+<th>Promotion</th>
+<th>Aging</th>
+<th>Victim Selection</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MRU position</td>
+<td>MRU position</td>
+<td>Move 1 position towards LRU</td>
+<td>MRU position</td>
+</tr>
+</tbody></table>
+<p>缺点是:</p>
+<ol>
+<li>对于 recency-friendly 访存模式，性能较差，因为该策略不容易将较新的工作集保存在 cache 中</li>
+<li>很难适应不同的工作集大小</li>
+</ol>
+<h1 id="EELRU-Early-Eviction-LRU-1999"><a href="#EELRU-Early-Eviction-LRU-1999" class="headerlink" title="EELRU, Early Eviction LRU (1999)"></a>EELRU, Early Eviction LRU (1999)</h1><p>主要目的：避免 cache 颠簸</p>
+<p>检测访存范围是否超出 cache size ，超出则随机踢出一部分 lines ，以便于剩下的 lines 可以更好地被 LRU 策略管理</p>
+<p>根据访问的时间顺序从最近到最早，将 cacheline 划分为 late region, early region, LRU memory region</p>
+<p><img src="/2025/09/14/Arch/cache/replacement/coarse/recency-based/eelru.png" alt="EELRU"></p>
+<p>两种 evict 模式：</p>
+<ol>
+<li>Ealry Eviction: late region 的 hits 多于early region，认为此时发生了 cache 颠簸，踢出 ealry region 中的 cacheline</li>
+<li>LRU Eviction: late region 的 hits 低于 ealry region，认为此时没有发生 cache 颠簸，采用 LRU 策略踢出 cacheline</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Insertion</th>
+<th>Promotion</th>
+<th>Aging</th>
+<th>Victim Selection</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MRU position</td>
+<td>MRU position</td>
+<td>Move 1 position towards LRU</td>
+<td>Choose between LRU or $e^{th}$ recently used line</td>
+</tr>
+</tbody></table>
+<h1 id="Segmented-LRU-Seg-LRU-1994"><a href="#Segmented-LRU-Seg-LRU-1994" class="headerlink" title="Segmented LRU, Seg-LRU (1994)"></a>Segmented LRU, Seg-LRU (1994)</h1><blockquote>
+<p>Ramakrishna Karedla, J Spencer Love, and Bradley G Wherry. Caching strategies to improve disk system performance. Computer, (3):38–46, 1994.</p>
+</blockquote>
+<p>将 LRU stack 区分为两个 logic segments</p>
+<ol>
+<li>probationary segment: 所有 cacheline 首先进入该 segment，在该 segment 中 hit 一次后提升到 protected segment</li>
+<li>protected segment: 其中的 cacheline 都至少被访问过两次<br> 发生 evcition 时首先从 probationary segment 中选择 LRU 项踢出</li>
+</ol>
+<p>cacheline 从 probationary segment 提升到 protected segment 时，如果 protected segment 满，则会导致 protected segment 中的 LRU 项替换到 probationary segment 中的 MRU 项，而不是立即踢出 cache</p>
+<table>
+<thead>
+<tr>
+<th>Insertion</th>
+<th>Promotion</th>
+<th>Aging</th>
+<th>Victim Selection</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MRU position in probationary segment</td>
+<td>MRU position in protected segment</td>
+<td>Increment recency counter</td>
+<td>LRU position from probationary segment</td>
+</tr>
+</tbody></table>
+<p>可以很好的处理扫描模式</p>
+<blockquote>
+<p>Seg-LRU 的一个变体获得了 the First Cache Replacement Championship 的冠军:  </p>
+<p><em>Hongliang Gao and Chris Wilkerson. A dueling segmented LRU replacement algorithm with adaptive bypassing. In JWAC 2010-1st JILP Workshop on Computer Architecture Competitions: Cache Replacement Championship, 2010.</em></p>
+</blockquote>
+<h1 id="LIP-LRU-Insertion-Policy-2007"><a href="#LIP-LRU-Insertion-Policy-2007" class="headerlink" title="LIP, LRU Insertion Policy(2007)"></a>LIP, LRU Insertion Policy(2007)</h1><blockquote>
+<p>Moinuddin K Qureshi, Aamer Jaleel, Yale N Patt, Simon C Steely, and Joel Emer. Adaptive insertion policies for high performance caching. In Proceedings of the International Symposium on Computer Architecture (ISCA), pages 381–391, 2007.</p>
+</blockquote>
+<ul>
+<li>插入新 cacheline 时，优先插入到 LRU 项</li>
+<li>踢出 cacheline 时，优先踢出 LRU 项</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Insertion</th>
+<th>Promotion</th>
+<th>Aging</th>
+<th>Victim Selection</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>LRU position</td>
+<td>MRU position</td>
+<td>Move 1 position towards LRU</td>
+<td>LRU position</td>
+</tr>
+</tbody></table>
+<p>可以抗抖动，但无法适应工作集的变化</p>
+<h1 id="BIP-Bimodel-Insertion-Policy-2007"><a href="#BIP-Bimodel-Insertion-Policy-2007" class="headerlink" title="BIP, Bimodel Insertion Policy(2007)"></a>BIP, Bimodel Insertion Policy(2007)</h1><blockquote>
+<p>Moinuddin K Qureshi, Aamer Jaleel, Yale N Patt, Simon C Steely, and Joel Emer. Adaptive insertion policies for high performance caching. In Proceedings of the International Symposium on Computer Architecture (ISCA), pages 381–391, 2007.</p>
+</blockquote>
+<p>对 LIP 进行了修改，使新 cacheline 以较低概率(1&#x2F;32 或 1&#x2F;64)插入到 MRU 项(用于适应工作集的变化)，大部分情况下还是插入到 LRU 项(抗抖动)</p>
+<table>
+<thead>
+<tr>
+<th>Insertion</th>
+<th>Promotion</th>
+<th>Aging</th>
+<th>Victim Selection</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MRU position with probability $\epsilon$</td>
+<td>MRU position</td>
+<td>Move 1 position towards LRU</td>
+<td>LRU position</td>
+</tr>
+</tbody></table>
+<h1 id="Static-Re-Reference-Interval-Prediction-SRRIP-2010"><a href="#Static-Re-Reference-Interval-Prediction-SRRIP-2010" class="headerlink" title="Static Re-Reference Interval Prediction (SRRIP, 2010)"></a>Static Re-Reference Interval Prediction (SRRIP, 2010)</h1><blockquote>
+<p>Aamer Jaleel, Kevin B. Theobald, Simon C. Steely Jr, and Joel Emer. High performance cache replacement using re-reference interval prediction (RRIP). In Proceedings of the International Symposium on Computer Architecture (ISCA), pages 60–71, 2010b.</p>
+</blockquote>
+<h2 id="思路：RRIP"><a href="#思路：RRIP" class="headerlink" title="思路：RRIP"></a>思路：RRIP</h2><p>将 cache replacement 视为一个 Re-Reference Interval Prediction (RRIP) 问题</p>
+<ol>
+<li>位于 RRIP 链顶端的 cacheline 将被预测为会最快被重新引用</li>
+<li>位于 RRIP 链底端的 cacheline 将被预测为会最晚被重新引用<br>cacheline evcition 将选择 RRIP 链底端的 cacheline</li>
+</ol>
+<p>LRU 链也可以视为一种 RRIP 链，cacheline 在 LRU 链上的位置代表其自上次访问以来的时间间隔</p>
+<ul>
+<li>LRU 新插入的 cacheline 预测为最近重引用</li>
+<li>LIP 新插入的 cacheline 预测为最晚重引用</li>
+</ul>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>SRRIP 策略对于新插入的 cacheline 预测一个 RRIP 链中间的重引用间隔 (增加了抗扫描能力，可以防止具有较晚重引用间隔的 cacheline 驱逐具有较近重引用间隔的 cacheline)</p>
+<p>SRRIP 为每个 cacheline 关联一个 M 位计数器存储其重引用间隔预测值 RRPV   (实验发现，2 位的 RRPV 足以提供抗扫描能力)</p>
+<pre><code class="highlight mermaid">flowchart LR;
+  A((0))--Age--&gt;B((1));
+  B--Age--&gt;C((2));
+  C--Age--&gt;D((3));
+  D--Evict--&gt;Out[&quot; &quot;];
+  B--Promote--&gt;A;
+  C--Promote--&gt;A;
+  D--Promote--&gt;A;
+  LRU--&gt;A;
+  SRRIP--&gt;C;
+  MRU--&gt;D;</code></pre>
+
+
+<table>
+<thead>
+<tr>
+<th>Insertion</th>
+<th>Promotion</th>
+<th>Aging</th>
+<th>Victim Selection</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>RRPV &#x3D; 2</td>
+<td>RRPV &#x3D; 0</td>
+<td>Increment all RRPVs (if no line with RRPV &#x3D; 3)</td>
+<td>RRPV &#x3D; 3</td>
+</tr>
+</tbody></table>
+<p>SRRIP 的缺点：当重引用间隔超出 cache 容量时，同样容易发生 cache 颠簸(抗抖动能力差)</p>
+<h1 id="Bimodel-Re-Reference-Interval-Prediction-BRRIP-2010"><a href="#Bimodel-Re-Reference-Interval-Prediction-BRRIP-2010" class="headerlink" title="Bimodel Re-Reference Interval Prediction (BRRIP, 2010)"></a>Bimodel Re-Reference Interval Prediction (BRRIP, 2010)</h1><blockquote>
+<p>Aamer Jaleel, Kevin B. Theobald, Simon C. Steely Jr, and Joel Emer. High performance cache replacement using re-reference interval prediction (RRIP). In Proceedings of the International Symposium on Computer Architecture (ISCA), pages 60–71, 2010b.</p>
+</blockquote>
+<p>结合了 SRRIP 和 BIP 策略，新插入的大多数 cacheline 具有较远的重引用间隔预测（即RRPV &#x3D; 3），而极少插入具有中等重引用间隔预测的缓存块（即RRPV &#x3D; 2）</p>
+<table>
+<thead>
+<tr>
+<th>Insertion</th>
+<th>Promotion</th>
+<th>Aging</th>
+<th>Victim Selection</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>RRPV &#x3D; 3 for most insertions, RRPV &#x3D; 2 with probability $\epsilon$</td>
+<td>RRPV &#x3D; 0</td>
+<td>Increment all RRPVs (if no line with RRPV &#x3D; 3)</td>
+<td>RRPV &#x3D; 3</td>
+</tr>
+</tbody></table>
+<p>缺点：当 workload 在近期友好型和 cache 颠簸型之间切换时，表现不佳</p>
+<h1 id="Protecting-Distance-Based-Policy-PDP-2012"><a href="#Protecting-Distance-Based-Policy-PDP-2012" class="headerlink" title="Protecting Distance-Based Policy (PDP, 2012)"></a>Protecting Distance-Based Policy (PDP, 2012)</h1><blockquote>
+<p>Nam Duong, Dali Zhao, Taesu Kim, Rosario Cammarota, Mateo Valero, and Alexander V. Veidenbaum. Improving cache management policies using dynamic reuse distances. In 45th Annual IEEE&#x2F;ACM International Symposium on Microarchitecture (MICRO), pages 389–400, 2012.</p>
+</blockquote>
+<p>思想：保护距离</p>
+<p>PDP 策略动态地估计一个保护距离 (PD)</p>
+<ul>
+<li>所有 cacheline 在被踢出 cache 前都会受到保护，可抵御 PD 次访问</li>
+<li>保护距离是一个单一值，但会根据应用程序的动态行为持续更新</li>
+</ul>
+<p>保护距离的计算</p>
+<ul>
+<li>PDP会计算重用距离分布 (RDD)，即程序在最近一段执行时间内观察到的重用距离的分布</li>
+<li>利用 RDD，保护距离被定义为覆盖 cache 中大多数 cacheline 的重用距离，使得大多数 cacheline 在 PD 或更小的距离内被重用</li>
+</ul>
+<p>在插入或提升时，每个 cacheline 会被分配一个值来代表其剩余保护距离（RPD），即它保持受保护状态的剩余访问次数</p>
+<ul>
+<li>该值初始化为保护距离（PD）</li>
+<li>在每次对 set 进行访问后，set 中每个 cacheline 的 RPD 会通过递减其 RPD 值（下限为 0）来老化</li>
+<li>仅当缓存行的 RPD 大于 0 时，它才受到保护</li>
+<li>未受保护的 cacheline 将被选为 victim cacheline</li>
+</ul>
+<h1 id="Genetic-Insertion-and-Promotion-for-Pseudo-LRU-Replacement-GIPPR-2013"><a href="#Genetic-Insertion-and-Promotion-for-Pseudo-LRU-Replacement-GIPPR-2013" class="headerlink" title="Genetic Insertion and Promotion for Pseudo LRU Replacement (GIPPR, 2013)"></a>Genetic Insertion and Promotion for Pseudo LRU Replacement (GIPPR, 2013)</h1><blockquote>
+<p>Daniel A. Jiménez. Insertion and promotion for tree-based PseudoLRU last-level caches. In 46th Annual IEEE&#x2F;ACM International Symposium on Microarchitecture (MICRO), pages 284–296, 2013.</p>
+</blockquote>
+<p>使用插入&#x2F;提升向量 (IPV) 的概念来概括对插入与提升策略的修改</p>
+<p>IPV 规定了一个 cacheline 在插入时，以及从LRU 栈的不同位置被提升时，其在 LRU 栈中的新位置</p>
+<p>对于一个 k 路组相联 cache，一个 IPV 是一个包含 k+1 个条目的整数向量</p>
+<ul>
+<li>取值范围从0 到 k−1</li>
+<li>其中第 ith 个位置的值表示位于位置 i 的 cacheline 在被重新引用时应被提升到的新位置</li>
+<li>第 kth 个条目表示新进入的 cacheline 应被插入的位置</li>
+<li>如果 LRU 栈中的新位置小于旧位置，则 cacheline 会向下移动以腾出空间；否则，cacheline 会向上移动以腾出空间</li>
+</ul>
+<p>问题:</p>
+<ul>
+<li>可能的 IPV 数量呈指数级增长（对于一个 k 路缓存有 $k^{k+1}$ 种可能的 IPV）</li>
+<li>最佳的 IPV 因工作负载而异</li>
+</ul>
+<p>通过离线遗传搜索针对 SPEC2006 演化出了一种 IPV 配置：<br><img src="/2025/09/14/Arch/cache/replacement/coarse/recency-based/gippr.png" alt="GIPPR"></p>
+<h1 id="Shepherd-Cache-2007"><a href="#Shepherd-Cache-2007" class="headerlink" title="Shepherd Cache (2007)"></a>Shepherd Cache (2007)</h1><blockquote>
+<p>Kaushik Rajan and Ramaswamy Govindarajan. Emulating optimal replacement with a shepherd cache. In the 40th Annual IEEE&#x2F;ACM International Symposium on Microarchitecture (MICRO), pages 445–454, 2007.</p>
+</blockquote>
+<p>思路：扩展寿命策略<br>是 Recence-Based Policy 的一个特殊类别</p>
+<ul>
+<li>通过将某些 cacheline 存储在辅助缓冲区或 victim cache 中，人为地延长其生命周期</li>
+<li>关键动机: 将 eviction 决策推迟以便做出更明智的决定</li>
+<li>这种策略允许粗粒度策略将 cache hit 的重用窗口略微扩展到比 cache 本身的大小更大</li>
+</ul>
+<p>Shepherd Cache 模仿了Belady的最优策略</p>
+<ul>
+<li>借助一个称为 Shepherd Cache 的辅助缓存来模拟 Belady 的未来前瞻</li>
+<li>cache 在逻辑上被划分为两个部分<ol>
+<li>模拟最优替换的主 cache（MC）</li>
+<li>使用简单 FIFO 替换策略的 Shepherd Cache (SC）</li>
+</ol>
+</li>
+<li>SC 通过提供一个前瞻窗口来支持 MC 的最优替换</li>
+<li>新 cacheline 最初被存到 SC 中</li>
+<li>从 MC 中替换 cacheline 的决策会推迟到新 cacheline 离开 SC 时</li>
+<li>当新 cacheline 位于 SC 中时，会收集关于MC 中替换 cacheline 重用顺序的信息<ul>
+<li>较早被重用的 cacheline 被驱逐的可能性较低</li>
+</ul>
+</li>
+<li>当新 cacheline 因 SC 中的其他插入而被踢出 SC 时，会选择一个替换 cacheline:<ul>
+<li>要么选择在 SC cacheline 被重用前 MC 中未被重用的 cacheline</li>
+<li>要么选择最后被重用的 cacheline</li>
+<li>如果 MC 中的所有 cacheline 在 SC cacheline 被重用前都已重用，则 SC cacheline 替换自身</li>
+</ul>
+</li>
+<li>MC 和 SC 被组织成一个单一的物理结构，避免了数据在组件间的移动</li>
+</ul>
+<p>Trade-Off:</p>
+<ul>
+<li>MC 中的替换在高前瞻性下接近真正的最优性</li>
+<li>更高的前瞻性是以牺牲 MC 容量为代价的<br>(实验证明，为接近 Belady MIN 策略，该策略需要的前瞻性大小需达到 8× cache 的大小)</li>
+</ul>
+<blockquote>
+<p>证明实验出自：<br>Akanksha Jain and Calvin Lin. Back to the future: Leveraging belady’s algorithm for improved cache replacement. In Proceedings of the International Symposium on Computer Architecture (ISCA), June 2016.</p>
+</blockquote>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2025/09/14/Arch/cache/replacement/coarse/recency-based/">https://xixi-shredp.github.io/2025/09/14/Arch/cache/replacement/coarse/recency-based/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/09/14/Arch/cache/coherence/overview/" title="Cache Coherence Protocols"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Cache Coherence Protocols</div></div><div class="info-2"><div class="info-item-1">cache 一致性协议简介</div></div></div></a><a class="pagination-related" href="/2025/09/12/Arch/mem/consistency/relaxed/" title="Relaxed(Weaker) Memory Consistency Model"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Relaxed(Weaker) Memory Consistency Model</div></div><div class="info-2"><div class="info-item-1">Relaxed(Weaker) Memory Consistency Model 松散内存模型简介</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">73</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">44</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#LRU-1970"><span class="toc-number">1.</span> <span class="toc-text">LRU (1970)</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#MRU"><span class="toc-number">2.</span> <span class="toc-text">MRU</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#EELRU-Early-Eviction-LRU-1999"><span class="toc-number">3.</span> <span class="toc-text">EELRU, Early Eviction LRU (1999)</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Segmented-LRU-Seg-LRU-1994"><span class="toc-number">4.</span> <span class="toc-text">Segmented LRU, Seg-LRU (1994)</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#LIP-LRU-Insertion-Policy-2007"><span class="toc-number">5.</span> <span class="toc-text">LIP, LRU Insertion Policy(2007)</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#BIP-Bimodel-Insertion-Policy-2007"><span class="toc-number">6.</span> <span class="toc-text">BIP, Bimodel Insertion Policy(2007)</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Static-Re-Reference-Interval-Prediction-SRRIP-2010"><span class="toc-number">7.</span> <span class="toc-text">Static Re-Reference Interval Prediction (SRRIP, 2010)</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%EF%BC%9ARRIP"><span class="toc-number">7.1.</span> <span class="toc-text">思路：RRIP</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0"><span class="toc-number">7.2.</span> <span class="toc-text">实现</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Bimodel-Re-Reference-Interval-Prediction-BRRIP-2010"><span class="toc-number">8.</span> <span class="toc-text">Bimodel Re-Reference Interval Prediction (BRRIP, 2010)</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Protecting-Distance-Based-Policy-PDP-2012"><span class="toc-number">9.</span> <span class="toc-text">Protecting Distance-Based Policy (PDP, 2012)</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Genetic-Insertion-and-Promotion-for-Pseudo-LRU-Replacement-GIPPR-2013"><span class="toc-number">10.</span> <span class="toc-text">Genetic Insertion and Promotion for Pseudo LRU Replacement (GIPPR, 2013)</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Shepherd-Cache-2007"><span class="toc-number">11.</span> <span class="toc-text">Shepherd Cache (2007)</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/30/Arch/frontend/patent_US11720365B2/" title="alibaba-US11720365B2: Path prediction method used for instruction cache, access control unit, and instruction processing apparatus">alibaba-US11720365B2: Path prediction method used for instruction cache, access control unit, and instruction processing apparatus</a><time datetime="2026-03-30T05:22:50.000Z" title="Created 2026-03-30 13:22:50">2026-03-30</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/26/Arch/cache/replacement/coarse/hybrid/" title="Hybrid Policies">Hybrid Policies</a><time datetime="2026-03-26T12:53:50.000Z" title="Created 2026-03-26 20:53:50">2026-03-26</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/26/Arch/cache/replacement/coarse/frequency-based/" title="Frequency Based Policies">Frequency Based Policies</a><time datetime="2026-03-26T12:27:40.000Z" title="Created 2026-03-26 20:27:40">2026-03-26</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/25/Arch/cache/replacement/2026-ASPLOS-ICARUS/" title="2026 ASPLOS: ICARUS: Criticality and Reuse based Instruction Caching for Datacenter Applications">2026 ASPLOS: ICARUS: Criticality and Reuse based Instruction Caching for Datacenter Applications</a><time datetime="2026-03-25T07:11:45.000Z" title="Created 2026-03-25 15:11:45">2026-03-25</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/03/24/Arch/cache/prefetch/data-pf/2026-HPCA-Athena/" title="2026 HPCA: Athena: Synergizing Data Prefetching and Off-Chip Prediction via Online Reinforcement Learning">2026 HPCA: Athena: Synergizing Data Prefetching and Off-Chip Prediction via Online Reinforcement Learning</a><time datetime="2026-03-24T04:19:35.000Z" title="Created 2026-03-24 12:19:35">2026-03-24</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
   const parseViewBox = viewBox => {
     if (!viewBox) return null
     const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
