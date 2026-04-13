@@ -7,7 +7,7 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
 <meta property="article:published_time" content="2026-04-08T09:26:32.000Z">
-<meta property="article:modified_time" content="2026-04-08T12:10:49.152Z">
+<meta property="article:modified_time" content="2026-04-13T06:33:10.173Z">
 <meta property="article:author" content="xixi">
 <meta property="article:tag" content="CPU, Computer Architechture, OS">
 <meta name="twitter:card" content="summary">
@@ -18,7 +18,7 @@
   "url": "https://xixi-shredp.github.io/2026/04/08/Arch/simulator/gem5/frontend/ftq/",
   "image": "https://xixi-shredp.github.io/img/avatar.jpg",
   "datePublished": "2026-04-08T09:26:32.000Z",
-  "dateModified": "2026-04-08T12:10:49.152Z",
+  "dateModified": "2026-04-13T06:33:10.173Z",
   "author": [
     {
       "@type": "Person",
@@ -159,7 +159,7 @@
   isHighlightShrink: false,
   isToc: true,
   pageType: 'post'
-}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background: linear-gradient(180deg, black, black, #23064D);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">79</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">46</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Gem5: Fetch Target Queue(FTQ)</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Gem5: Fetch Target Queue(FTQ)</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-04-08T09:26:32.000Z" title="Created 2026-04-08 17:26:32">2026-04-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-04-08T12:10:49.152Z" title="Updated 2026-04-08 20:10:49">2026-04-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/">Arch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/simulator/">simulator</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/simulator/gem5/">gem5</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/simulator/gem5/frontend/">frontend</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>当前 O3 前端里的 <code>FTQ</code> 的定位是：</p>
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background: linear-gradient(180deg, black, black, #23064D);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">81</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">47</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Gem5: Fetch Target Queue(FTQ)</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Gem5: Fetch Target Queue(FTQ)</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-04-08T09:26:32.000Z" title="Created 2026-04-08 17:26:32">2026-04-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-04-13T06:33:10.173Z" title="Updated 2026-04-13 14:33:10">2026-04-13</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/">Arch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/simulator/">simulator</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/simulator/gem5/">gem5</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Arch/simulator/gem5/frontend/">frontend</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>当前 O3 前端里的 <code>FTQ</code> 的定位是：</p>
 <ol>
 <li><code>BAC</code>(Branch Address Calculation) 生成 <code>FetchTarget</code> 后，用于在 <code>BAC</code> 与 <code>Fetch</code> 之间传递取指目标的队列。</li>
 <li><code>FetchTarget</code> 的承载体，用来描述一段连续的 fetch 范围，以及该范围退出点的预测信息。</li>
@@ -200,286 +200,224 @@
 </blockquote>
 <h2 id="Coupled-frontend-与-decoupled-frontend-的差异"><a href="#Coupled-frontend-与-decoupled-frontend-的差异" class="headerlink" title="Coupled frontend 与 decoupled frontend 的差异"></a>Coupled frontend 与 decoupled frontend 的差异</h2><p>当前代码同时支持两种模式：</p>
 <h4 id="Coupled-frontend"><a href="#Coupled-frontend" class="headerlink" title="Coupled frontend"></a>Coupled frontend</h4><ul>
-<li><code>Fetch</code> 在预译码到 branch 时，直接调用 <code>bpu-&gt;predict(...)</code>。</li>
-<li>不需要 <code>FTQ</code> 介入预测流程。</li>
-<li>预测和 <code>Fetch</code> 更同步。</li>
+<li><code>Fetch</code> 在预译码到 branch 时，直接调用 <code>bpu-&gt;predict(...)</code></li>
+<li>不需要 <code>FTQ</code> 介入预测流程</li>
+<li>预测和 <code>Fetch</code> 更同步</li>
 </ul>
 <h4 id="Decoupled-frontend"><a href="#Decoupled-frontend" class="headerlink" title="Decoupled frontend"></a>Decoupled frontend</h4><ul>
-<li><code>BAC</code> 提前基于 <code>BTB</code> 扫描地址流，先生成 <code>FetchTarget</code>。</li>
-<li><code>Fetch</code> 后续只按 FTQ 头项取指。</li>
-<li><code>Fetch</code> 在预译码到 branch 后，不再重新做一次预测，而是从 <code>FTQ</code> 里取出已生成的预测历史并“正式入账”。</li>
+<li><code>BAC</code> 提前基于 <code>BTB</code> 扫描地址流，先生成 <code>FetchTarget</code></li>
+<li><code>Fetch</code> 后续只按 FTQ 第一项取指</li>
+<li><code>Fetch</code> 在预译码到 branch 后，不再重新做预测，而是从 <code>FTQ</code> 里取出已生成的预测历史</li>
 </ul>
-<p>本文重点讨论的是第二种，也就是 <code>FTQ</code> 真正参与的模式。</p>
 <hr>
-<h2 id="5-FetchTarget-的数据模型"><a href="#5-FetchTarget-的数据模型" class="headerlink" title="5. FetchTarget 的数据模型"></a>5. FetchTarget 的数据模型</h2><h3 id="5-1-FetchTarget-的含义"><a href="#5-1-FetchTarget-的含义" class="headerlink" title="5.1 FetchTarget 的含义"></a>5.1 FetchTarget 的含义</h3><p><code>FetchTarget</code> 可以近似理解成一个“前端预测驱动的连续取指块”。它和传统基本块 <code>basic block</code> 有相似性，但并不完全等价：</p>
+<h1 id="FTQ"><a href="#FTQ" class="headerlink" title="FTQ"></a>FTQ</h1><h2 id="FetchTarget"><a href="#FetchTarget" class="headerlink" title="FetchTarget"></a>FetchTarget</h2><p><code>FetchTarget</code> 可以近似理解成一个“前端预测驱动的连续取指块”。它和传统基本块 <code>basic block</code> 有相似性，但并不完全等价：</p>
 <ul>
-<li>它有一个 <code>startPC</code> 和一个 <code>endPC</code>。</li>
-<li>它通常在一个 branch 处结束。</li>
-<li>它也可能不以 branch 结束，而只是因为达到了允许的最大搜索宽度。</li>
-<li>它还可能包含 <code>surprise branch</code>，也就是 BAC 当时看不到、只能在后续 predecode 才发现的 branch。</li>
+<li>有一个 <code>startPC</code> 和一个 <code>endPC</code></li>
+<li>可能包含 <code>surprise branch</code>: BAC 当时看不到、只能在后续 predecode 才发现的 branch</li>
 </ul>
-<h3 id="5-2-FetchTarget-的关键字段"><a href="#5-2-FetchTarget-的关键字段" class="headerlink" title="5.2 FetchTarget 的关键字段"></a>5.2 FetchTarget 的关键字段</h3><p><code>FetchTarget</code> 核心包含以下信息：</p>
+<p><code>FetchTarget</code> 包含以下信息：</p>
 <ul>
-<li><p><code>startPC</code></p>
-<ul>
-<li>本 fetch target 的起始地址。</li>
+<li><code>startPC</code>: fetch target 的起始地址</li>
+<li><code>endPC</code>: fetch target 的结束地址，对应退出 instruction 的 PC。</li>
+<li><code>predPC</code><ul>
+<li>如果退出 instruction 是 branch，则这是该退出 branch 对应的预测目标地址</li>
+<li>如果退出 instruction 不是 branch，那么这个字段仍会在 <code>finalize()</code> 时被填入“下一个 FT 的起点”</li>
 </ul>
 </li>
-<li><p><code>endPC</code></p>
+<li><code>ftSeqNum</code>: <code>FetchTarget</code> 自己的编号，不是指令的 <code>seqNum</code>(因为 FT 是在真正生成动态指令之前就构建出来的)</li>
+<li><code>tid</code>: 线程 id</li>
+<li><code>is_branch</code>: 退出 instruction 是否是 branch。</li>
+<li><code>taken</code>: 退出 branch 是否预测为 taken。</li>
+<li><code>bpuHistory</code>: <code>BPredUnit::PredictorHistory *</code>，用于在 FT 等待于 FTQ 期间暂存该 fetch target 对应的分支预测历史</li>
+</ul>
+<p><code>FetchTarget</code> 结束的条件：</p>
 <ul>
-<li>本 fetch target 的结束地址，对应退出 instruction 的 PC。</li>
+<li>找到 branch</li>
+<li>达到最大搜索宽度</li>
+<li>在复杂 micro-op 场景下触发特殊处理后被保守截断</li>
 </ul>
-</li>
-<li><p><code>predPC</code></p>
-<ul>
-<li>如果退出 instruction 是 branch，则这是该退出 branch 对应的预测目标地址。</li>
-<li>如果退出 instruction 不是 branch，那么这个字段仍会在 <code>finalize()</code> 时被填入“下一个 FT 的起点”。</li>
-</ul>
-</li>
-<li><p><code>ftSeqNum</code></p>
-<ul>
-<li><code>FetchTarget</code> 自己的编号。</li>
-<li>注意这不是指令的 <code>seqNum</code>，因为 FT 是在真正生成动态指令之前就构建出来的。</li>
-</ul>
-</li>
-<li><p><code>tid</code></p>
-<ul>
-<li>所属线程。</li>
-</ul>
-</li>
-<li><p><code>is_branch</code></p>
-<ul>
-<li>退出 instruction 是否是 branch。</li>
-</ul>
-</li>
-<li><p><code>taken</code></p>
-<ul>
-<li>退出 branch 是否预测为 taken。</li>
-</ul>
-</li>
-<li><p><code>bpuHistory</code></p>
-<ul>
-<li>最关键字段。</li>
-<li>这是一个 <code>BPredUnit::PredictorHistory *</code>，用于在 FT 等待于 FTQ 期间暂存该 fetch target 对应的分支预测历史。</li>
-</ul>
-</li>
-</ul>
-<h3 id="5-3-为什么-bpuHistory-需要挂在-FetchTarget-上"><a href="#5-3-为什么-bpuHistory-需要挂在-FetchTarget-上" class="headerlink" title="5.3 为什么 bpuHistory 需要挂在 FetchTarget 上"></a>5.3 为什么 <code>bpuHistory</code> 需要挂在 FetchTarget 上</h3><p>因为在 decoupled frontend 中，预测发生得更早，而真正动态指令的 <code>seqNum</code> 更晚才出现。</p>
-<p>在 gem5 当前实现里：</p>
-<ul>
-<li>BPU 的正式历史管理以指令序号 <code>seqNum</code> 为核心。</li>
-<li>但 BAC 构造 FT 的那一刻，还没有真实的动态指令，自然拿不到最终 <code>seqNum</code>。</li>
-</ul>
-<p>于是实现采用了一个过渡策略：</p>
-<ol>
-<li>在 BAC 生成 FT 并调用 <code>bpu-&gt;predict(...)</code> 时，先拿到一份 <code>PredictorHistory</code>。</li>
-<li>这份历史不立即放进 BPU 的 <code>predHist</code> 正式队列。</li>
-<li>它先挂到 <code>ft-&gt;bpuHistory</code> 上，在 FTQ 中临时保存。</li>
-<li>等 <code>Fetch</code> 真正预译码到那个 branch，拿到动态指令和真实 <code>seqNum</code> 后，再把这份历史转移回 BPU 主历史队列。</li>
-</ol>
-<p>这个设计是整个 FTQ&#x2F;BPU 协同机制的核心。</p>
-<hr>
-<h2 id="6-FTQ-的职责与状态"><a href="#6-FTQ-的职责与状态" class="headerlink" title="6. FTQ 的职责与状态"></a>6. FTQ 的职责与状态</h2><h3 id="6-1-FTQ-的基本职责"><a href="#6-1-FTQ-的基本职责" class="headerlink" title="6.1 FTQ 的基本职责"></a>6.1 FTQ 的基本职责</h3><p><code>FTQ</code> 本身非常“瘦”。</p>
-<p>它不负责：</p>
-<ul>
-<li>生成预测。</li>
-<li>更新预测器状态。</li>
-<li>计算恢复后的历史。</li>
-<li>解释 branch 类型。</li>
-</ul>
-<p>它主要负责：</p>
-<ul>
-<li>存放 <code>FetchTarget</code>。</li>
-<li>提供头尾插入和弹出。</li>
-<li>提供一些状态控制接口，如 <code>invalidate()</code>、<code>lock()</code>。</li>
-<li>在 squash 时清空队列。</li>
-<li>为外部逻辑提供遍历接口，以便 BAC 回滚 FTQ 中仍未正式转入 BPU 的历史。</li>
-</ul>
-<h3 id="6-2-FTQ-的状态"><a href="#6-2-FTQ-的状态" class="headerlink" title="6.2 FTQ 的状态"></a>6.2 FTQ 的状态</h3><p>当前实现中，FTQ 具有如下状态：</p>
-<ul>
-<li><p><code>Valid</code></p>
-<ul>
-<li>可以安全读取和消费队列。</li>
-</ul>
-</li>
-<li><p><code>Invalid</code></p>
-<ul>
-<li>当前队列中的 fetch target 不再可信。</li>
-<li>进入该状态后，需要依靠 <code>resteer/squash</code> 来恢复。</li>
-</ul>
-</li>
-<li><p><code>Locked</code></p>
-<ul>
-<li>头部 fetch target 仍然可用，但其后的项不再可信。</li>
-<li>常出现在复杂指令或多 branch micro-op 的保守处理路径中。</li>
-</ul>
-</li>
-</ul>
-<p>代码里还有 <code>Full</code> 相关概念，但严格来说“是否已满”主要通过 <code>size &gt;= numEntries</code> 计算，不是一个单独用于外部语义判断的常驻状态机值；<code>BAC</code> 侧会据此进入 <code>FTQFull</code> 阻塞状态。</p>
-<h3 id="6-3-FTQ-的几个关键接口"><a href="#6-3-FTQ-的几个关键接口" class="headerlink" title="6.3 FTQ 的几个关键接口"></a>6.3 FTQ 的几个关键接口</h3><h4 id="insert"><a href="#insert" class="headerlink" title="insert()"></a><code>insert()</code></h4><ul>
-<li>将 <code>FetchTarget</code> 压入队尾。</li>
-<li>由 <code>BAC</code> 调用。</li>
-</ul>
-<h4 id="readHead"><a href="#readHead" class="headerlink" title="readHead()"></a><code>readHead()</code></h4><ul>
-<li>返回当前头部 <code>FetchTarget</code>。</li>
-<li>如果 <code>FTQ</code> 已 <code>Invalid</code> 或队列为空，则返回 <code>nullptr</code>。</li>
-</ul>
-<h4 id="isHeadReady"><a href="#isHeadReady" class="headerlink" title="isHeadReady()"></a><code>isHeadReady()</code></h4><ul>
-<li>只有在队列非空且不为 <code>Invalid</code> 时才为真。</li>
-<li><code>Fetch</code> 在 decoupled 模式下会依赖这个条件来判断能否继续取指。</li>
-</ul>
-<h4 id="popHead"><a href="#popHead" class="headerlink" title="popHead()"></a><code>popHead()</code></h4><ul>
-<li>消费当前 FTQ 头项。</li>
-<li>这是一个非常关键的保护点。</li>
-<li>如果头项仍然携带 <code>bpuHistory</code>，则弹出失败，并将 FTQ 置为 <code>Invalid</code>。</li>
-</ul>
-<p>这等价于一个重要不变量：</p>
 <blockquote>
-<p>任意 <code>FetchTarget</code> 在被真正弹出 FTQ 之前，挂在它上面的 <code>bpuHistory</code> 必须已经被转移走，或者在 squash 路径中被清空。</p>
+<p><strong>为什么 <code>bpuHistory</code> 需要在 FetchTarget 上?</strong>  </p>
+<p>因为在 decoupled frontend 中，预测发生得更早，而真正动态指令的 <code>seqNum</code> 更晚才出现<br>在 gem5 当前实现里：</p>
+<ul>
+<li>BPU 的正式历史管理以指令序号 <code>seqNum</code> 为核心</li>
+<li>但 BAC 构造 FT 的时候，还没有真实的动态指令，拿不到最终 <code>seqNum</code></li>
+</ul>
+<p>于是实现采用一个过渡策略：</p>
+<ol>
+<li>在 BAC 生成 FT 并调用 <code>bpu-&gt;predict(...)</code> 时，先拿到一份 <code>PredictorHistory</code></li>
+<li>这份历史不立即放进 BPU 的 <code>predHist</code> 正式队列</li>
+<li>它先挂到 <code>ft-&gt;bpuHistory</code> 上，在 FTQ 中临时保存</li>
+<li>等 <code>Fetch</code> 真正预译码到那个 branch，拿到动态指令和真实 <code>seqNum</code> 后，再把这份历史转移回 BPU 主历史队列</li>
+</ol>
 </blockquote>
-<h4 id="squash"><a href="#squash" class="headerlink" title="squash()"></a><code>squash()</code></h4><ul>
-<li>清空队列。</li>
-<li>但它内部假设所有 <code>FetchTarget</code> 上的 <code>bpuHistory</code> 已经先被外部清掉。</li>
+<hr>
+<h2 id="FTQ-任务"><a href="#FTQ-任务" class="headerlink" title="FTQ 任务"></a>FTQ 任务</h2><p><code>FTQ</code> 本身主要负责：</p>
+<ul>
+<li>存放 <code>FetchTarget</code></li>
+<li>提供头尾插入和弹出</li>
+<li>提供一些状态控制接口，如 <code>invalidate()</code>、<code>lock()</code></li>
+<li>在 squash 时清空队列</li>
+<li>为外部逻辑提供遍历接口，以便 BAC 回滚 FTQ 中仍未正式转入 BPU 的历史</li>
+</ul>
+<p>FTQ 状态：</p>
+<ul>
+<li><code>Valid</code>: 可以安全读取和消费队列</li>
+<li><code>Invalid</code><ul>
+<li>当前队列中的 fetch target 不再可信</li>
+<li>进入该状态后，需要依靠 <code>resteer/squash</code> 来恢复</li>
+</ul>
+</li>
+<li><code>Locked</code><ul>
+<li>头部 fetch target 仍然可用，但其后的项不再可信</li>
+<li>常出现在复杂指令或多 branch micro-op 的保守处理路径中</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>FTQ 还有 <code>Full</code> 的相关概念，但严格来说“是否已满”主要通过 <code>size &gt;= numEntries</code> 计算，不是一个单独用于外部语义判断的常驻状态机值；<code>BAC</code> 侧会据此进入 <code>FTQFull</code> 阻塞状态</p>
+</blockquote>
+<h2 id="FTQ-API"><a href="#FTQ-API" class="headerlink" title="FTQ API"></a>FTQ API</h2><p><code>insert()</code>:</p>
+<ul>
+<li>将 <code>FetchTarget</code> 压入队尾</li>
+<li>由 <code>BAC</code> 调用</li>
+</ul>
+<p><code>readHead()</code>:</p>
+<ul>
+<li>返回当前头部 <code>FetchTarget</code></li>
+<li>如果 <code>FTQ</code> 已 <code>Invalid</code> 或队列为空，则返回 <code>nullptr</code></li>
+</ul>
+<p><code>isHeadReady()</code>:</p>
+<ul>
+<li>只有在队列非空且不为 <code>Invalid</code> 时才为真</li>
+<li><code>Fetch</code> 在 decoupled 模式下会依赖这个条件来判断能否继续取指</li>
+</ul>
+<p><code>popHead()</code>:</p>
+<ul>
+<li>消费当前 FTQ 头项</li>
+<li>如果头项仍然携带 <code>bpuHistory</code>，则弹出失败，并将 FTQ 置为 <code>Invalid</code></li>
+</ul>
+<blockquote>
+<p>任意 <code>FetchTarget</code> 在被真正弹出 FTQ 之前，挂在它上面的 <code>bpuHistory</code> 必须已经被转移走，或者在 squash 路径中被清空</p>
+</blockquote>
+<p><code>squash()</code>:</p>
+<ul>
+<li>清空队列</li>
+<li>但它内部假设所有 <code>FetchTarget</code> 上的 <code>bpuHistory</code> 已经先被外部清掉</li>
 <li>因此正常顺序是：<ol>
-<li>BAC 先调用 <code>squashBpuHistories()</code> 倒序回滚历史。</li>
-<li>再调用 <code>ftq-&gt;squash()</code> 清队列。</li>
+<li>BAC 先调用 <code>squashBpuHistories()</code> 倒序回滚历史</li>
+<li>再调用 <code>ftq-&gt;squash()</code> 清队列</li>
 </ol>
 </li>
 </ul>
 <hr>
-<h2 id="7-BAC-如何生成-FetchTarget-并填充-FTQ"><a href="#7-BAC-如何生成-FetchTarget-并填充-FTQ" class="headerlink" title="7. BAC 如何生成 FetchTarget 并填充 FTQ"></a>7. BAC 如何生成 FetchTarget 并填充 FTQ</h2><h3 id="7-1-输入：BAC-维护自己的前端-PC"><a href="#7-1-输入：BAC-维护自己的前端-PC" class="headerlink" title="7.1 输入：BAC 维护自己的前端 PC"></a>7.1 输入：BAC 维护自己的前端 PC</h3><p>在 decoupled frontend 中，<code>BAC</code> 维护自己的 <code>bacPC</code>。<br>这个 PC 不是 <code>Fetch</code> 正在使用的那个 <code>fetch PC</code>，而是“预测生产侧”的 PC。</p>
-<p>也就是说：</p>
+<h2 id="FTQ-填充：BAC-生成-FetchTarget"><a href="#FTQ-填充：BAC-生成-FetchTarget" class="headerlink" title="FTQ 填充：BAC 生成 FetchTarget"></a>FTQ 填充：BAC 生成 FetchTarget</h2><h3 id="输入：BAC-维护自己的前端-PC"><a href="#输入：BAC-维护自己的前端-PC" class="headerlink" title="输入：BAC 维护自己的前端 PC"></a>输入：BAC 维护自己的前端 PC</h3><p>在 decoupled frontend 中，<code>BAC</code> 维护自己的 <code>bacPC</code><br>(不是 <code>Fetch</code> 正在使用的 <code>fetch PC</code>，而是“预测生产侧”的 PC)</p>
 <ul>
-<li><code>Fetch</code> 消费 FTQ 中已有的 fetch targets。</li>
-<li><code>BAC</code> 则在后台持续尝试生成后续 fetch targets。</li>
+<li><code>Fetch</code> 消费 FTQ 中已有的 fetch targets</li>
+<li><code>BAC</code> 则在后台持续尝试生成后续 fetch targets</li>
 </ul>
-<h3 id="7-2-搜索-branch-的方式"><a href="#7-2-搜索-branch-的方式" class="headerlink" title="7.2 搜索 branch 的方式"></a>7.2 搜索 branch 的方式</h3><p><code>BAC::generateFetchTargets()</code> 的基本策略是：</p>
+<h3 id="搜索-branch"><a href="#搜索-branch" class="headerlink" title="搜索 branch"></a>搜索 branch</h3><p><code>BAC::generateFetchTargets()</code> 的基本策略是：</p>
 <ol>
-<li>从当前 <code>bacPC</code> 开始。</li>
-<li>逐地址检查 <code>BTB</code> 是否命中。</li>
+<li>从当前 <code>bacPC</code> 开始</li>
+<li>逐地址检查 <code>BTB</code> 是否命中</li>
 <li>如果未命中，则继续向前扫描，直到：<ul>
 <li>找到 branch，或</li>
-<li>扫描宽度达到 <code>fetchTargetWidth</code>。</li>
+<li>扫描宽度达到 <code>fetchTargetWidth</code></li>
 </ul>
 </li>
 </ol>
-<p>这里的一个关键设计选择是：</p>
 <blockquote>
-<p><code>BAC</code> 并不依赖预译码来识别 branch，而是纯粹依赖 <code>BTB</code> 来发现“这里看起来有 branch”。</p>
-</blockquote>
-<p>这意味着：</p>
+<p><code>BAC</code> 并不依赖预译码来识别 branch，而是纯粹依赖 <code>BTB</code> 来发现 branch</p>
 <ul>
-<li>只有进入过 <code>BTB</code> 的 branch，BAC 才能在生成 FT 时看到。</li>
-<li><code>never-taken branch</code>、首次遇到的 branch、被 BTB 驱逐的 branch，都可能在 BAC 阶段完全不可见。</li>
+<li>只有进入过 <code>BTB</code> 的 branch，BAC 才能在生成 FT 时看到</li>
+<li><code>never-taken branch</code>、首次遇到的 branch、被 BTB 驱逐的 branch，都可能在 BAC 阶段完全不可见</li>
 </ul>
-<h3 id="7-3-找到-branch-后如何预测"><a href="#7-3-找到-branch-后如何预测" class="headerlink" title="7.3 找到 branch 后如何预测"></a>7.3 找到 branch 后如何预测</h3><p>一旦 <code>BTB</code> 命中：</p>
+</blockquote>
+<h3 id="预测-branch"><a href="#预测-branch" class="headerlink" title="预测 branch"></a>预测 branch</h3><p>一旦 <code>BTB</code> 命中：</p>
 <ol>
-<li><code>BAC</code> 通过 <code>BTBGetInst()</code> 取出对应的 <code>StaticInst</code>。</li>
-<li>调用 <code>BAC::predict()</code>。</li>
-<li><code>BAC::predict()</code> 内部进一步调用 <code>bpu-&gt;predict(...)</code>。</li>
-<li>BPU 返回预测方向，同时更新传入的 <code>pc</code> 为预测目标或 fallthrough。</li>
-<li>BPU 生成的 <code>PredictorHistory</code> 不进入 BPU 正式历史队列，而是直接挂到 <code>ft-&gt;bpuHistory</code>。</li>
+<li><code>BAC</code> 通过 <code>BTBGetInst()</code> 取出对应的 <code>StaticInst</code></li>
+<li>调用 <code>BAC::predict()</code></li>
+<li><code>BAC::predict()</code> 内部进一步调用 <code>bpu-&gt;predict(...)</code></li>
+<li>BPU 返回预测方向，同时更新传入的 <code>pc</code> 为预测目标或 fallthrough</li>
+<li>BPU 生成的 <code>PredictorHistory</code> 不进入 BPU 正式历史队列，而是直接挂到 <code>ft-&gt;bpuHistory</code></li>
 </ol>
-<h3 id="7-4-完成-FetchTarget"><a href="#7-4-完成-FetchTarget" class="headerlink" title="7.4 完成 FetchTarget"></a>7.4 完成 FetchTarget</h3><p>无论是否发现 branch，<code>BAC</code> 都会调用 <code>curFT-&gt;finalize(...)</code>，设置：</p>
+<h3 id="完成-FetchTarget"><a href="#完成-FetchTarget" class="headerlink" title="完成 FetchTarget"></a>完成 FetchTarget</h3><p>无论是否发现 branch，<code>BAC</code> 都会调用 <code>curFT-&gt;finalize(...)</code>，设置：</p>
 <ul>
 <li><code>endPC</code></li>
 <li><code>is_branch</code></li>
 <li><code>taken</code></li>
 <li><code>predPC</code></li>
 </ul>
-<p>随后将该 FT 插入 FTQ。</p>
-<h3 id="7-5-下一-FT-的起点如何确定"><a href="#7-5-下一-FT-的起点如何确定" class="headerlink" title="7.5 下一 FT 的起点如何确定"></a>7.5 下一 FT 的起点如何确定</h3><p>如果当前 branch 预测为 taken：</p>
-<ul>
-<li>下一个 FT 的起点就是预测目标 <code>predPC</code>。</li>
+<p>随后将该 FT 插入 FTQ</p>
+<h3 id="确定下一-FT-的起点"><a href="#确定下一-FT-的起点" class="headerlink" title="确定下一 FT 的起点"></a>确定下一 FT 的起点</h3><ul>
+<li>如果当前 branch 预测为 taken：下一个 FT 的起点就是预测目标 <code>predPC</code></li>
+<li>如果当前 branch 预测为 not-taken，或根本没有 branch： 下一个 FT 的起点就是顺序地址</li>
 </ul>
-<p>如果当前 branch 预测为 not-taken，或根本没有 branch：</p>
-<ul>
-<li>下一个 FT 的起点就是顺序地址。</li>
-</ul>
-<p>也就是说，FTQ 中的每个 FT 实际上隐含构成了一条由 BPU 提前规划出来的 fetch 路径。</p>
 <hr>
-<h2 id="8-Fetch-如何消费-FTQ"><a href="#8-Fetch-如何消费-FTQ" class="headerlink" title="8. Fetch 如何消费 FTQ"></a>8. Fetch 如何消费 FTQ</h2><h3 id="8-1-Fetch-只处理头部-FT"><a href="#8-1-Fetch-只处理头部-FT" class="headerlink" title="8.1 Fetch 只处理头部 FT"></a>8.1 Fetch 只处理头部 FT</h3><p><code>Fetch</code> 在 decoupled 模式下，首先会检查 FTQ 是否 ready：</p>
+<h2 id="FTQ-消费-Fetch-读取并-pop-FetchTarget"><a href="#FTQ-消费-Fetch-读取并-pop-FetchTarget" class="headerlink" title="FTQ 消费: Fetch 读取并 pop FetchTarget"></a>FTQ 消费: Fetch 读取并 pop FetchTarget</h2><h3 id="Fetch-只处理头部-FT"><a href="#Fetch-只处理头部-FT" class="headerlink" title="Fetch 只处理头部 FT"></a>Fetch 只处理头部 FT</h3><p><code>Fetch</code> 在 decoupled 模式下，首先会检查 FTQ 是否 ready：</p>
 <ul>
-<li>若 FTQ 为空或无效，则 <code>Fetch</code> 进入 <code>FtqWait</code>。</li>
-<li>若 FTQ 可用，则读取头部 <code>FetchTarget</code>。</li>
+<li>若 FTQ 为空或无效，则 <code>Fetch</code> 进入 <code>FtqWait</code></li>
+<li>若 FTQ 可用，则读取头部 <code>FetchTarget</code></li>
 </ul>
-<h3 id="8-2-当前-PC-必须落在当前-FT-的范围内"><a href="#8-2-当前-PC-必须落在当前-FT-的范围内" class="headerlink" title="8.2 当前 PC 必须落在当前 FT 的范围内"></a>8.2 当前 PC 必须落在当前 FT 的范围内</h3><p><code>Fetch</code> 会验证：</p>
+<h3 id="当前-PC-必须落在当前-FT-的范围内"><a href="#当前-PC-必须落在当前-FT-的范围内" class="headerlink" title="当前 PC 必须落在当前 FT 的范围内"></a>当前 PC 必须落在当前 FT 的范围内</h3><p><code>Fetch</code> 会验证当前 <code>fetch PC</code> 是否在 <code>curFT-&gt;inRange(...)</code> 范围内</p>
+<p>如果不在范围内，说明前端状态与 FTQ 内容已经不同步，需要触发 <code>bacResteer()</code> 进行恢复</p>
+<h3 id="Fetch-在-FT-范围内顺序取指"><a href="#Fetch-在-FT-范围内顺序取指" class="headerlink" title="Fetch 在 FT 范围内顺序取指"></a>Fetch 在 FT 范围内顺序取指</h3><p>只要当前 PC 仍然位于 <code>curFT</code> 内：</p>
 <ul>
-<li>当前 <code>fetch PC</code> 是否在 <code>curFT-&gt;inRange(...)</code> 范围内。</li>
+<li><code>Fetch</code> 就继续从 I-cache &#x2F; decoder 中取出指令</li>
+<li>每生成一条 <code>DynInst</code>，都调用 <code>bac-&gt;updatePC(instruction, next_pc, curFT)</code></li>
 </ul>
-<p>如果不在范围内，说明前端状态与 FTQ 内容已经不同步，需要触发 <code>bacResteer()</code> 进行恢复。</p>
-<p>这说明 FTQ 不只是一个“建议列表”，而是当前前端取指路径的强约束。</p>
-<h3 id="8-3-Fetch-在-FT-范围内顺序取指"><a href="#8-3-Fetch-在-FT-范围内顺序取指" class="headerlink" title="8.3 Fetch 在 FT 范围内顺序取指"></a>8.3 Fetch 在 FT 范围内顺序取指</h3><p>只要当前 PC 仍然位于 <code>curFT</code> 内：</p>
+<h3 id="Fetch-预译码到-branch-后，分支历史从-FTQ-转回-BPU"><a href="#Fetch-预译码到-branch-后，分支历史从-FTQ-转回-BPU" class="headerlink" title="Fetch 预译码到 branch 后，分支历史从 FTQ 转回 BPU"></a>Fetch 预译码到 branch 后，分支历史从 FTQ 转回 BPU</h3><p>当 <code>Fetch</code> 发现当前 instruction 是 control instruction：</p>
 <ul>
-<li><code>Fetch</code> 就继续从 I-cache &#x2F; decoder 中取出指令。</li>
-<li>每生成一条 <code>DynInst</code>，都调用 <code>bac-&gt;updatePC(instruction, next_pc, curFT)</code>。</li>
+<li>在 coupled 模式下，直接在这里调用 <code>bpu-&gt;predict(...)</code></li>
+<li>在 decoupled 模式下，不再重新预测，而是调用 <code>BAC::updatePreDecode(...)</code></li>
 </ul>
-<p>这时 FTQ 头项相当于给 <code>Fetch</code> 提供了一个“当前有效取指段”的边界条件。</p>
-<hr>
-<h2 id="9-Fetch-预译码到-branch-后，历史如何从-FTQ-转回-BPU"><a href="#9-Fetch-预译码到-branch-后，历史如何从-FTQ-转回-BPU" class="headerlink" title="9. Fetch 预译码到 branch 后，历史如何从 FTQ 转回 BPU"></a>9. Fetch 预译码到 branch 后，历史如何从 FTQ 转回 BPU</h2><p>这是当前设计中最重要、也最容易误解的一步。</p>
-<h3 id="9-1-预译码到-control-instruction-时"><a href="#9-1-预译码到-control-instruction-时" class="headerlink" title="9.1 预译码到 control instruction 时"></a>9.1 预译码到 control instruction 时</h3><p>当 <code>Fetch</code> 发现当前 instruction 是 control instruction：</p>
+<p><code>updatePreDecode()</code> 的处理：</p>
+<h4 id="情况-A：是当前-FT-的-exit-branch，且-FT-上有-bpuHistory"><a href="#情况-A：是当前-FT-的-exit-branch，且-FT-上有-bpuHistory" class="headerlink" title="情况 A：是当前 FT 的 exit branch，且 FT 上有 bpuHistory"></a>情况 A：是当前 FT 的 exit branch，且 FT 上有 <code>bpuHistory</code></h4><p>这说明：</p>
 <ul>
-<li>在 coupled 模式下，直接在这里调用 <code>bpu-&gt;predict(...)</code>。</li>
-<li>在 decoupled 模式下，不再重新预测，而是调用 <code>BAC::updatePreDecode(...)</code>。</li>
-</ul>
-<h3 id="9-2-updatePreDecode-的基本动作"><a href="#9-2-updatePreDecode-的基本动作" class="headerlink" title="9.2 updatePreDecode 的基本动作"></a>9.2 updatePreDecode 的基本动作</h3><p><code>updatePreDecode()</code> 会做以下事情：</p>
-<h4 id="情况-A：这是当前-FT-的-exit-branch，且-FT-上有-bpuHistory"><a href="#情况-A：这是当前-FT-的-exit-branch，且-FT-上有-bpuHistory" class="headerlink" title="情况 A：这是当前 FT 的 exit branch，且 FT 上有 bpuHistory"></a>情况 A：这是当前 FT 的 exit branch，且 FT 上有 <code>bpuHistory</code></h4><p>这说明：</p>
-<ul>
-<li>BAC 之前已经对这个 branch 做过预测。</li>
-<li>现在只是到了真正的预译码阶段，需要把历史正式转入 BPU。</li>
+<li>BAC 之前已经对这个 branch 做过预测</li>
+<li>现在到了真正的预译码阶段，需要把历史正式转入 BPU</li>
 </ul>
 <p>流程是：</p>
 <ol>
-<li>将 <code>ft-&gt;bpuHistory</code> 取出。</li>
-<li>给这份 history 填入真实 <code>seqNum</code>。</li>
-<li>调用 <code>bpu-&gt;insertPredictorHistory(...)</code> 插入 BPU 主历史队列。</li>
-<li>按 history 中记录的预测结果更新 <code>fetch PC</code>。</li>
+<li>将 <code>ft-&gt;bpuHistory</code> 取出</li>
+<li>给这份 history 填入真实 <code>seqNum</code></li>
+<li>调用 <code>bpu-&gt;insertPredictorHistory(...)</code> 插入 BPU 主历史队列</li>
+<li>按 history 中记录的预测结果更新 <code>fetch PC</code></li>
 </ol>
-<p>这一步实际上完成了“临时历史 -&gt; 正式历史”的生命周期切换。</p>
-<h4 id="情况-B：FT-上没有对应-history"><a href="#情况-B：FT-上没有对应-history" class="headerlink" title="情况 B：FT 上没有对应 history"></a>情况 B：FT 上没有对应 history</h4><p>这通常意味着：</p>
+<h4 id="情况-B：FT-上没有对应-history"><a href="#情况-B：FT-上没有对应-history" class="headerlink" title="情况 B：FT 上没有对应 history"></a>情况 B：FT 上没有对应 history</h4><p>这意味着：</p>
 <ul>
-<li>BAC 生成 FT 时根本没发现这个 branch。</li>
-<li>常见原因是 <code>BTB miss</code>、首次出现、从未 taken、或者 BTB entry 被替换。</li>
+<li>BAC 生成 FT 时没发现这个 branch</li>
+<li>常见原因是 <code>BTB miss</code>、首次出现、从未 taken、或者 BTB entry 被替换</li>
 </ul>
-<p>此时当前实现不会立即认为这是错误，而是采用一个保守恢复机制：</p>
+<p>此时采用一个保守恢复机制：</p>
 <ol>
-<li>新建一个 <code>PredictorHistory</code>。</li>
-<li>调用 <code>bpu-&gt;branchPlaceholder(...)</code> 构造 predictor-specific 的占位历史。</li>
-<li>假设该 branch 的预测是 not-taken。</li>
-<li>先把这份 dummy history 插入 BPU 正式历史体系。</li>
-<li>如果后续 decode&#x2F;commit 发现真实情况不是这样，再依赖 squash 路径纠正。</li>
+<li>新建一个 <code>PredictorHistory</code></li>
+<li>调用 <code>bpu-&gt;branchPlaceholder(...)</code> 构造 predictor-specific 的占位历史</li>
+<li>假设该 branch 的预测是 not-taken</li>
+<li>先把这份 dummy history 插入 BPU 正式历史体系</li>
+<li>如果后续 decode&#x2F;commit 发现真实情况不是这样，再依赖 squash 路径纠正</li>
 </ol>
-<p>这一策略非常关键，因为它保证了即使 BAC 事先没看到 branch，前端和预测器历史仍能在之后恢复到一致状态。</p>
-<h3 id="9-3-为什么不能在-BAC-预测时直接插入-BPU-主历史"><a href="#9-3-为什么不能在-BAC-预测时直接插入-BPU-主历史" class="headerlink" title="9.3 为什么不能在 BAC 预测时直接插入 BPU 主历史"></a>9.3 为什么不能在 BAC 预测时直接插入 BPU 主历史</h3><p>原因主要有三个：</p>
+<blockquote>
+<p><strong>为什么不能在 BAC 预测时直接插入 BPU 主历史?</strong>  </p>
 <ol>
-<li><p><strong>当时没有真实 <code>seqNum</code></strong></p>
-<ul>
-<li>BPU 主历史以动态指令序号管理 in-flight branch。</li>
+<li><strong>当时没有真实 <code>seqNum</code></strong><ul>
+<li>BPU 主历史以动态指令序号管理 in-flight branch</li>
 </ul>
 </li>
-<li><p><strong>当时 branch 类型信息可能不够稳定</strong></p>
-<ul>
-<li>特别是复杂 instruction &#x2F; micro-op 场景下，单纯依赖 BTB 中保存的静态信息可能还不够安全。</li>
+<li><strong>当时 branch 类型信息可能不够稳定</strong><ul>
+<li>特别是复杂 instruction &#x2F; micro-op 场景下，单纯依赖 BTB 中保存的静态信息可能还不够安全</li>
 </ul>
 </li>
-<li><p><strong>需要允许“预测已发生，但尚未被真正消费”</strong></p>
-<ul>
-<li>FTQ 本质上就是为了支持这种 decoupling。</li>
+<li><strong>需要允许“预测已发生，但尚未被真正消费”</strong><ul>
+<li>FTQ 本质上就是为了支持这种 decoupling</li>
 </ul>
 </li>
 </ol>
-<hr>
-<h2 id="10-FetchTarget-何时被弹出"><a href="#10-FetchTarget-何时被弹出" class="headerlink" title="10. FetchTarget 何时被弹出"></a>10. FetchTarget 何时被弹出</h2><h3 id="10-1-一个-FT-不一定以-branch-结束"><a href="#10-1-一个-FT-不一定以-branch-结束" class="headerlink" title="10.1 一个 FT 不一定以 branch 结束"></a>10.1 一个 FT 不一定以 branch 结束</h3><p>当前实现中，一个 FT 结束的条件可以是：</p>
+</blockquote>
+<h3 id="FT-消费完成的处理"><a href="#FT-消费完成的处理" class="headerlink" title="FT 消费完成的处理"></a>FT 消费完成的处理</h3><p>如果满足以下任一条件，当前 <code>ft</code> 指针会被置空：</p>
 <ul>
-<li>找到 branch。</li>
-<li>达到最大搜索宽度。</li>
-<li>在复杂 micro-op 场景下触发特殊处理后被保守截断。</li>
-</ul>
-<p>因此 FT 的退出 instruction 不一定是 branch。</p>
-<h3 id="10-2-何时认为当前-FT-已被消费完成"><a href="#10-2-何时认为当前-FT-已被消费完成" class="headerlink" title="10.2 何时认为当前 FT 已被消费完成"></a>10.2 何时认为当前 FT 已被消费完成</h3><p>在 decoupled 模式下，如果满足以下任一条件，当前 <code>ft</code> 指针会被置空：</p>
-<ul>
-<li>当前 instruction 是 FT 的 exit instruction，且若是 micro-op 则必须是最后一个 micro-op。</li>
-<li>FTQ 已变为 not ready。</li>
+<li>当前 instruction 是 FT 的 exit instruction，且若是 micro-op 则必须是最后一个 micro-op</li>
+<li>FTQ 已变为 not ready</li>
 </ul>
 <p>一旦当前 FT 被置空，<code>Fetch</code> 就尝试：</p>
 <ol>
@@ -487,373 +425,83 @@
 <li>若成功，读取下一个 FT</li>
 <li>若失败，则认为状态异常并触发 <code>bacResteer()</code></li>
 </ol>
-<h3 id="10-3-popHead-为什么可能失败"><a href="#10-3-popHead-为什么可能失败" class="headerlink" title="10.3 popHead 为什么可能失败"></a>10.3 popHead 为什么可能失败</h3><p><code>popHead()</code> 失败的核心条件是：</p>
-<ul>
-<li>头部 <code>FetchTarget</code> 上仍残留 <code>bpuHistory</code></li>
-</ul>
+<blockquote>
+<p><strong><code>popHead</code> 为什么可能失败?</strong></p>
+<p>头部 <code>FetchTarget</code> 上仍残留 <code>bpuHistory</code></p>
 <p>这意味着某个关键步骤没有按预期发生，例如：</p>
 <ul>
-<li>exit branch 的 history 没有在 <code>updatePreDecode()</code> 中成功取走。</li>
-<li>或者发生了复杂 corner case，导致 FT 被消费结束，但对应分支历史还没有完成迁移。</li>
+<li>exit branch 的 history 没有在 <code>updatePreDecode()</code> 中成功取走</li>
+<li>或者发生了复杂 corner case，导致 FT 被消费结束，但对应分支历史还没有完成迁移</li>
 </ul>
-<p>当前实现对这种情况的态度非常保守：</p>
+<p>当前实现对这种情况的处理非常保守：</p>
 <ul>
-<li>不尝试在 <code>popHead()</code> 时“补救性处理”历史。</li>
-<li>而是直接把 FTQ 置 <code>Invalid</code>，让外层走 squash&#x2F;resteer 恢复。</li>
+<li>不尝试在 <code>popHead()</code> 时“补救性处理”历史</li>
+<li>而是直接把 FTQ 置 <code>Invalid</code>，让外层走 squash&#x2F;resteer 恢复</li>
 </ul>
-<p>这是一个明确的安全优先选择。</p>
-<hr>
-<h2 id="11-FTQ-与-BPU-的真实边界"><a href="#11-FTQ-与-BPU-的真实边界" class="headerlink" title="11. FTQ 与 BPU 的真实边界"></a>11. FTQ 与 BPU 的真实边界</h2><h3 id="11-1-BPU-负责什么"><a href="#11-1-BPU-负责什么" class="headerlink" title="11.1 BPU 负责什么"></a>11.1 BPU 负责什么</h3><p><code>BPredUnit</code> 负责：</p>
-<ul>
-<li>执行方向预测。</li>
-<li>结合 <code>BTB</code> &#x2F; <code>RAS</code> &#x2F; indirect predictor 得到目标。</li>
-<li>创建和维护 <code>PredictorHistory</code>。</li>
-<li>在 commit 进行训练更新。</li>
-<li>在 decode&#x2F;commit&#x2F;fetch squash 时恢复历史。</li>
-</ul>
-<h3 id="11-2-FTQ-负责什么"><a href="#11-2-FTQ-负责什么" class="headerlink" title="11.2 FTQ 负责什么"></a>11.2 FTQ 负责什么</h3><p>FTQ 不负责预测语义本身，只负责：</p>
-<ul>
-<li>暂存未来要给 <code>Fetch</code> 使用的取指目标。</li>
-<li>暂存还没“正式编号”的 <code>PredictorHistory</code>。</li>
-</ul>
-<p>因此可以把两者关系概括为：</p>
-<ul>
-<li><code>BPU</code> 是 <strong>owner of predictor state</strong></li>
-<li><code>FTQ</code> 是 <strong>temporary carrier of prediction products</strong></li>
-</ul>
-<h3 id="11-3-为什么要有这种边界"><a href="#11-3-为什么要有这种边界" class="headerlink" title="11.3 为什么要有这种边界"></a>11.3 为什么要有这种边界</h3><p>这是 decoupled frontend 的直接代价。</p>
-<p>一旦希望：</p>
-<ul>
-<li>让预测早于真实 fetch&#x2F;predecode 发生，</li>
-<li>并且让 BAC 与 Fetch 分离，</li>
-</ul>
-<p>就必然需要一个中间层来保存“已经算出来但还没有完全消费”的预测产物。</p>
-<p>在当前实现里，这个中间层就是 <code>FetchTarget + FTQ</code>。</p>
-<hr>
-<h2 id="12-squash、mispredict、resteer-时的恢复流程"><a href="#12-squash、mispredict、resteer-时的恢复流程" class="headerlink" title="12. squash、mispredict、resteer 时的恢复流程"></a>12. squash、mispredict、resteer 时的恢复流程</h2><h3 id="12-1-恢复顺序"><a href="#12-1-恢复顺序" class="headerlink" title="12.1 恢复顺序"></a>12.1 恢复顺序</h3><p>当前实现对恢复流程非常谨慎，核心顺序通常是：</p>
-<ol>
-<li>先回滚 FTQ 中尚未正式进入 BPU 主历史队列的历史。</li>
-<li>再清空 FTQ。</li>
-<li>再根据 decode&#x2F;commit&#x2F;fetch 反馈，对 BPU 正式历史进行 squash&#x2F;update。</li>
-<li>重设 BAC 的 PC，重新开始生成 FT。</li>
-</ol>
-<h3 id="12-2-squashBpuHistories-的作用"><a href="#12-2-squashBpuHistories-的作用" class="headerlink" title="12.2 squashBpuHistories 的作用"></a>12.2 squashBpuHistories 的作用</h3><p><code>BAC::squashBpuHistories()</code> 会：</p>
-<ul>
-<li>倒序遍历 FTQ。</li>
-<li>对每个仍带有 <code>bpuHistory</code> 的 FT，调用 <code>bpu-&gt;squashHistory(...)</code>。</li>
-<li>清空对应 <code>ft-&gt;bpuHistory</code>。</li>
-</ul>
-<p>之所以倒序，是因为这些 history 代表的是按预测路径逐步累积的 speculative history update，恢复时必须反向回滚。</p>
-<h3 id="12-3-FTQ-squash-的前提"><a href="#12-3-FTQ-squash-的前提" class="headerlink" title="12.3 FTQ::squash 的前提"></a>12.3 FTQ::squash 的前提</h3><p><code>FTQ::squash()</code> 内部对所有 FT 都断言：</p>
-<ul>
-<li><code>ft-&gt;bpuHistory == nullptr</code></li>
-</ul>
-<p>这意味着 <code>FTQ::squash()</code> 不是一个包含全部恢复语义的“一站式接口”，而只是一个在历史已清空前提下的队列清空动作。</p>
-<p>这进一步体现出当前实现的层次：</p>
-<ul>
-<li>历史恢复归 BAC&#x2F;BPU。</li>
-<li>队列清空归 FTQ。</li>
-</ul>
-<h3 id="12-4-不同来源的-squash"><a href="#12-4-不同来源的-squash" class="headerlink" title="12.4 不同来源的 squash"></a>12.4 不同来源的 squash</h3><p>当前实现会从多个来源触发恢复：</p>
-<ul>
-<li><p><code>commit</code></p>
-<ul>
-<li>例如真实 branch mispredict 在提交时被确认。</li>
-</ul>
-</li>
-<li><p><code>decode</code></p>
-<ul>
-<li>例如更早发现的控制流纠错。</li>
-</ul>
-</li>
-<li><p><code>fetch</code></p>
-<ul>
-<li>例如前端发现当前 FT 与实际 PC 不一致，或在消费 FT 过程中检测到异常。</li>
-</ul>
-</li>
-</ul>
-<p>不管来源是什么，BAC 先处理 FTQ 中的悬挂历史，再让 BPU 继续处理正式历史。</p>
-<hr>
-<h2 id="13-BTB-miss-与-surprise-branch-的处理"><a href="#13-BTB-miss-与-surprise-branch-的处理" class="headerlink" title="13. BTB miss 与 surprise branch 的处理"></a>13. BTB miss 与 surprise branch 的处理</h2><p>这是理解当前 FTQ 设计时不可绕过的一点。</p>
-<h3 id="13-1-BAC-对-branch-可见性的前提"><a href="#13-1-BAC-对-branch-可见性的前提" class="headerlink" title="13.1 BAC 对 branch 可见性的前提"></a>13.1 BAC 对 branch 可见性的前提</h3><p>在 decoupled frontend 里，BAC 依赖 <code>BTB</code> 来发现 branch。</p>
-<p>也就是说：</p>
-<ul>
-<li><code>BTB hit</code> 才能让 BAC 在生成 FT 时“看到”一个 branch。</li>
-</ul>
-<p>所以如果某个 branch：</p>
-<ul>
-<li>首次出现，</li>
-<li>从未被 taken，</li>
-<li>被 BTB 驱逐，</li>
-</ul>
-<p>那么 BAC 在生成 FT 时会把它当作普通顺序 instruction，根本不会提前预测它。</p>
-<h3 id="13-2-这类-branch-在何时被发现"><a href="#13-2-这类-branch-在何时被发现" class="headerlink" title="13.2 这类 branch 在何时被发现"></a>13.2 这类 branch 在何时被发现</h3><p>只有在后续 <code>Fetch</code> 真正把对应 bytes 送进 decoder，预译码出 control instruction 时，系统才意识到：</p>
-<blockquote>
-<p>这里其实有一个 BAC 当时没看到的 branch。</p>
 </blockquote>
-<h3 id="13-3-branchPlaceholder-的意义"><a href="#13-3-branchPlaceholder-的意义" class="headerlink" title="13.3 branchPlaceholder 的意义"></a>13.3 branchPlaceholder 的意义</h3><p>这就是 <code>branchPlaceholder()</code> 存在的根本原因。</p>
-<p>对于这类“漏检 branch”，系统仍然需要：</p>
-<ul>
-<li>给 predictor 一个可恢复的占位点，</li>
-<li>让后续 squash 能正确对齐历史，</li>
-<li>避免 predictor 的 speculative history 与真实前端路径彻底脱节。</li>
-</ul>
-<p>因此当前实现采用：</p>
-<ul>
-<li>先插入一个 placeholder history，</li>
-<li>默认按 not-taken 继续，</li>
-<li>后续若错，再由 decode&#x2F;commit squash 修正。</li>
-</ul>
-<p>这是一个典型的保守一致性设计。</p>
 <hr>
-<h2 id="14-复杂指令与多-branch-micro-op-的处理"><a href="#14-复杂指令与多-branch-micro-op-的处理" class="headerlink" title="14. 复杂指令与多 branch micro-op 的处理"></a>14. 复杂指令与多 branch micro-op 的处理</h2><p>当前 FTQ&#x2F;BPU 关系中最复杂的 corner case 是：</p>
-<ul>
-<li>一个 instruction 含多个 branch 语义，</li>
-<li>或 branch 不在最后一个 micro-op，</li>
-<li>或 BTB 中保存的 branch 类型与最终预译码出的真实类型不一致。</li>
+<h1 id="squash-mispredict-resteer-时的恢复流程"><a href="#squash-mispredict-resteer-时的恢复流程" class="headerlink" title="squash, mispredict, resteer 时的恢复流程"></a>squash, mispredict, resteer 时的恢复流程</h1><h2 id="恢复顺序"><a href="#恢复顺序" class="headerlink" title="恢复顺序"></a>恢复顺序</h2><ol>
+<li>先回滚 FTQ 中尚未正式进入 BPU 主历史队列的历史</li>
+<li>再清空 FTQ</li>
+<li>再根据 decode&#x2F;commit&#x2F;fetch 反馈，对 BPU 正式历史进行 squash&#x2F;update</li>
+<li>重设 BAC 的 PC，重新开始生成 FT</li>
+</ol>
+<h2 id="BAC-squashBpuHistories"><a href="#BAC-squashBpuHistories" class="headerlink" title="BAC::squashBpuHistories()"></a><code>BAC::squashBpuHistories()</code></h2><ul>
+<li>倒序遍历 FTQ</li>
+<li>对每个仍带有 <code>bpuHistory</code> 的 FT，调用 <code>bpu-&gt;squashHistory(...)</code></li>
+<li>清空对应 <code>ft-&gt;bpuHistory</code></li>
 </ul>
-<p>当前实现对这些情况采取的是非常保守的策略。</p>
-<h3 id="14-1-branch-type-mismatch"><a href="#14-1-branch-type-mismatch" class="headerlink" title="14.1 branch type mismatch"></a>14.1 branch type mismatch</h3><p>如果从 FT 上取下来的 history 所记录的 branch 类型，与当前预译码得到的 branch 类型不同：</p>
+<p>之所以倒序，是因为这些 history 代表的是按预测路径逐步累积的 speculative history update，恢复时必须反向回滚</p>
+<h2 id="不同来源的-squash"><a href="#不同来源的-squash" class="headerlink" title="不同来源的 squash"></a>不同来源的 squash</h2><p>会从多个来源触发恢复：</p>
 <ul>
-<li>认为当前预测历史不可信。</li>
-<li>先把 history 放回 FT。</li>
-<li>立刻回滚 FTQ 中所有悬挂历史。</li>
-<li>将 FTQ 置 <code>Locked</code>。</li>
+<li><code>commit</code>: 例如真实 branch mispredict 在提交时被确认</li>
+<li><code>decode</code>: 例如更早发现的控制流纠错</li>
+<li><code>fetch</code>: 例如前端发现当前 FT 与实际 PC 不一致，或在消费 FT 过程中检测到异常</li>
+</ul>
+<hr>
+<h1 id="复杂指令与多-branch-micro-op-的处理"><a href="#复杂指令与多-branch-micro-op-的处理" class="headerlink" title="复杂指令与多 branch micro-op 的处理"></a>复杂指令与多 branch micro-op 的处理</h1><p>最复杂的 corner case 是：</p>
+<ul>
+<li>一个 instruction 含多个 branch 语义</li>
+<li>或 branch 不在最后一个 micro-op</li>
+<li>或 BTB 中保存的 branch 类型与最终预译码出的真实类型不一致</li>
+</ul>
+<p>当前实现对这些情况采取的是非常保守的策略</p>
+<h2 id="branch-type-mismatch"><a href="#branch-type-mismatch" class="headerlink" title="branch type mismatch"></a>branch type mismatch</h2><p>如果从 FT 上取下来的 history 所记录的 branch 类型，与当前预译码得到的 branch 类型不同：</p>
+<ul>
+<li>认为当前预测历史不可信</li>
+<li>先把 history 放回 FT</li>
+<li>立刻回滚 FTQ 中所有悬挂历史</li>
+<li>将 FTQ 置 <code>Locked</code></li>
 </ul>
 <p>这样做的含义是：</p>
 <ul>
-<li>不再信任当前队列后续项。</li>
-<li>等当前复杂 instruction 处理完，再通过 resteer 重建前端状态。</li>
+<li>不再信任当前队列后续项</li>
+<li>等当前复杂 instruction 处理完，再通过 resteer 重建前端状态</li>
 </ul>
-<h3 id="14-2-多-branch-complex-instruction"><a href="#14-2-多-branch-complex-instruction" class="headerlink" title="14.2 多 branch complex instruction"></a>14.2 多 branch complex instruction</h3><p>对于包含多个 branch 的复杂 instruction，当前实现只在 BAC 生成 FT 时预测“第一个可见 branch”。</p>
+<h2 id="多-branch-complex-instruction"><a href="#多-branch-complex-instruction" class="headerlink" title="多 branch complex instruction"></a>多 branch complex instruction</h2><p>对于包含多个 branch 的复杂 instruction，当前实现只在 BAC 生成 FT 时预测“第一个可见 branch”</p>
 <p>如果在后续 predecode 发现：</p>
 <ul>
-<li>当前 micro-op 并不是最后一个，</li>
-<li>但已经没有可用 history，</li>
+<li>当前 micro-op 并不是最后一个</li>
+<li>但已经没有可用 history</li>
 </ul>
 <p>则会：</p>
 <ol>
-<li>先回滚 FTQ 中现有悬挂历史。</li>
-<li>将 FTQ <code>lock</code>。</li>
-<li>对当前 instruction 重新做一次新预测。</li>
+<li>先回滚 FTQ 中现有悬挂历史</li>
+<li>将 FTQ <code>lock</code></li>
+<li>对当前 instruction 重新做一次新预测</li>
 </ol>
-<p>这表明当前实现并不试图为复杂 instruction 提供完美的细粒度多 branch FT 建模，而是通过锁定和重建来保守处理。</p>
-<h3 id="14-3-这种策略的特点"><a href="#14-3-这种策略的特点" class="headerlink" title="14.3 这种策略的特点"></a>14.3 这种策略的特点</h3><p>优点：</p>
+<p>这表明当前实现并不试图为复杂 instruction 提供完美的细粒度多 branch FT 建模，而是通过锁定和重建来保守处理</p>
+<p>优点：</p>
 <ul>
-<li>实现简单。</li>
-<li>一致性风险较低。</li>
-<li>对少见复杂场景足够稳妥。</li>
+<li>实现简单</li>
+<li>一致性风险较低</li>
 </ul>
 <p>代价：</p>
 <ul>
-<li>会频繁走 <code>lock -&gt; squash/resteer</code> 路径。</li>
-<li>不适合用来精确模拟非常激进、能在复杂 macro-op 内做高精度 branch streaming 的工业前端。</li>
+<li>会频繁走 <code>lock -&gt; squash/resteer</code> 路径</li>
+<li>不适合用来精确模拟非常激进、能在复杂 macro-op 内做高精度 branch streaming 的工业前端</li>
 </ul>
-<hr>
-<h2 id="15-FTQ-的关键不变量"><a href="#15-FTQ-的关键不变量" class="headerlink" title="15. FTQ 的关键不变量"></a>15. FTQ 的关键不变量</h2><p>以下不变量对当前实现至关重要：</p>
-<h3 id="15-1-FTQ-头项在弹出前不能残留-bpuHistory"><a href="#15-1-FTQ-头项在弹出前不能残留-bpuHistory" class="headerlink" title="15.1 FTQ 头项在弹出前不能残留 bpuHistory"></a>15.1 FTQ 头项在弹出前不能残留 <code>bpuHistory</code></h3><p>这是最重要的不变量。</p>
-<p>若违反：</p>
-<ul>
-<li><code>popHead()</code> 直接失败。</li>
-<li>FTQ 置 <code>Invalid</code>。</li>
-<li>外层必须走恢复路径。</li>
-</ul>
-<h3 id="15-2-FTQ-清空前，所有悬挂历史必须已被回滚并清空"><a href="#15-2-FTQ-清空前，所有悬挂历史必须已被回滚并清空" class="headerlink" title="15.2 FTQ 清空前，所有悬挂历史必须已被回滚并清空"></a>15.2 FTQ 清空前，所有悬挂历史必须已被回滚并清空</h3><p><code>FTQ::squash()</code> 明确依赖这个前提。</p>
-<h3 id="15-3-当前-fetch-PC-必须落在当前-FT-范围内"><a href="#15-3-当前-fetch-PC-必须落在当前-FT-范围内" class="headerlink" title="15.3 当前 fetch PC 必须落在当前 FT 范围内"></a>15.3 当前 fetch PC 必须落在当前 FT 范围内</h3><p>若不在：</p>
-<ul>
-<li>说明 FTQ 与实际前端路径已经脱节。</li>
-<li>必须 resteer。</li>
-</ul>
-<h3 id="15-4-对于由-BAC-预先预测的-exit-branch，history-转入-BPU-主历史只能发生一次"><a href="#15-4-对于由-BAC-预先预测的-exit-branch，history-转入-BPU-主历史只能发生一次" class="headerlink" title="15.4 对于由 BAC 预先预测的 exit branch，history 转入 BPU 主历史只能发生一次"></a>15.4 对于由 BAC 预先预测的 exit branch，history 转入 BPU 主历史只能发生一次</h3><p>也就是说，<code>ft-&gt;bpuHistory</code> 的所有权转移路径必须明确：</p>
-<ul>
-<li>要么在 <code>updatePreDecode()</code> 中被迁走并插入 BPU。</li>
-<li>要么在 squash 路径中被回滚并清空。</li>
-</ul>
-<p>不能重复消费，也不能遗失。</p>
-<h3 id="15-5-BAC-生成-FT-时看到的-branch-集合，不等于最终-decoder-看到的-branch-集合"><a href="#15-5-BAC-生成-FT-时看到的-branch-集合，不等于最终-decoder-看到的-branch-集合" class="headerlink" title="15.5 BAC 生成 FT 时看到的 branch 集合，不等于最终 decoder 看到的 branch 集合"></a>15.5 BAC 生成 FT 时看到的 branch 集合，不等于最终 decoder 看到的 branch 集合</h3><p>这不是 bug，而是设计前提。</p>
-<p>因此 placeholder、lock、invalidate、resteer 都是必需机制，而不是补丁式残留。</p>
-<hr>
-<h2 id="16-当前实现的优点"><a href="#16-当前实现的优点" class="headerlink" title="16. 当前实现的优点"></a>16. 当前实现的优点</h2><h3 id="16-1-将预测生产与取指消费解耦"><a href="#16-1-将预测生产与取指消费解耦" class="headerlink" title="16.1 将预测生产与取指消费解耦"></a>16.1 将预测生产与取指消费解耦</h3><p>这是引入 FTQ 的根本收益：</p>
-<ul>
-<li><code>BAC</code> 可以提前规划 fetch path。</li>
-<li><code>Fetch</code> 可以更像一个按 target 执行的消费者。</li>
-</ul>
-<h3 id="16-2-缩短-fetch-关键路径"><a href="#16-2-缩短-fetch-关键路径" class="headerlink" title="16.2 缩短 fetch 关键路径"></a>16.2 缩短 fetch 关键路径</h3><p>在 decoupled 模式下，预测不必等到 <code>Fetch</code> 预译码到 branch 才发生。<br>从模型语义上，前端取指路径的生成被前移到了 BAC 阶段。</p>
-<h3 id="16-3-允许-BPU-驱动的更精确-prefetch-target-generation"><a href="#16-3-允许-BPU-驱动的更精确-prefetch-target-generation" class="headerlink" title="16.3 允许 BPU 驱动的更精确 prefetch &#x2F; target generation"></a>16.3 允许 BPU 驱动的更精确 prefetch &#x2F; target generation</h3><p>源码注释也明确提到，这种设计利于由 BPU 引导的 fetch target 级别 prefetch。</p>
-<h3 id="16-4-对异常场景采用安全优先的恢复策略"><a href="#16-4-对异常场景采用安全优先的恢复策略" class="headerlink" title="16.4 对异常场景采用安全优先的恢复策略"></a>16.4 对异常场景采用安全优先的恢复策略</h3><p>当前实现对不一致的容忍方式不是“尽量在线修复”，而是：</p>
-<ul>
-<li>发现问题，</li>
-<li>标记 invalid&#x2F;locked，</li>
-<li>走 squash&#x2F;resteer 恢复。</li>
-</ul>
-<p>这种策略对模拟器来说通常比激进在线修补更稳健。</p>
-<hr>
-<h2 id="17-当前实现的限制与代价"><a href="#17-当前实现的限制与代价" class="headerlink" title="17. 当前实现的限制与代价"></a>17. 当前实现的限制与代价</h2><h3 id="17-1-强依赖-BTB-的-branch-可见性"><a href="#17-1-强依赖-BTB-的-branch-可见性" class="headerlink" title="17.1 强依赖 BTB 的 branch 可见性"></a>17.1 强依赖 BTB 的 branch 可见性</h3><p>这是当前 decoupled 设计最本质的限制。</p>
-<p>若 branch 不在 <code>BTB</code> 中：</p>
-<ul>
-<li>BAC 根本看不到。</li>
-<li>只能在后续 predecode 补救。</li>
-</ul>
-<p>因此这份实现并不是“完全凭静态指令流就能独立构建 FT”的前端模型，而是“BTB-guided FT generation”。</p>
-<h3 id="17-2-FTQ-和-BPU-耦合较深"><a href="#17-2-FTQ-和-BPU-耦合较深" class="headerlink" title="17.2 FTQ 和 BPU 耦合较深"></a>17.2 FTQ 和 BPU 耦合较深</h3><p>虽然 FTQ 本身结构轻量，但整个机制依赖多个跨模块约定：</p>
-<ul>
-<li><code>ft-&gt;bpuHistory</code> 何时生成。</li>
-<li>何时迁移。</li>
-<li>何时回滚。</li>
-<li><code>popHead()</code> 前必须清空。</li>
-</ul>
-<p>这使得 BAC、FTQ、BPU 三者之间存在明显的隐式协作协议。</p>
-<h3 id="17-3-复杂指令场景依赖保守恢复"><a href="#17-3-复杂指令场景依赖保守恢复" class="headerlink" title="17.3 复杂指令场景依赖保守恢复"></a>17.3 复杂指令场景依赖保守恢复</h3><p>当前实现面对多 branch complex instruction 时，不是做精细建模，而是：</p>
-<ul>
-<li><code>lock</code></li>
-<li><code>invalidate</code></li>
-<li><code>squash</code></li>
-<li><code>resteer</code></li>
-</ul>
-<p>这对功能正确性是合理的，但对前端微结构时序细节的建模精度有限。</p>
-<h3 id="17-4-FTQ-不是完全自治的数据结构"><a href="#17-4-FTQ-不是完全自治的数据结构" class="headerlink" title="17.4 FTQ 不是完全自治的数据结构"></a>17.4 FTQ 不是完全自治的数据结构</h3><p>FTQ 并不知道如何处理 BPU 历史。</p>
-<p>它只是一个容器：</p>
-<ul>
-<li>外部先回滚 history，</li>
-<li>它再清队列。</li>
-</ul>
-<p>因此 FTQ 的接口语义本身并不闭合，必须结合 BAC&#x2F;BPU 才能正确使用。</p>
-<hr>
-<h2 id="18-与-TAGE-预测器的关系"><a href="#18-与-TAGE-预测器的关系" class="headerlink" title="18. 与 TAGE 预测器的关系"></a>18. 与 TAGE 预测器的关系</h2><p>当前仓库里的 TAGE 预测器本体没有显式多周期预测延迟建模，而是同步返回预测结果。</p>
-<p>放到 FTQ 设计中看，其关系是：</p>
-<ol>
-<li><code>BAC</code> 在生成 FT 时，通过 <code>BPredUnit::predict()</code> 调用条件分支预测器。</li>
-<li>如果条件预测器配置为 <code>TAGE</code>，则 <code>TAGE::lookup()</code> &#x2F; <code>TAGE::predict()</code> 会同步返回方向预测。</li>
-<li>BPU 再结合 <code>BTB</code>、<code>RAS</code>、indirect predictor 形成完整控制流预测。</li>
-<li>这些预测结果被封装进 <code>FetchTarget</code> 和 <code>bpuHistory</code>，进入 FTQ。</li>
-</ol>
-<p>因此：</p>
-<ul>
-<li><code>TAGE</code> 决定“方向预测结果”。</li>
-<li><code>BPredUnit</code> 决定“完整 branch prediction 结果”。</li>
-<li><code>FTQ</code> 承载“被 BAC 预先规划出来的 fetch path”。</li>
-</ul>
-<p>换句话说，FTQ 并不直接关心底层条件预测器是 <code>TAGE</code>、<code>gshare</code> 还是别的实现；它只消费由 <code>BPredUnit</code> 整合后的预测产物。</p>
-<hr>
-<h2 id="19-一条完整的数据流示例"><a href="#19-一条完整的数据流示例" class="headerlink" title="19. 一条完整的数据流示例"></a>19. 一条完整的数据流示例</h2><p>以下给出一条典型 decoupled frontend 路径，帮助理解各组件分工。</p>
-<h3 id="步骤-1：BAC-从-bacPC-开始扫描"><a href="#步骤-1：BAC-从-bacPC-开始扫描" class="headerlink" title="步骤 1：BAC 从 bacPC 开始扫描"></a>步骤 1：BAC 从 <code>bacPC</code> 开始扫描</h3><ul>
-<li>检查若干顺序地址是否在 <code>BTB</code> 中命中。</li>
-<li>找到一个 branch 地址。</li>
-</ul>
-<h3 id="步骤-2：BAC-调用-BPU-预测"><a href="#步骤-2：BAC-调用-BPU-预测" class="headerlink" title="步骤 2：BAC 调用 BPU 预测"></a>步骤 2：BAC 调用 BPU 预测</h3><ul>
-<li>从 BTB 中取出 <code>StaticInst</code>。</li>
-<li>调用 <code>bpu-&gt;predict(...)</code>。</li>
-<li>得到 taken&#x2F;not-taken 和 target。</li>
-<li>同时获得一份 <code>PredictorHistory</code>。</li>
-</ul>
-<h3 id="步骤-3：构建-FetchTarget"><a href="#步骤-3：构建-FetchTarget" class="headerlink" title="步骤 3：构建 FetchTarget"></a>步骤 3：构建 FetchTarget</h3><ul>
-<li>设置 <code>startPC/endPC/predPC/is_branch/taken</code>。</li>
-<li>把 <code>PredictorHistory</code> 挂到 <code>ft-&gt;bpuHistory</code>。</li>
-<li>将 <code>FetchTarget</code> 插入 FTQ。</li>
-</ul>
-<h3 id="步骤-4：Fetch-读取-FTQ-头项"><a href="#步骤-4：Fetch-读取-FTQ-头项" class="headerlink" title="步骤 4：Fetch 读取 FTQ 头项"></a>步骤 4：Fetch 读取 FTQ 头项</h3><ul>
-<li>检查当前 <code>fetch PC</code> 是否处于 FT 范围内。</li>
-<li>在 FT 范围内顺序取指并预译码。</li>
-</ul>
-<h3 id="步骤-5：Fetch-预译码到-branch"><a href="#步骤-5：Fetch-预译码到-branch" class="headerlink" title="步骤 5：Fetch 预译码到 branch"></a>步骤 5：Fetch 预译码到 branch</h3><ul>
-<li>调用 <code>bac-&gt;updatePC(...)</code>。</li>
-<li>在 decoupled 模式下进一步调用 <code>updatePreDecode(...)</code>。</li>
-</ul>
-<h3 id="步骤-6：history-从-FTQ-转回-BPU"><a href="#步骤-6：history-从-FTQ-转回-BPU" class="headerlink" title="步骤 6：history 从 FTQ 转回 BPU"></a>步骤 6：history 从 FTQ 转回 BPU</h3><ul>
-<li>若这是 FT 的 exit branch，则取下 <code>ft-&gt;bpuHistory</code>。</li>
-<li>补上真实 <code>seqNum</code>。</li>
-<li>调用 <code>bpu-&gt;insertPredictorHistory(...)</code>。</li>
-</ul>
-<h3 id="步骤-7：FetchTarget-完成消费"><a href="#步骤-7：FetchTarget-完成消费" class="headerlink" title="步骤 7：FetchTarget 完成消费"></a>步骤 7：FetchTarget 完成消费</h3><ul>
-<li>当 FT 的退出 instruction 被处理完后，当前 FT 被视为消费结束。</li>
-<li><code>Fetch</code> 调用 <code>ftq-&gt;popHead()</code>。</li>
-<li>若无残留 <code>bpuHistory</code>，则成功弹出。</li>
-</ul>
-<h3 id="步骤-8：后续训练与恢复"><a href="#步骤-8：后续训练与恢复" class="headerlink" title="步骤 8：后续训练与恢复"></a>步骤 8：后续训练与恢复</h3><ul>
-<li>若预测正确，commit 时 <code>bpu-&gt;update(...)</code> 正常训练。</li>
-<li>若预测错误，decode&#x2F;commit&#x2F;fetch 任何一方都可能触发 squash。</li>
-<li>BAC 先回滚 FTQ 中尚未入账的历史，再清空 FTQ，重建路径。</li>
-</ul>
-<hr>
-<h2 id="20-审查结论"><a href="#20-审查结论" class="headerlink" title="20. 审查结论"></a>20. 审查结论</h2><p>基于当前源码，可以得到如下结论：</p>
-<h3 id="20-1-FTQ-的角色非常明确"><a href="#20-1-FTQ-的角色非常明确" class="headerlink" title="20.1 FTQ 的角色非常明确"></a>20.1 FTQ 的角色非常明确</h3><p>FTQ 在当前实现中是：</p>
-<ul>
-<li><code>BAC</code> 与 <code>Fetch</code> 之间的 <code>FetchTarget</code> 队列；</li>
-<li>同时也是尚未正式进入 BPU 主历史体系的 <code>PredictorHistory</code> 的临时载体。</li>
-</ul>
-<p>它不是 predictor 本体，也不是 predictor 训练队列。</p>
-<h3 id="20-2-当前实现逻辑上是自洽的"><a href="#20-2-当前实现逻辑上是自洽的" class="headerlink" title="20.2 当前实现逻辑上是自洽的"></a>20.2 当前实现逻辑上是自洽的</h3><p>从源码逻辑看，<code>FTQ</code>、<code>BAC</code>、<code>Fetch</code>、<code>BPU</code> 之间的分工和恢复路径是闭合的：</p>
-<ul>
-<li>预测先发生；</li>
-<li>历史先挂 FT；</li>
-<li>预译码后正式入账；</li>
-<li>出错时先回滚 FTQ 悬挂历史，再清队列，再修正正式历史。</li>
-</ul>
-<p>整体设计是自洽的。</p>
-<h3 id="20-3-这是一种“保守而稳健”的-decoupled-frontend-建模"><a href="#20-3-这是一种“保守而稳健”的-decoupled-frontend-建模" class="headerlink" title="20.3 这是一种“保守而稳健”的 decoupled frontend 建模"></a>20.3 这是一种“保守而稳健”的 decoupled frontend 建模</h3><p>它的主要特征是：</p>
-<ul>
-<li>使用 <code>BTB-guided</code> 的 fetch target 生成；</li>
-<li>允许 branch 漏检并通过 placeholder 补救；</li>
-<li>对复杂 corner case 优先选择 <code>lock/invalidate/squash/resteer</code>；</li>
-<li>把一致性置于建模激进度之前。</li>
-</ul>
-<h3 id="20-4-最大限制在于-BTB-可见性和复杂指令精细建模"><a href="#20-4-最大限制在于-BTB-可见性和复杂指令精细建模" class="headerlink" title="20.4 最大限制在于 BTB 可见性和复杂指令精细建模"></a>20.4 最大限制在于 BTB 可见性和复杂指令精细建模</h3><p>这套实现适合模拟一种：</p>
-<ul>
-<li>有 decoupled branch prediction，</li>
-<li>但仍然高度依赖 BTB 发现 branch，</li>
-<li>对复杂 branch packing 采取保守恢复策略</li>
-</ul>
-<p>的前端。</p>
-<p>如果未来希望建模更激进的工业级前端，可能需要进一步增强：</p>
-<ul>
-<li>非 BTB 依赖的 branch discoverability；</li>
-<li>complex instruction &#x2F; multi-branch micro-op 的细粒度建模；</li>
-<li>FTQ 与 predictor history 的所有权语义封装。</li>
-</ul>
-<hr>
-<h2 id="21-简要术语表"><a href="#21-简要术语表" class="headerlink" title="21. 简要术语表"></a>21. 简要术语表</h2><ul>
-<li><p><code>BAC</code></p>
-<ul>
-<li>Branch Address Calculation stage，当前实现里同时承担 decoupled prediction feeding 与 fetch-side PC update 的协调职责。</li>
-</ul>
-</li>
-<li><p><code>BPU</code></p>
-<ul>
-<li>Branch Prediction Unit，即 <code>BPredUnit</code>。</li>
-</ul>
-</li>
-<li><p><code>FT</code></p>
-<ul>
-<li>Fetch Target。</li>
-</ul>
-</li>
-<li><p><code>FTQ</code></p>
-<ul>
-<li>Fetch Target Queue。</li>
-</ul>
-</li>
-<li><p><code>PredictorHistory</code></p>
-<ul>
-<li>BPU 为单条 branch 预测维护的历史对象，支持后续 update&#x2F;squash&#x2F;recovery。</li>
-</ul>
-</li>
-<li><p><code>BTB</code></p>
-<ul>
-<li>Branch Target Buffer，当前 decoupled FT 生成的 branch 可见性基础。</li>
-</ul>
-</li>
-<li><p><code>Placeholder</code></p>
-<ul>
-<li>为 BAC 漏检 branch 构造的占位历史，用于后续恢复和纠偏。</li>
-</ul>
-</li>
-<li><p><code>Resteer</code></p>
-<ul>
-<li>前端发现 FTQ 路径与实际取指路径不一致后，重定向 BAC&#x2F;fetch 路径并恢复状态的机制。</li>
-</ul>
-</li>
-</ul>
-</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2026/04/08/Arch/simulator/gem5/frontend/ftq/">https://xixi-shredp.github.io/2026/04/08/Arch/simulator/gem5/frontend/ftq/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/04/08/Arch/simulator/xs-gem5/frontend/" title="xs-gem5: Frontend"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">xs-gem5: Frontend</div></div><div class="info-2"><div class="info-item-1">xs-gem5 前端实现简介</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">79</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">46</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%89%8D%E7%AB%AF%E7%BB%84%E7%BB%87%E6%96%B9%E5%BC%8F"><span class="toc-number">1.</span> <span class="toc-text">前端组织方式</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#BAC-%E8%A2%AB%E6%8B%86%E6%88%90%E4%B8%A4%E9%83%A8%E5%88%86"><span class="toc-number">1.1.</span> <span class="toc-text">BAC 被拆成两部分</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Coupled-frontend-%E4%B8%8E-decoupled-frontend-%E7%9A%84%E5%B7%AE%E5%BC%82"><span class="toc-number">1.2.</span> <span class="toc-text">Coupled frontend 与 decoupled frontend 的差异</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Coupled-frontend"><span class="toc-number">1.2.1.</span> <span class="toc-text">Coupled frontend</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Decoupled-frontend"><span class="toc-number">1.2.2.</span> <span class="toc-text">Decoupled frontend</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-FetchTarget-%E7%9A%84%E6%95%B0%E6%8D%AE%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.3.</span> <span class="toc-text">5. FetchTarget 的数据模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-FetchTarget-%E7%9A%84%E5%90%AB%E4%B9%89"><span class="toc-number">1.3.1.</span> <span class="toc-text">5.1 FetchTarget 的含义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-FetchTarget-%E7%9A%84%E5%85%B3%E9%94%AE%E5%AD%97%E6%AE%B5"><span class="toc-number">1.3.2.</span> <span class="toc-text">5.2 FetchTarget 的关键字段</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E4%B8%BA%E4%BB%80%E4%B9%88-bpuHistory-%E9%9C%80%E8%A6%81%E6%8C%82%E5%9C%A8-FetchTarget-%E4%B8%8A"><span class="toc-number">1.3.3.</span> <span class="toc-text">5.3 为什么 bpuHistory 需要挂在 FetchTarget 上</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-FTQ-%E7%9A%84%E8%81%8C%E8%B4%A3%E4%B8%8E%E7%8A%B6%E6%80%81"><span class="toc-number">1.4.</span> <span class="toc-text">6. FTQ 的职责与状态</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-FTQ-%E7%9A%84%E5%9F%BA%E6%9C%AC%E8%81%8C%E8%B4%A3"><span class="toc-number">1.4.1.</span> <span class="toc-text">6.1 FTQ 的基本职责</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-FTQ-%E7%9A%84%E7%8A%B6%E6%80%81"><span class="toc-number">1.4.2.</span> <span class="toc-text">6.2 FTQ 的状态</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-FTQ-%E7%9A%84%E5%87%A0%E4%B8%AA%E5%85%B3%E9%94%AE%E6%8E%A5%E5%8F%A3"><span class="toc-number">1.4.3.</span> <span class="toc-text">6.3 FTQ 的几个关键接口</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#insert"><span class="toc-number">1.4.3.1.</span> <span class="toc-text">insert()</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#readHead"><span class="toc-number">1.4.3.2.</span> <span class="toc-text">readHead()</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#isHeadReady"><span class="toc-number">1.4.3.3.</span> <span class="toc-text">isHeadReady()</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#popHead"><span class="toc-number">1.4.3.4.</span> <span class="toc-text">popHead()</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#squash"><span class="toc-number">1.4.3.5.</span> <span class="toc-text">squash()</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-BAC-%E5%A6%82%E4%BD%95%E7%94%9F%E6%88%90-FetchTarget-%E5%B9%B6%E5%A1%AB%E5%85%85-FTQ"><span class="toc-number">1.5.</span> <span class="toc-text">7. BAC 如何生成 FetchTarget 并填充 FTQ</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E8%BE%93%E5%85%A5%EF%BC%9ABAC-%E7%BB%B4%E6%8A%A4%E8%87%AA%E5%B7%B1%E7%9A%84%E5%89%8D%E7%AB%AF-PC"><span class="toc-number">1.5.1.</span> <span class="toc-text">7.1 输入：BAC 维护自己的前端 PC</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E6%90%9C%E7%B4%A2-branch-%E7%9A%84%E6%96%B9%E5%BC%8F"><span class="toc-number">1.5.2.</span> <span class="toc-text">7.2 搜索 branch 的方式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E6%89%BE%E5%88%B0-branch-%E5%90%8E%E5%A6%82%E4%BD%95%E9%A2%84%E6%B5%8B"><span class="toc-number">1.5.3.</span> <span class="toc-text">7.3 找到 branch 后如何预测</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-4-%E5%AE%8C%E6%88%90-FetchTarget"><span class="toc-number">1.5.4.</span> <span class="toc-text">7.4 完成 FetchTarget</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-5-%E4%B8%8B%E4%B8%80-FT-%E7%9A%84%E8%B5%B7%E7%82%B9%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A"><span class="toc-number">1.5.5.</span> <span class="toc-text">7.5 下一 FT 的起点如何确定</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-Fetch-%E5%A6%82%E4%BD%95%E6%B6%88%E8%B4%B9-FTQ"><span class="toc-number">1.6.</span> <span class="toc-text">8. Fetch 如何消费 FTQ</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-Fetch-%E5%8F%AA%E5%A4%84%E7%90%86%E5%A4%B4%E9%83%A8-FT"><span class="toc-number">1.6.1.</span> <span class="toc-text">8.1 Fetch 只处理头部 FT</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-%E5%BD%93%E5%89%8D-PC-%E5%BF%85%E9%A1%BB%E8%90%BD%E5%9C%A8%E5%BD%93%E5%89%8D-FT-%E7%9A%84%E8%8C%83%E5%9B%B4%E5%86%85"><span class="toc-number">1.6.2.</span> <span class="toc-text">8.2 当前 PC 必须落在当前 FT 的范围内</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-3-Fetch-%E5%9C%A8-FT-%E8%8C%83%E5%9B%B4%E5%86%85%E9%A1%BA%E5%BA%8F%E5%8F%96%E6%8C%87"><span class="toc-number">1.6.3.</span> <span class="toc-text">8.3 Fetch 在 FT 范围内顺序取指</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#9-Fetch-%E9%A2%84%E8%AF%91%E7%A0%81%E5%88%B0-branch-%E5%90%8E%EF%BC%8C%E5%8E%86%E5%8F%B2%E5%A6%82%E4%BD%95%E4%BB%8E-FTQ-%E8%BD%AC%E5%9B%9E-BPU"><span class="toc-number">1.7.</span> <span class="toc-text">9. Fetch 预译码到 branch 后，历史如何从 FTQ 转回 BPU</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#9-1-%E9%A2%84%E8%AF%91%E7%A0%81%E5%88%B0-control-instruction-%E6%97%B6"><span class="toc-number">1.7.1.</span> <span class="toc-text">9.1 预译码到 control instruction 时</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-2-updatePreDecode-%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8A%A8%E4%BD%9C"><span class="toc-number">1.7.2.</span> <span class="toc-text">9.2 updatePreDecode 的基本动作</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%83%85%E5%86%B5-A%EF%BC%9A%E8%BF%99%E6%98%AF%E5%BD%93%E5%89%8D-FT-%E7%9A%84-exit-branch%EF%BC%8C%E4%B8%94-FT-%E4%B8%8A%E6%9C%89-bpuHistory"><span class="toc-number">1.7.2.1.</span> <span class="toc-text">情况 A：这是当前 FT 的 exit branch，且 FT 上有 bpuHistory</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%83%85%E5%86%B5-B%EF%BC%9AFT-%E4%B8%8A%E6%B2%A1%E6%9C%89%E5%AF%B9%E5%BA%94-history"><span class="toc-number">1.7.2.2.</span> <span class="toc-text">情况 B：FT 上没有对应 history</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-3-%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E8%83%BD%E5%9C%A8-BAC-%E9%A2%84%E6%B5%8B%E6%97%B6%E7%9B%B4%E6%8E%A5%E6%8F%92%E5%85%A5-BPU-%E4%B8%BB%E5%8E%86%E5%8F%B2"><span class="toc-number">1.7.3.</span> <span class="toc-text">9.3 为什么不能在 BAC 预测时直接插入 BPU 主历史</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#10-FetchTarget-%E4%BD%95%E6%97%B6%E8%A2%AB%E5%BC%B9%E5%87%BA"><span class="toc-number">1.8.</span> <span class="toc-text">10. FetchTarget 何时被弹出</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#10-1-%E4%B8%80%E4%B8%AA-FT-%E4%B8%8D%E4%B8%80%E5%AE%9A%E4%BB%A5-branch-%E7%BB%93%E6%9D%9F"><span class="toc-number">1.8.1.</span> <span class="toc-text">10.1 一个 FT 不一定以 branch 结束</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-2-%E4%BD%95%E6%97%B6%E8%AE%A4%E4%B8%BA%E5%BD%93%E5%89%8D-FT-%E5%B7%B2%E8%A2%AB%E6%B6%88%E8%B4%B9%E5%AE%8C%E6%88%90"><span class="toc-number">1.8.2.</span> <span class="toc-text">10.2 何时认为当前 FT 已被消费完成</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-3-popHead-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%8F%AF%E8%83%BD%E5%A4%B1%E8%B4%A5"><span class="toc-number">1.8.3.</span> <span class="toc-text">10.3 popHead 为什么可能失败</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#11-FTQ-%E4%B8%8E-BPU-%E7%9A%84%E7%9C%9F%E5%AE%9E%E8%BE%B9%E7%95%8C"><span class="toc-number">1.9.</span> <span class="toc-text">11. FTQ 与 BPU 的真实边界</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#11-1-BPU-%E8%B4%9F%E8%B4%A3%E4%BB%80%E4%B9%88"><span class="toc-number">1.9.1.</span> <span class="toc-text">11.1 BPU 负责什么</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#11-2-FTQ-%E8%B4%9F%E8%B4%A3%E4%BB%80%E4%B9%88"><span class="toc-number">1.9.2.</span> <span class="toc-text">11.2 FTQ 负责什么</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#11-3-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E6%9C%89%E8%BF%99%E7%A7%8D%E8%BE%B9%E7%95%8C"><span class="toc-number">1.9.3.</span> <span class="toc-text">11.3 为什么要有这种边界</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#12-squash%E3%80%81mispredict%E3%80%81resteer-%E6%97%B6%E7%9A%84%E6%81%A2%E5%A4%8D%E6%B5%81%E7%A8%8B"><span class="toc-number">1.10.</span> <span class="toc-text">12. squash、mispredict、resteer 时的恢复流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#12-1-%E6%81%A2%E5%A4%8D%E9%A1%BA%E5%BA%8F"><span class="toc-number">1.10.1.</span> <span class="toc-text">12.1 恢复顺序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#12-2-squashBpuHistories-%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="toc-number">1.10.2.</span> <span class="toc-text">12.2 squashBpuHistories 的作用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#12-3-FTQ-squash-%E7%9A%84%E5%89%8D%E6%8F%90"><span class="toc-number">1.10.3.</span> <span class="toc-text">12.3 FTQ::squash 的前提</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#12-4-%E4%B8%8D%E5%90%8C%E6%9D%A5%E6%BA%90%E7%9A%84-squash"><span class="toc-number">1.10.4.</span> <span class="toc-text">12.4 不同来源的 squash</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#13-BTB-miss-%E4%B8%8E-surprise-branch-%E7%9A%84%E5%A4%84%E7%90%86"><span class="toc-number">1.11.</span> <span class="toc-text">13. BTB miss 与 surprise branch 的处理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#13-1-BAC-%E5%AF%B9-branch-%E5%8F%AF%E8%A7%81%E6%80%A7%E7%9A%84%E5%89%8D%E6%8F%90"><span class="toc-number">1.11.1.</span> <span class="toc-text">13.1 BAC 对 branch 可见性的前提</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#13-2-%E8%BF%99%E7%B1%BB-branch-%E5%9C%A8%E4%BD%95%E6%97%B6%E8%A2%AB%E5%8F%91%E7%8E%B0"><span class="toc-number">1.11.2.</span> <span class="toc-text">13.2 这类 branch 在何时被发现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#13-3-branchPlaceholder-%E7%9A%84%E6%84%8F%E4%B9%89"><span class="toc-number">1.11.3.</span> <span class="toc-text">13.3 branchPlaceholder 的意义</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#14-%E5%A4%8D%E6%9D%82%E6%8C%87%E4%BB%A4%E4%B8%8E%E5%A4%9A-branch-micro-op-%E7%9A%84%E5%A4%84%E7%90%86"><span class="toc-number">1.12.</span> <span class="toc-text">14. 复杂指令与多 branch micro-op 的处理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#14-1-branch-type-mismatch"><span class="toc-number">1.12.1.</span> <span class="toc-text">14.1 branch type mismatch</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#14-2-%E5%A4%9A-branch-complex-instruction"><span class="toc-number">1.12.2.</span> <span class="toc-text">14.2 多 branch complex instruction</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#14-3-%E8%BF%99%E7%A7%8D%E7%AD%96%E7%95%A5%E7%9A%84%E7%89%B9%E7%82%B9"><span class="toc-number">1.12.3.</span> <span class="toc-text">14.3 这种策略的特点</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#15-FTQ-%E7%9A%84%E5%85%B3%E9%94%AE%E4%B8%8D%E5%8F%98%E9%87%8F"><span class="toc-number">1.13.</span> <span class="toc-text">15. FTQ 的关键不变量</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#15-1-FTQ-%E5%A4%B4%E9%A1%B9%E5%9C%A8%E5%BC%B9%E5%87%BA%E5%89%8D%E4%B8%8D%E8%83%BD%E6%AE%8B%E7%95%99-bpuHistory"><span class="toc-number">1.13.1.</span> <span class="toc-text">15.1 FTQ 头项在弹出前不能残留 bpuHistory</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#15-2-FTQ-%E6%B8%85%E7%A9%BA%E5%89%8D%EF%BC%8C%E6%89%80%E6%9C%89%E6%82%AC%E6%8C%82%E5%8E%86%E5%8F%B2%E5%BF%85%E9%A1%BB%E5%B7%B2%E8%A2%AB%E5%9B%9E%E6%BB%9A%E5%B9%B6%E6%B8%85%E7%A9%BA"><span class="toc-number">1.13.2.</span> <span class="toc-text">15.2 FTQ 清空前，所有悬挂历史必须已被回滚并清空</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#15-3-%E5%BD%93%E5%89%8D-fetch-PC-%E5%BF%85%E9%A1%BB%E8%90%BD%E5%9C%A8%E5%BD%93%E5%89%8D-FT-%E8%8C%83%E5%9B%B4%E5%86%85"><span class="toc-number">1.13.3.</span> <span class="toc-text">15.3 当前 fetch PC 必须落在当前 FT 范围内</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#15-4-%E5%AF%B9%E4%BA%8E%E7%94%B1-BAC-%E9%A2%84%E5%85%88%E9%A2%84%E6%B5%8B%E7%9A%84-exit-branch%EF%BC%8Chistory-%E8%BD%AC%E5%85%A5-BPU-%E4%B8%BB%E5%8E%86%E5%8F%B2%E5%8F%AA%E8%83%BD%E5%8F%91%E7%94%9F%E4%B8%80%E6%AC%A1"><span class="toc-number">1.13.4.</span> <span class="toc-text">15.4 对于由 BAC 预先预测的 exit branch，history 转入 BPU 主历史只能发生一次</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#15-5-BAC-%E7%94%9F%E6%88%90-FT-%E6%97%B6%E7%9C%8B%E5%88%B0%E7%9A%84-branch-%E9%9B%86%E5%90%88%EF%BC%8C%E4%B8%8D%E7%AD%89%E4%BA%8E%E6%9C%80%E7%BB%88-decoder-%E7%9C%8B%E5%88%B0%E7%9A%84-branch-%E9%9B%86%E5%90%88"><span class="toc-number">1.13.5.</span> <span class="toc-text">15.5 BAC 生成 FT 时看到的 branch 集合，不等于最终 decoder 看到的 branch 集合</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#16-%E5%BD%93%E5%89%8D%E5%AE%9E%E7%8E%B0%E7%9A%84%E4%BC%98%E7%82%B9"><span class="toc-number">1.14.</span> <span class="toc-text">16. 当前实现的优点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#16-1-%E5%B0%86%E9%A2%84%E6%B5%8B%E7%94%9F%E4%BA%A7%E4%B8%8E%E5%8F%96%E6%8C%87%E6%B6%88%E8%B4%B9%E8%A7%A3%E8%80%A6"><span class="toc-number">1.14.1.</span> <span class="toc-text">16.1 将预测生产与取指消费解耦</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#16-2-%E7%BC%A9%E7%9F%AD-fetch-%E5%85%B3%E9%94%AE%E8%B7%AF%E5%BE%84"><span class="toc-number">1.14.2.</span> <span class="toc-text">16.2 缩短 fetch 关键路径</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#16-3-%E5%85%81%E8%AE%B8-BPU-%E9%A9%B1%E5%8A%A8%E7%9A%84%E6%9B%B4%E7%B2%BE%E7%A1%AE-prefetch-target-generation"><span class="toc-number">1.14.3.</span> <span class="toc-text">16.3 允许 BPU 驱动的更精确 prefetch &#x2F; target generation</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#16-4-%E5%AF%B9%E5%BC%82%E5%B8%B8%E5%9C%BA%E6%99%AF%E9%87%87%E7%94%A8%E5%AE%89%E5%85%A8%E4%BC%98%E5%85%88%E7%9A%84%E6%81%A2%E5%A4%8D%E7%AD%96%E7%95%A5"><span class="toc-number">1.14.4.</span> <span class="toc-text">16.4 对异常场景采用安全优先的恢复策略</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#17-%E5%BD%93%E5%89%8D%E5%AE%9E%E7%8E%B0%E7%9A%84%E9%99%90%E5%88%B6%E4%B8%8E%E4%BB%A3%E4%BB%B7"><span class="toc-number">1.15.</span> <span class="toc-text">17. 当前实现的限制与代价</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#17-1-%E5%BC%BA%E4%BE%9D%E8%B5%96-BTB-%E7%9A%84-branch-%E5%8F%AF%E8%A7%81%E6%80%A7"><span class="toc-number">1.15.1.</span> <span class="toc-text">17.1 强依赖 BTB 的 branch 可见性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#17-2-FTQ-%E5%92%8C-BPU-%E8%80%A6%E5%90%88%E8%BE%83%E6%B7%B1"><span class="toc-number">1.15.2.</span> <span class="toc-text">17.2 FTQ 和 BPU 耦合较深</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#17-3-%E5%A4%8D%E6%9D%82%E6%8C%87%E4%BB%A4%E5%9C%BA%E6%99%AF%E4%BE%9D%E8%B5%96%E4%BF%9D%E5%AE%88%E6%81%A2%E5%A4%8D"><span class="toc-number">1.15.3.</span> <span class="toc-text">17.3 复杂指令场景依赖保守恢复</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#17-4-FTQ-%E4%B8%8D%E6%98%AF%E5%AE%8C%E5%85%A8%E8%87%AA%E6%B2%BB%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-number">1.15.4.</span> <span class="toc-text">17.4 FTQ 不是完全自治的数据结构</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#18-%E4%B8%8E-TAGE-%E9%A2%84%E6%B5%8B%E5%99%A8%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-number">1.16.</span> <span class="toc-text">18. 与 TAGE 预测器的关系</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#19-%E4%B8%80%E6%9D%A1%E5%AE%8C%E6%95%B4%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81%E7%A4%BA%E4%BE%8B"><span class="toc-number">1.17.</span> <span class="toc-text">19. 一条完整的数据流示例</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-1%EF%BC%9ABAC-%E4%BB%8E-bacPC-%E5%BC%80%E5%A7%8B%E6%89%AB%E6%8F%8F"><span class="toc-number">1.17.1.</span> <span class="toc-text">步骤 1：BAC 从 bacPC 开始扫描</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-2%EF%BC%9ABAC-%E8%B0%83%E7%94%A8-BPU-%E9%A2%84%E6%B5%8B"><span class="toc-number">1.17.2.</span> <span class="toc-text">步骤 2：BAC 调用 BPU 预测</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-3%EF%BC%9A%E6%9E%84%E5%BB%BA-FetchTarget"><span class="toc-number">1.17.3.</span> <span class="toc-text">步骤 3：构建 FetchTarget</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-4%EF%BC%9AFetch-%E8%AF%BB%E5%8F%96-FTQ-%E5%A4%B4%E9%A1%B9"><span class="toc-number">1.17.4.</span> <span class="toc-text">步骤 4：Fetch 读取 FTQ 头项</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-5%EF%BC%9AFetch-%E9%A2%84%E8%AF%91%E7%A0%81%E5%88%B0-branch"><span class="toc-number">1.17.5.</span> <span class="toc-text">步骤 5：Fetch 预译码到 branch</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-6%EF%BC%9Ahistory-%E4%BB%8E-FTQ-%E8%BD%AC%E5%9B%9E-BPU"><span class="toc-number">1.17.6.</span> <span class="toc-text">步骤 6：history 从 FTQ 转回 BPU</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-7%EF%BC%9AFetchTarget-%E5%AE%8C%E6%88%90%E6%B6%88%E8%B4%B9"><span class="toc-number">1.17.7.</span> <span class="toc-text">步骤 7：FetchTarget 完成消费</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-8%EF%BC%9A%E5%90%8E%E7%BB%AD%E8%AE%AD%E7%BB%83%E4%B8%8E%E6%81%A2%E5%A4%8D"><span class="toc-number">1.17.8.</span> <span class="toc-text">步骤 8：后续训练与恢复</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#20-%E5%AE%A1%E6%9F%A5%E7%BB%93%E8%AE%BA"><span class="toc-number">1.18.</span> <span class="toc-text">20. 审查结论</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#20-1-FTQ-%E7%9A%84%E8%A7%92%E8%89%B2%E9%9D%9E%E5%B8%B8%E6%98%8E%E7%A1%AE"><span class="toc-number">1.18.1.</span> <span class="toc-text">20.1 FTQ 的角色非常明确</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#20-2-%E5%BD%93%E5%89%8D%E5%AE%9E%E7%8E%B0%E9%80%BB%E8%BE%91%E4%B8%8A%E6%98%AF%E8%87%AA%E6%B4%BD%E7%9A%84"><span class="toc-number">1.18.2.</span> <span class="toc-text">20.2 当前实现逻辑上是自洽的</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#20-3-%E8%BF%99%E6%98%AF%E4%B8%80%E7%A7%8D%E2%80%9C%E4%BF%9D%E5%AE%88%E8%80%8C%E7%A8%B3%E5%81%A5%E2%80%9D%E7%9A%84-decoupled-frontend-%E5%BB%BA%E6%A8%A1"><span class="toc-number">1.18.3.</span> <span class="toc-text">20.3 这是一种“保守而稳健”的 decoupled frontend 建模</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#20-4-%E6%9C%80%E5%A4%A7%E9%99%90%E5%88%B6%E5%9C%A8%E4%BA%8E-BTB-%E5%8F%AF%E8%A7%81%E6%80%A7%E5%92%8C%E5%A4%8D%E6%9D%82%E6%8C%87%E4%BB%A4%E7%B2%BE%E7%BB%86%E5%BB%BA%E6%A8%A1"><span class="toc-number">1.18.4.</span> <span class="toc-text">20.4 最大限制在于 BTB 可见性和复杂指令精细建模</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#21-%E7%AE%80%E8%A6%81%E6%9C%AF%E8%AF%AD%E8%A1%A8"><span class="toc-number">1.19.</span> <span class="toc-text">21. 简要术语表</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/08/Arch/simulator/gem5/frontend/ftq/" title="Gem5: Fetch Target Queue(FTQ)">Gem5: Fetch Target Queue(FTQ)</a><time datetime="2026-04-08T09:26:32.000Z" title="Created 2026-04-08 17:26:32">2026-04-08</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/08/Arch/simulator/xs-gem5/frontend/" title="xs-gem5: Frontend">xs-gem5: Frontend</a><time datetime="2026-04-08T04:22:41.000Z" title="Created 2026-04-08 12:22:41">2026-04-08</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/06/Arch/cache/replacement/fine/classification-based/" title="Classification-Based Cache Replacement Policies">Classification-Based Cache Replacement Policies</a><time datetime="2026-04-06T09:09:08.000Z" title="Created 2026-04-06 17:09:08">2026-04-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/06/Arch/cache/replacement/fine/reuse-dist-pred-policies/" title="Reuse Distance Prediction Replacement Policies">Reuse Distance Prediction Replacement Policies</a><time datetime="2026-04-06T03:40:01.000Z" title="Created 2026-04-06 11:40:01">2026-04-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/04/Arch/bpu/btb/directed_btb/" title="New Idea: DirectedBTB?">New Idea: DirectedBTB?</a><time datetime="2026-04-04T13:55:54.000Z" title="Created 2026-04-04 21:55:54">2026-04-04</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2026/04/08/Arch/simulator/gem5/frontend/ftq/">https://xixi-shredp.github.io/2026/04/08/Arch/simulator/gem5/frontend/ftq/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/04/12/Arch/cache/prefetch/multi-pf/IPCP/" title="IPCP(2020 ISCA): Bouquet of Instruction Pointers: Instruction Pointer Classifier-based Spatial Hardware Prefetching"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">IPCP(2020 ISCA): Bouquet of Instruction Pointers: Instruction Pointer Classifier-based Spatial Hardware Prefetching</div></div><div class="info-2"><div class="info-item-1">2020 ISCA IPCP 论文解读：多预取器集成</div></div></div></a><a class="pagination-related" href="/2026/04/08/Arch/simulator/xs-gem5/frontend/" title="xs-gem5: Frontend"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">xs-gem5: Frontend</div></div><div class="info-2"><div class="info-item-1">xs-gem5 前端实现简介</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">81</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">47</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%89%8D%E7%AB%AF%E7%BB%84%E7%BB%87%E6%96%B9%E5%BC%8F"><span class="toc-number">1.</span> <span class="toc-text">前端组织方式</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#BAC-%E8%A2%AB%E6%8B%86%E6%88%90%E4%B8%A4%E9%83%A8%E5%88%86"><span class="toc-number">1.1.</span> <span class="toc-text">BAC 被拆成两部分</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Coupled-frontend-%E4%B8%8E-decoupled-frontend-%E7%9A%84%E5%B7%AE%E5%BC%82"><span class="toc-number">1.2.</span> <span class="toc-text">Coupled frontend 与 decoupled frontend 的差异</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Coupled-frontend"><span class="toc-number">1.2.1.</span> <span class="toc-text">Coupled frontend</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Decoupled-frontend"><span class="toc-number">1.2.2.</span> <span class="toc-text">Decoupled frontend</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#FTQ"><span class="toc-number">2.</span> <span class="toc-text">FTQ</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#FetchTarget"><span class="toc-number">2.1.</span> <span class="toc-text">FetchTarget</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FTQ-%E4%BB%BB%E5%8A%A1"><span class="toc-number">2.2.</span> <span class="toc-text">FTQ 任务</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FTQ-API"><span class="toc-number">2.3.</span> <span class="toc-text">FTQ API</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FTQ-%E5%A1%AB%E5%85%85%EF%BC%9ABAC-%E7%94%9F%E6%88%90-FetchTarget"><span class="toc-number">2.4.</span> <span class="toc-text">FTQ 填充：BAC 生成 FetchTarget</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BE%93%E5%85%A5%EF%BC%9ABAC-%E7%BB%B4%E6%8A%A4%E8%87%AA%E5%B7%B1%E7%9A%84%E5%89%8D%E7%AB%AF-PC"><span class="toc-number">2.4.1.</span> <span class="toc-text">输入：BAC 维护自己的前端 PC</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%90%9C%E7%B4%A2-branch"><span class="toc-number">2.4.2.</span> <span class="toc-text">搜索 branch</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A2%84%E6%B5%8B-branch"><span class="toc-number">2.4.3.</span> <span class="toc-text">预测 branch</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%8C%E6%88%90-FetchTarget"><span class="toc-number">2.4.4.</span> <span class="toc-text">完成 FetchTarget</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A1%AE%E5%AE%9A%E4%B8%8B%E4%B8%80-FT-%E7%9A%84%E8%B5%B7%E7%82%B9"><span class="toc-number">2.4.5.</span> <span class="toc-text">确定下一 FT 的起点</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FTQ-%E6%B6%88%E8%B4%B9-Fetch-%E8%AF%BB%E5%8F%96%E5%B9%B6-pop-FetchTarget"><span class="toc-number">2.5.</span> <span class="toc-text">FTQ 消费: Fetch 读取并 pop FetchTarget</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Fetch-%E5%8F%AA%E5%A4%84%E7%90%86%E5%A4%B4%E9%83%A8-FT"><span class="toc-number">2.5.1.</span> <span class="toc-text">Fetch 只处理头部 FT</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BD%93%E5%89%8D-PC-%E5%BF%85%E9%A1%BB%E8%90%BD%E5%9C%A8%E5%BD%93%E5%89%8D-FT-%E7%9A%84%E8%8C%83%E5%9B%B4%E5%86%85"><span class="toc-number">2.5.2.</span> <span class="toc-text">当前 PC 必须落在当前 FT 的范围内</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Fetch-%E5%9C%A8-FT-%E8%8C%83%E5%9B%B4%E5%86%85%E9%A1%BA%E5%BA%8F%E5%8F%96%E6%8C%87"><span class="toc-number">2.5.3.</span> <span class="toc-text">Fetch 在 FT 范围内顺序取指</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Fetch-%E9%A2%84%E8%AF%91%E7%A0%81%E5%88%B0-branch-%E5%90%8E%EF%BC%8C%E5%88%86%E6%94%AF%E5%8E%86%E5%8F%B2%E4%BB%8E-FTQ-%E8%BD%AC%E5%9B%9E-BPU"><span class="toc-number">2.5.4.</span> <span class="toc-text">Fetch 预译码到 branch 后，分支历史从 FTQ 转回 BPU</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%83%85%E5%86%B5-A%EF%BC%9A%E6%98%AF%E5%BD%93%E5%89%8D-FT-%E7%9A%84-exit-branch%EF%BC%8C%E4%B8%94-FT-%E4%B8%8A%E6%9C%89-bpuHistory"><span class="toc-number">2.5.4.1.</span> <span class="toc-text">情况 A：是当前 FT 的 exit branch，且 FT 上有 bpuHistory</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%83%85%E5%86%B5-B%EF%BC%9AFT-%E4%B8%8A%E6%B2%A1%E6%9C%89%E5%AF%B9%E5%BA%94-history"><span class="toc-number">2.5.4.2.</span> <span class="toc-text">情况 B：FT 上没有对应 history</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#FT-%E6%B6%88%E8%B4%B9%E5%AE%8C%E6%88%90%E7%9A%84%E5%A4%84%E7%90%86"><span class="toc-number">2.5.5.</span> <span class="toc-text">FT 消费完成的处理</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#squash-mispredict-resteer-%E6%97%B6%E7%9A%84%E6%81%A2%E5%A4%8D%E6%B5%81%E7%A8%8B"><span class="toc-number">3.</span> <span class="toc-text">squash, mispredict, resteer 时的恢复流程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%81%A2%E5%A4%8D%E9%A1%BA%E5%BA%8F"><span class="toc-number">3.1.</span> <span class="toc-text">恢复顺序</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#BAC-squashBpuHistories"><span class="toc-number">3.2.</span> <span class="toc-text">BAC::squashBpuHistories()</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8D%E5%90%8C%E6%9D%A5%E6%BA%90%E7%9A%84-squash"><span class="toc-number">3.3.</span> <span class="toc-text">不同来源的 squash</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%A4%8D%E6%9D%82%E6%8C%87%E4%BB%A4%E4%B8%8E%E5%A4%9A-branch-micro-op-%E7%9A%84%E5%A4%84%E7%90%86"><span class="toc-number">4.</span> <span class="toc-text">复杂指令与多 branch micro-op 的处理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#branch-type-mismatch"><span class="toc-number">4.1.</span> <span class="toc-text">branch type mismatch</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%9A-branch-complex-instruction"><span class="toc-number">4.2.</span> <span class="toc-text">多 branch complex instruction</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/12/Arch/cache/replacement/fine/other-metrics/" title="Fine-Grained Cache Replacement Policies: Other Prediction Metrics">Fine-Grained Cache Replacement Policies: Other Prediction Metrics</a><time datetime="2026-04-12T08:31:36.000Z" title="Created 2026-04-12 16:31:36">2026-04-12</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/12/Arch/cache/prefetch/multi-pf/IPCP/" title="IPCP(2020 ISCA): Bouquet of Instruction Pointers: Instruction Pointer Classifier-based Spatial Hardware Prefetching">IPCP(2020 ISCA): Bouquet of Instruction Pointers: Instruction Pointer Classifier-based Spatial Hardware Prefetching</a><time datetime="2026-04-12T08:01:42.000Z" title="Created 2026-04-12 16:01:42">2026-04-12</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/08/Arch/simulator/gem5/frontend/ftq/" title="Gem5: Fetch Target Queue(FTQ)">Gem5: Fetch Target Queue(FTQ)</a><time datetime="2026-04-08T09:26:32.000Z" title="Created 2026-04-08 17:26:32">2026-04-08</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/08/Arch/simulator/xs-gem5/frontend/" title="xs-gem5: Frontend">xs-gem5: Frontend</a><time datetime="2026-04-08T04:22:41.000Z" title="Created 2026-04-08 12:22:41">2026-04-08</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/06/Arch/cache/replacement/fine/classification-based/" title="Fine-Grained Cache Replacement Policies: Classification-Based">Fine-Grained Cache Replacement Policies: Classification-Based</a><time datetime="2026-04-06T09:09:08.000Z" title="Created 2026-04-06 17:09:08">2026-04-06</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
   const parseViewBox = viewBox => {
     if (!viewBox) return null
     const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
