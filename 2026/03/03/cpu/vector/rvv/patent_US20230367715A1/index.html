@@ -1,0 +1,537 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>SiFive Patents(US20230367715A1): Load-Store Pipeline Selection for Vector | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="SiFive 专利解读: Vector Store 旁路 L1D Cache 的预测">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SiFive Patents(US20230367715A1): Load-Store Pipeline Selection for Vector">
+<meta property="og:url" content="https://xixi-shredp.github.io/2026/03/03/cpu/vector/rvv/patent_US20230367715A1/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="SiFive 专利解读: Vector Store 旁路 L1D Cache 的预测">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2026-03-03T13:55:27.000Z">
+<meta property="article:modified_time" content="2026-04-13T07:48:10.615Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="patent">
+<meta property="article:tag" content="sifive">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "SiFive Patents(US20230367715A1): Load-Store Pipeline Selection for Vector",
+  "url": "https://xixi-shredp.github.io/2026/03/03/cpu/vector/rvv/patent_US20230367715A1/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2026-03-03T13:55:27.000Z",
+  "dateModified": "2026-04-13T07:48:10.615Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2026/03/03/cpu/vector/rvv/patent_US20230367715A1/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'SiFive Patents(US20230367715A1): Load-Store Pipeline Selection for Vector',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background: linear-gradient(180deg, black, black, #23064D);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">86</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">48</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">SiFive Patents(US20230367715A1): Load-Store Pipeline Selection for Vector</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">SiFive Patents(US20230367715A1): Load-Store Pipeline Selection for Vector</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-03-03T13:55:27.000Z" title="Created 2026-03-03 21:55:27">2026-03-03</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-04-13T07:48:10.615Z" title="Updated 2026-04-13 15:48:10">2026-04-13</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/">cpu</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/vector/">vector</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/vector/rvv/">rvv</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><table>
+<thead>
+<tr>
+<th>Patents</th>
+<th>Inc.</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>US20230367715A1</td>
+<td>SiFive</td>
+<td>Load-Store Pipeline Selection for Vector.</td>
+</tr>
+</tbody></table>
+<h1 id="背景与针对问题"><a href="#背景与针对问题" class="headerlink" title="背景与针对问题"></a>背景与针对问题</h1><ul>
+<li>RVV 向量指令的操作数长度可能超过单周期内存写入能力，因此需要多拍执行</li>
+<li>向量 store 指令可能使用 stride 或 index 寻址，导致地址不连续，难以在指令调度时完全确定所有地址</li>
+<li>处理器中可能有多个 store unit（如 load&#x2F;store pipeline 和 store-only pipeline）以提升内存写入带宽</li>
+</ul>
+<p>存在的问题：</p>
+<ul>
+<li>store 指令的执行策略：<ol>
+<li>通过 L1 Cache 写入内存，带宽有限</li>
+<li>绕过 L1 Cache 直接写入 L2 Cache，带宽更高，但可能引发 cache invalidation （一致性导致），降低性能</li>
+</ol>
+</li>
+<li>如何在不引发缓存一致性问题的情况下，动态选择最优存储单元成为关键</li>
+</ul>
+<h1 id="解法"><a href="#解法" class="headerlink" title="解法"></a>解法</h1><h2 id="1-基于第一拍地址的动态选择"><a href="#1-基于第一拍地址的动态选择" class="headerlink" title="1. 基于第一拍地址的动态选择"></a>1. 基于第一拍地址的动态选择</h2><p>在 vector store 指令被调度时，识别出第一拍（first beat）的地址（即第一个元素的目标地址）</p>
+<p>根据该地址决定使用哪个存储单元：</p>
+<ul>
+<li>若该地址在 L1 Cache 中命中，则使用第一存储单元（通过 L1 Cache 写入）</li>
+<li>若未命中，则使用第二存储单元（绕过 L1 Cache，直接写入 L2 Cache）</li>
+</ul>
+<h2 id="2-使用预测器（Predictor）进行选择"><a href="#2-使用预测器（Predictor）进行选择" class="headerlink" title="2. 使用预测器（Predictor）进行选择"></a>2. 使用预测器（Predictor）进行选择</h2><p>引入一个预测器电路，输入为：</p>
+<ul>
+<li>PC</li>
+<li>第一拍地址</li>
+</ul>
+<p>输出为预测结果：选择第一或第二存储单元</p>
+<p>预测器条目通过 PC 与地址的哈希值索引，存储一个饱和计数器</p>
+<p>更新机制：</p>
+<ul>
+<li>若某条指令使用第二存储单元导致 L1 Cache 无效化，则对应计数器减一</li>
+<li>若指令顺利完成且未引发无效化，则计数器加一</li>
+</ul>
+<h2 id="3-内存映射I-O（MMIO）处理"><a href="#3-内存映射I-O（MMIO）处理" class="headerlink" title="3. 内存映射I&#x2F;O（MMIO）处理"></a>3. 内存映射I&#x2F;O（MMIO）处理</h2><p>若第一拍地址属于 MMIO 区域，则强制使用第一存储单元，确保 I&#x2F;O 操作的顺序性和正确性</p>
+<h2 id="4-处理指令依赖（Hazard-Handling）"><a href="#4-处理指令依赖（Hazard-Handling）" class="headerlink" title="4. 处理指令依赖（Hazard Handling）"></a>4. 处理指令依赖（Hazard Handling）</h2><p>由于两个存储单元并行执行，可能出现 WAW 或 WAR 冒险</p>
+<p>解决方案：</p>
+<ul>
+<li>强制调度到同一单元：若检测到目标地址冲突，将后续指令调度到同一存储单元，确保顺序执行</li>
+<li>延迟调度：若冲突存在，延迟后续指令的调度，直到前一条指令完成</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2026/03/03/cpu/vector/rvv/patent_US20230367715A1/">https://xixi-shredp.github.io/2026/03/03/cpu/vector/rvv/patent_US20230367715A1/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/patent/">patent</a><a class="post-meta__tags" href="/tags/sifive/">sifive</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/03/04/cpu/ooo/rob/patent_US11467844B2/" title="Alibaba Patents(US11467844B2): Storing multiple instructions in a single reordering buffer entry"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Alibaba Patents(US11467844B2): Storing multiple instructions in a single reordering buffer entry</div></div><div class="info-2"><div class="info-item-1">Alibaba 专利解读: ROB Entry 存储多个指令</div></div></div></a><a class="pagination-related" href="/2026/03/01/cpu/vector/rvv/patent_US20230367599A1/" title="SiFive Patents(US20230367599A1): Vector Gather with a Narrow Datapath"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">SiFive Patents(US20230367599A1): Vector Gather with a Narrow Datapath</div></div><div class="info-2"><div class="info-item-1">SiFive 专利解读: RVV Gather 操作</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/03/01/cpu/vector/rvv/patent_US20230367599A1/" title="SiFive Patents(US20230367599A1): Vector Gather with a Narrow Datapath"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-01</div><div class="info-item-2">SiFive Patents(US20230367599A1): Vector Gather with a Narrow Datapath</div></div><div class="info-2"><div class="info-item-1">SiFive 专利解读: RVV Gather 操作</div></div></div></a><a class="pagination-related" href="/2026/03/10/cpu/bpu/btb/patent_US12487830B1/" title="Ventana Patent(US12487830B1): Prediction unit with first predictor that provides a hashed fetch address of a current fetch block to its own input and to a second predictor that uses it to predict the fetch address of a next fetch block"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-10</div><div class="info-item-2">Ventana Patent(US12487830B1): Prediction unit with first predictor that provides a hashed fetch address of a current fetch block to its own input and to a second predictor that uses it to predict the fetch address of a next fetch block</div></div><div class="info-2"><div class="info-item-1">Ventana 专利简介：BTB 预测 ICache Set/Way + SCP 前端完整流水线</div></div></div></a><a class="pagination-related" href="/2026/03/08/cpu/bpu/btb/patent_US12190114B2/" title="Intel Patent(US12190114B2): Segmented branch target buffer based on branch instruction type"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-08</div><div class="info-item-2">Intel Patent(US12190114B2): Segmented branch target buffer based on branch instruction type</div></div><div class="info-2"><div class="info-item-1">Intel 专利简介：新型 BTB 结构设计 Segmented BTB</div></div></div></a><a class="pagination-related" href="/2026/03/30/cpu/frontend/patent_US11720365B2/" title="alibaba-US11720365B2: Path prediction method used for instruction cache, access control unit, and instruction processing apparatus"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-30</div><div class="info-item-2">alibaba-US11720365B2: Path prediction method used for instruction cache, access control unit, and instruction processing apparatus</div></div><div class="info-2"><div class="info-item-1">Alibaba 专利简介: </div></div></div></a><a class="pagination-related" href="/2026/03/04/cpu/ooo/rob/patent_US11467844B2/" title="Alibaba Patents(US11467844B2): Storing multiple instructions in a single reordering buffer entry"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-04</div><div class="info-item-2">Alibaba Patents(US11467844B2): Storing multiple instructions in a single reordering buffer entry</div></div><div class="info-2"><div class="info-item-1">Alibaba 专利解读: ROB Entry 存储多个指令</div></div></div></a><a class="pagination-related" href="/2026/03/06/cpu/bpu/restore/patent_US20250328350A1/" title="Tenstorrent Patent(US20250328350A1): Branch Status Table and Control Instruction Buffer for Processor Instruction Pipeline"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-06</div><div class="info-item-2">Tenstorrent Patent(US20250328350A1): Branch Status Table and Control Instruction Buffer for Processor Instruction Pipeline</div></div><div class="info-2"><div class="info-item-1">Tenstorrent 专利解读: 分支预测恢复时对于控制类指令（如 vsetvl）的处理</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">86</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">48</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%83%8C%E6%99%AF%E4%B8%8E%E9%92%88%E5%AF%B9%E9%97%AE%E9%A2%98"><span class="toc-number">1.</span> <span class="toc-text">背景与针对问题</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%A7%A3%E6%B3%95"><span class="toc-number">2.</span> <span class="toc-text">解法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%9F%BA%E4%BA%8E%E7%AC%AC%E4%B8%80%E6%8B%8D%E5%9C%B0%E5%9D%80%E7%9A%84%E5%8A%A8%E6%80%81%E9%80%89%E6%8B%A9"><span class="toc-number">2.1.</span> <span class="toc-text">1. 基于第一拍地址的动态选择</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BD%BF%E7%94%A8%E9%A2%84%E6%B5%8B%E5%99%A8%EF%BC%88Predictor%EF%BC%89%E8%BF%9B%E8%A1%8C%E9%80%89%E6%8B%A9"><span class="toc-number">2.2.</span> <span class="toc-text">2. 使用预测器（Predictor）进行选择</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84I-O%EF%BC%88MMIO%EF%BC%89%E5%A4%84%E7%90%86"><span class="toc-number">2.3.</span> <span class="toc-text">3. 内存映射I&#x2F;O（MMIO）处理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E5%A4%84%E7%90%86%E6%8C%87%E4%BB%A4%E4%BE%9D%E8%B5%96%EF%BC%88Hazard-Handling%EF%BC%89"><span class="toc-number">2.4.</span> <span class="toc-text">4. 处理指令依赖（Hazard Handling）</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/15/cpu/cache/prefetch/multi-pf/Alecto/" title="Alecto (HPCA 2025): Integrating Prefetcher Selection with Dynamic Request Allocation Improves Prefetching Efficiency">Alecto (HPCA 2025): Integrating Prefetcher Selection with Dynamic Request Allocation Improves Prefetching Efficiency</a><time datetime="2026-04-15T15:56:20.000Z" title="Created 2026-04-15 23:56:20">2026-04-15</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/15/cpu/cache/prefetch/data-pf/overview/" title="L2 Cache Data Prefetcher Overview">L2 Cache Data Prefetcher Overview</a><time datetime="2026-04-15T11:55:41.000Z" title="Created 2026-04-15 19:55:41">2026-04-15</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/15/cpu/simulator/gem5/custom-gem5/" title="Custom Gem5 实现汇总">Custom Gem5 实现汇总</a><time datetime="2026-04-15T07:58:35.000Z" title="Created 2026-04-15 15:58:35">2026-04-15</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/15/cpu/simulator/gem5/bpu/btb/directed_simple_btb/" title="DirectedBTB in Gem5">DirectedBTB in Gem5</a><time datetime="2026-04-15T07:52:25.000Z" title="Created 2026-04-15 15:52:25">2026-04-15</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/15/cpu/cache/prefetch/multi-pf/overview/" title="多预取器管理 Overview">多预取器管理 Overview</a><time datetime="2026-04-15T03:13:46.000Z" title="Created 2026-04-15 11:13:46">2026-04-15</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

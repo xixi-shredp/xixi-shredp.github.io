@@ -1,0 +1,556 @@
+<hr>
+<h2 id="title-DirectedBTB-in-Gem5date-2026-04-15-15-52-25categories-cpu-simulator-gem5-bpu-btb-description-“在-Gem5-上实现的-DirectedBTB”tags"><a href="#title-DirectedBTB-in-Gem5date-2026-04-15-15-52-25categories-cpu-simulator-gem5-bpu-btb-description-“在-Gem5-上实现的-DirectedBTB”tags" class="headerlink" title="title: DirectedBTB in Gem5date: 2026-04-15 15:52:25categories: [cpu, simulator, gem5, bpu, btb]description: “在 Gem5 上实现的 DirectedBTB”tags:"></a>title: DirectedBTB in Gem5<br>date: 2026-04-15 15:52:25<br>categories: [cpu, simulator, gem5, bpu, btb]<br>description: “在 Gem5 上实现的 DirectedBTB”<br>tags:</h2><blockquote>
+<p>实现基于 v25.1.0.0 的 Gem5 , github repo: <a href="https://github.com/xixi-shredp/gem5/tree/directed-btb">https://github.com/xixi-shredp/gem5/tree/directed-btb</a></p>
+</blockquote>
+<h2 id="1-概述"><a href="#1-概述" class="headerlink" title="1. 概述"></a>1. 概述</h2><p>DirectedBTB 是对 gem5 Branch Target Buffer (BTB) 子系统的扩展实现，核心思想是<strong>在 BTB entry 中嵌入一个轻量级的方向分类器 (direction classifier)</strong>，用于对 conditional branch 提供 coarse-grained 的 taken&#x2F;not-taken hint。当 BTB 中的饱和计数器 (saturating counter) 积累了足够的 taken 历史后，DirectedBTB 可以绕过 conditional predictor 直接给出 “taken” 的方向预测，从而在流水线早期阶段 (pipeline front-end) 缩短分支预测延迟。</p>
+<h3 id="1-1-设计动机"><a href="#1-1-设计动机" class="headerlink" title="1.1 设计动机"></a>1.1 设计动机</h3><p>在多周期流水线分支预测器 (PipelinedBPredUnit) 架构下，conditional predictor 的查询可能需要多个周期才能返回最终结果。对于历史上高度倾向于 taken 的 conditional branch（如循环回边 loop back-edge），BTB 本身已经持有目标地址，如果 BTB 同时能判断该分支”几乎总是 taken”，就可以在第一个周期直接给出方向预测，无需等待 conditional predictor 的结果。</p>
+<h3 id="1-2-核心设计原则"><a href="#1-2-核心设计原则" class="headerlink" title="1.2 核心设计原则"></a>1.2 核心设计原则</h3><ul>
+<li><strong>最小侵入 (minimal intrusion)</strong>：通过在 <code>BranchTargetBuffer</code> 基类中添加带有 no-op 默认实现的 virtual method，确保 <code>SimpleBTB</code> 和其他现有 BTB 实现完全不受影响</li>
+<li><strong>predictor 状态完整性保护</strong>：即使 DirectedBTB 覆盖了方向预测结果，仍然通过 <code>branchPlaceholder()</code> 为 conditional predictor 创建 history record，保证后续 commit&#x2F;squash 路径上的状态恢复正确</li>
+<li><strong>可参数化 (parameterizable)</strong>：counter 位宽、初始值、阈值均可通过 Python 配置对象灵活调整</li>
+</ul>
+<hr>
+<h2 id="2-文件清单与变更范围"><a href="#2-文件清单与变更范围" class="headerlink" title="2. 文件清单与变更范围"></a>2. 文件清单与变更范围</h2><table>
+<thead>
+<tr>
+<th>文件</th>
+<th>变更类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>src/cpu/pred/directed_btb.hh</code></td>
+<td><strong>新增</strong></td>
+<td>DirectedBTBEntry 和 DirectedBTB 类声明</td>
+</tr>
+<tr>
+<td><code>src/cpu/pred/directed_btb.cc</code></td>
+<td><strong>新增</strong></td>
+<td>DirectedBTBEntry 和 DirectedBTB 完整实现</td>
+</tr>
+<tr>
+<td><code>src/cpu/pred/btb.hh</code></td>
+<td>修改</td>
+<td>基类新增 <code>lookupDirectionHint()</code> 和 <code>updateDirectionInfo()</code> 两个 virtual method</td>
+</tr>
+<tr>
+<td><code>src/cpu/pred/BranchPredictor.py</code></td>
+<td>修改</td>
+<td>新增 <code>DirectedBTB</code> SimObject 定义及参数</td>
+</tr>
+<tr>
+<td><code>src/cpu/pred/SConscript</code></td>
+<td>修改</td>
+<td>注册 <code>directed_btb.cc</code> 源文件和 <code>DirectedBTB</code> SimObject</td>
+</tr>
+<tr>
+<td><code>src/cpu/pred/bpred_unit.cc</code></td>
+<td>修改</td>
+<td>单周期 BPredUnit 集成 direction hint 逻辑</td>
+</tr>
+<tr>
+<td><code>src/cpu/pred/pipelined_bpred_unit.cc</code></td>
+<td>修改</td>
+<td>多周期 PipelinedBPredUnit 集成 direction hint 逻辑</td>
+</tr>
+<tr>
+<td><code>tests/pyunit/pred/pyunit_pipelined_bpred_config.py</code></td>
+<td><strong>新增</strong></td>
+<td>Python 单元测试，验证 DirectedBTB 参数配置</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="3-类层次结构"><a href="#3-类层次结构" class="headerlink" title="3. 类层次结构"></a>3. 类层次结构</h2><pre><code>ClockedObject
+  └── BranchTargetBuffer          (基类, btb.hh)
+        ├── SimpleBTB              (原有实现, simple_btb.hh)  ── 无 direction 功能
+        └── DirectedBTB            (新增实现, directed_btb.hh) ── 嵌入 direction classifier
+
+ReplaceableEntry
+  └── BTBEntry                    (基类, btb_entry.hh)
+        └── DirectedBTBEntry      (新增, directed_btb.hh)  ── 增加 SatCounter8 + conditional 标志
+</code></pre>
+<h3 id="3-1-BranchTargetBuffer-基类扩展"><a href="#3-1-BranchTargetBuffer-基类扩展" class="headerlink" title="3.1 BranchTargetBuffer 基类扩展"></a>3.1 BranchTargetBuffer 基类扩展</h3><p>在 <code>btb.hh</code> 中新增两个 virtual method，均提供 no-op 默认实现：</p>
+<pre><code class="language-cpp">// 查询 direction hint：对于 conditional branch，返回 BTB 是否建议 taken
+virtual bool lookupDirectionHint(ThreadID tid, Addr instPC, BranchType type)
+{ return false; }
+
+// 更新 direction 信息：在 commit/squash 时将实际结果反馈给 BTB
+virtual void updateDirectionInfo(ThreadID tid, Addr inst_pc,
+                                 BranchType type, bool actually_taken)
+{}
+</code></pre>
+<p>这一设计保证了 <code>SimpleBTB</code> 以及所有未覆写这两个方法的 BTB 子类行为完全不变。</p>
+<hr>
+<h2 id="4-DirectedBTBEntry-详细设计"><a href="#4-DirectedBTBEntry-详细设计" class="headerlink" title="4. DirectedBTBEntry 详细设计"></a>4. DirectedBTBEntry 详细设计</h2><h3 id="4-1-数据结构"><a href="#4-1-数据结构" class="headerlink" title="4.1 数据结构"></a>4.1 数据结构</h3><p><code>DirectedBTBEntry</code> 继承自 <code>BTBEntry</code>，在基类的 <code>target</code>、<code>inst</code>、<code>valid</code>、<code>tag</code> 之外新增三个字段：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>counterBits</code></td>
+<td><code>unsigned</code></td>
+<td>饱和计数器位宽（构造时确定，取值范围 [1, 8]）</td>
+</tr>
+<tr>
+<td><code>takenCounter</code></td>
+<td><code>SatCounter8</code></td>
+<td>饱和计数器，记录该 entry 对应分支 taken 的倾向程度</td>
+</tr>
+<tr>
+<td><code>conditional</code></td>
+<td><code>bool</code></td>
+<td>标记该 entry 是否对应 conditional branch</td>
+</tr>
+</tbody></table>
+<h3 id="4-2-关键方法"><a href="#4-2-关键方法" class="headerlink" title="4.2 关键方法"></a>4.2 关键方法</h3><h4 id="resetDirectionState-bool-is-conditional-unsigned-initial-counter"><a href="#resetDirectionState-bool-is-conditional-unsigned-initial-counter" class="headerlink" title="resetDirectionState(bool is_conditional, unsigned initial_counter)"></a><code>resetDirectionState(bool is_conditional, unsigned initial_counter)</code></h4><p>当一个 entry 被新分配（首次插入或替换旧 entry 后重新使用）时调用。根据分支类型设置 <code>conditional</code> 标志，并将计数器重置为 <code>initialTakenCounter</code> 参数指定的初始值。</p>
+<pre><code class="language-cpp">void DirectedBTBEntry::resetDirectionState(bool is_conditional,
+                                           unsigned initial_counter)
+{
+    conditional = is_conditional;
+    takenCounter = SatCounter8(counterBits, initial_counter);
+}
+</code></pre>
+<h4 id="updateDirection-bool-taken"><a href="#updateDirection-bool-taken" class="headerlink" title="updateDirection(bool taken)"></a><code>updateDirection(bool taken)</code></h4><p>在 commit 或 squash 时由 <code>updateDirectionInfo()</code> 调用。仅对 conditional branch 有效：taken 时递增计数器，not-taken 时递减，由 <code>SatCounter8</code> 保证 saturate 语义（不溢出、不下溢）。</p>
+<h4 id="directsTaken-unsigned-threshold-→-bool"><a href="#directsTaken-unsigned-threshold-→-bool" class="headerlink" title="directsTaken(unsigned threshold) → bool"></a><code>directsTaken(unsigned threshold) → bool</code></h4><p>查询接口。当且仅当 entry 有效、是 conditional branch、且计数器值 &gt;&#x3D; <code>directedTakenThreshold</code> 时返回 <code>true</code>，表示 BTB 建议该分支预测为 taken。</p>
+<h4 id="replacementCandidate-unsigned-threshold-→-bool"><a href="#replacementCandidate-unsigned-threshold-→-bool" class="headerlink" title="replacementCandidate(unsigned threshold) → bool"></a><code>replacementCandidate(unsigned threshold) → bool</code></h4><p>替换策略辅助接口。当 entry 无效，或者是 conditional branch 且计数器值 &lt; <code>replacementCandidateThreshold</code> 时返回 <code>true</code>。这些 entry 被认为是”弱”entry，在替换时优先被淘汰。</p>
+<hr>
+<h2 id="5-DirectedBTB-核心逻辑"><a href="#5-DirectedBTB-核心逻辑" class="headerlink" title="5. DirectedBTB 核心逻辑"></a>5. DirectedBTB 核心逻辑</h2><h3 id="5-1-构造与参数校验"><a href="#5-1-构造与参数校验" class="headerlink" title="5.1 构造与参数校验"></a>5.1 构造与参数校验</h3><p>构造函数通过 <code>fatal_if</code> 进行严格的参数校验：</p>
+<ul>
+<li><code>numEntries / associativity</code> 必须是 2 的幂（set 数量约束）</li>
+<li><code>takenCounterBits</code> 必须在 [1, 8] 范围内</li>
+<li><code>initialTakenCounter</code>、<code>directedTakenThreshold</code>、<code>replacementCandidateThreshold</code> 均不得超过计数器最大值 <code>(1 &lt;&lt; takenCounterBits) - 1</code></li>
+</ul>
+<p>底层存储使用 gem5 的 <code>AssociativeCache&lt;DirectedBTBEntry&gt;</code> 模板，复用 gem5 现有的 indexing policy 和 replacement policy 框架。</p>
+<h3 id="5-2-查找路径-Lookup-Path"><a href="#5-2-查找路径-Lookup-Path" class="headerlink" title="5.2 查找路径 (Lookup Path)"></a>5.2 查找路径 (Lookup Path)</h3><h4 id="lookup-tid-instPC-type-→-PCStateBase"><a href="#lookup-tid-instPC-type-→-PCStateBase" class="headerlink" title="lookup(tid, instPC, type) → PCStateBase*"></a><code>lookup(tid, instPC, type) → PCStateBase*</code></h4><p>标准 BTB 查找。通过 <code>btb.accessEntry()</code> 查找 entry（同时更新 replacement policy 的 access 信息），返回目标地址。命中&#x2F;缺失统计由 <code>stats.lookups[type]</code> 和 <code>stats.misses[type]</code> 记录。</p>
+<h4 id="lookupDirectionHint-tid-instPC-type-→-bool"><a href="#lookupDirectionHint-tid-instPC-type-→-bool" class="headerlink" title="lookupDirectionHint(tid, instPC, type) → bool"></a><code>lookupDirectionHint(tid, instPC, type) → bool</code></h4><p>DirectedBTB 的核心扩展方法：</p>
+<pre><code class="language-cpp">bool DirectedBTB::lookupDirectionHint(ThreadID tid, Addr instPC, BranchType type)
+{
+    if (!isConditionalBranch(type))
+        return false;
+
+    DirectedBTBEntry *entry = findEntry(instPC, tid);
+    return entry != nullptr &amp;&amp; entry-&gt;directsTaken(directedTakenThreshold);
+}
+</code></pre>
+<p>注意这里使用 <code>findEntry()</code>（即 <code>btb.findEntry()</code>）而非 <code>btb.accessEntry()</code>，<strong>不更新 replacement policy 状态</strong>，因为同一分支的 <code>lookup()</code> 已经调用过 <code>accessEntry()</code> 了。</p>
+<p>分支类型判定通过 <code>isConditionalBranch()</code> 静态方法完成，覆盖 <code>DirectCond</code> 和 <code>IndirectCond</code> 两种 conditional branch 类型。</p>
+<h3 id="5-3-更新路径-Update-Path"><a href="#5-3-更新路径-Update-Path" class="headerlink" title="5.3 更新路径 (Update Path)"></a>5.3 更新路径 (Update Path)</h3><h4 id="update-tid-instPC-target-type-inst"><a href="#update-tid-instPC-target-type-inst" class="headerlink" title="update(tid, instPC, target, type, inst)"></a><code>update(tid, instPC, target, type, inst)</code></h4><p>在 BTB 目标地址更新时调用（由 <code>BPredUnit::updateBTB()</code> 触发）：</p>
+<ol>
+<li>尝试 <code>findEntry()</code> 查找现有 entry</li>
+<li>若 miss，调用 <code>findVictim()</code> 选择替换目标，插入新 entry，并通过 <code>resetDirectionState()</code> 初始化 direction 状态</li>
+<li>调用 <code>btb.accessEntry()</code> 更新 replacement policy</li>
+<li>调用 <code>entry-&gt;update()</code> 写入目标地址和指令指针</li>
+</ol>
+<p>关键设计点：<strong>只有新分配的 entry 才重置 direction 计数器</strong>。已存在的 entry 在更新目标地址时保留其计数器状态，避免目标地址变化时丢失积累的方向统计信息。</p>
+<h4 id="updateDirectionInfo-tid-instPC-type-actually-taken"><a href="#updateDirectionInfo-tid-instPC-type-actually-taken" class="headerlink" title="updateDirectionInfo(tid, instPC, type, actually_taken)"></a><code>updateDirectionInfo(tid, instPC, type, actually_taken)</code></h4><p>在 commit 和 squash 路径上均被调用，将分支的实际执行结果反馈给对应 entry 的饱和计数器：</p>
+<pre><code class="language-cpp">void DirectedBTB::updateDirectionInfo(ThreadID tid, Addr instPC,
+                                      BranchType type, bool actually_taken)
+{
+    if (!isConditionalBranch(type))
+        return;
+    DirectedBTBEntry *entry = findEntry(instPC, tid);
+    if (entry == nullptr)
+        return;
+    entry-&gt;updateDirection(actually_taken);
+}
+</code></pre>
+<p>仅对 conditional branch 且 BTB 中存在对应 entry 时才更新。不存在的 entry（如 compulsory miss）不做任何操作。</p>
+<h3 id="5-4-替换策略-Replacement-Policy"><a href="#5-4-替换策略-Replacement-Policy" class="headerlink" title="5.4 替换策略 (Replacement Policy)"></a>5.4 替换策略 (Replacement Policy)</h3><p><code>findVictim()</code> 实现了一种<strong>两层优先级的替换策略</strong>：</p>
+<pre><code>                    ┌─────────────────────────────────┐
+                    │  getPossibleEntries(key)         │
+                    │  获取同一 set 中所有 candidate    │
+                    └──────────┬──────────────────────┘
+                               │
+                    ┌──────────▼──────────────────────┐
+                    │  对每个 candidate 判断:            │
+                    │  replacementCandidate(threshold)  │
+                    │  → invalid 或 counter &lt; threshold │
+                    └──────────┬──────────────────────┘
+                               │
+                  ┌────────────┴────────────┐
+                  │                         │
+           有 weak candidates?         无 weak candidates
+                  │                         │
+                  ▼                         ▼
+         从 weak_candidates           从 all_replaceable
+         中由 replPolicy 选择         中由 replPolicy 选择
+         victim                       victim (LRU 回退)
+</code></pre>
+<p><strong>设计意图</strong>：保护”有价值”的 entry（counter 较高、表明该分支频繁 taken 的 entry），优先淘汰无效或 counter 低的 entry。当所有 entry 都是”强” entry 时，退化为标准 replacement policy（如 LRU）选择 victim。</p>
+<hr>
+<h2 id="6-预测器集成-Predictor-Integration"><a href="#6-预测器集成-Predictor-Integration" class="headerlink" title="6. 预测器集成 (Predictor Integration)"></a>6. 预测器集成 (Predictor Integration)</h2><h3 id="6-1-对-bpred-unit-cc-BPredUnit-的修改"><a href="#6-1-对-bpred-unit-cc-BPredUnit-的修改" class="headerlink" title="6.1 对 bpred_unit.cc (BPredUnit) 的修改"></a>6.1 对 <code>bpred_unit.cc</code> (BPredUnit) 的修改</h3><h4 id="6-1-1-BTB-查找前移"><a href="#6-1-1-BTB-查找前移" class="headerlink" title="6.1.1 BTB 查找前移"></a>6.1.1 BTB 查找前移</h4><p>原始代码中，BTB lookup 在 direction prediction 之后执行。修改后<strong>将 BTB lookup 提前到 direction prediction 之前</strong>，因为 <code>lookupDirectionHint()</code> 需要已知 BTB hit&#x2F;miss 状态：</p>
+<pre><code>  原始流程:            修改后流程:
+  ┌─────────────┐      ┌─────────────┐
+  │ direction   │      │ BTB lookup  │  ← 前移
+  │ prediction  │      ├─────────────┤
+  ├─────────────┤      │ direction   │
+  │ BTB lookup  │      │ prediction  │  ← 可利用 BTB hint
+  ├─────────────┤      ├─────────────┤
+  │ RAS/Indirect│      │ RAS/Indirect│
+  └─────────────┘      └─────────────┘
+</code></pre>
+<h4 id="6-1-2-Direction-hint-覆盖逻辑"><a href="#6-1-2-Direction-hint-覆盖逻辑" class="headerlink" title="6.1.2 Direction hint 覆盖逻辑"></a>6.1.2 Direction hint 覆盖逻辑</h4><p>在 <code>predict()</code> 中插入 direction hint 查询：</p>
+<pre><code class="language-cpp">const bool directed_taken_hint =
+    !hist-&gt;uncond &amp;&amp; hist-&gt;btbHit &amp;&amp;
+    btb-&gt;lookupDirectionHint(tid, pc.instAddr(), brType);
+</code></pre>
+<p>三个条件缺一不可：</p>
+<ol>
+<li><code>!hist-&gt;uncond</code>：必须是 conditional branch（unconditional 已经是 taken，无需 hint）</li>
+<li><code>hist-&gt;btbHit</code>：必须 BTB 命中（miss 则无 entry 可查询 counter）</li>
+<li><code>btb-&gt;lookupDirectionHint()</code> 返回 <code>true</code>：counter 达到阈值</li>
+</ol>
+<p>当 hint 生效时：</p>
+<pre><code class="language-cpp">if (directed_taken_hint) {
+    cPred-&gt;branchPlaceholder(tid, pc.instAddr(), false, hist-&gt;bpHistory);
+    hist-&gt;condPred = true;
+}
+</code></pre>
+<p>关键操作：</p>
+<ul>
+<li>调用 <code>branchPlaceholder()</code> 而非 <code>lookup()</code>：创建 conditional predictor 的 history record 但<strong>不执行真正的预测查询</strong>，不影响 predictor 内部状态（如 GHR 等）。参数 <code>uncond=false</code> 明确告知这是 conditional branch。</li>
+<li>将 <code>condPred</code> 强制设为 <code>true</code>（taken）</li>
+</ul>
+<p>这确保了当预测错误需要 squash 时，conditional predictor 仍能正确恢复其内部状态。</p>
+<h4 id="6-1-3-Commit-Squash-路径更新"><a href="#6-1-3-Commit-Squash-路径更新" class="headerlink" title="6.1.3 Commit&#x2F;Squash 路径更新"></a>6.1.3 Commit&#x2F;Squash 路径更新</h4><p>在 <code>commitBranch()</code> 和 <code>squash()</code> 中均新增一行：</p>
+<pre><code class="language-cpp">btb-&gt;updateDirectionInfo(tid, hist-&gt;pc, hist-&gt;type, hist-&gt;actuallyTaken);
+// 或
+btb-&gt;updateDirectionInfo(tid, hist-&gt;pc, hist-&gt;type, actually_taken);
+</code></pre>
+<p>确保无论分支最终是 commit 还是被 squash 修正，direction counter 都能收到实际的 taken&#x2F;not-taken 反馈。</p>
+<h3 id="6-2-对-pipelined-bpred-unit-cc-PipelinedBPredUnit-的修改"><a href="#6-2-对-pipelined-bpred-unit-cc-PipelinedBPredUnit-的修改" class="headerlink" title="6.2 对 pipelined_bpred_unit.cc (PipelinedBPredUnit) 的修改"></a>6.2 对 <code>pipelined_bpred_unit.cc</code> (PipelinedBPredUnit) 的修改</h3><p>与 BPredUnit 的修改逻辑一致，但需要适配多阶段 (multi-stage) 预测器架构：</p>
+<ol>
+<li><strong>BTB lookup 同样前移</strong>到 stage prediction 之前</li>
+<li>当 <code>directed_taken_hint</code> 生效时，对<strong>每一个 stage predictor</strong> 都调用 <code>branchPlaceholder()</code>：</li>
+</ol>
+<pre><code class="language-cpp">for (size_t stageIndex = 0; stageIndex &lt; stagePredictors.size(); ++stageIndex) {
+    void *stage_history = nullptr;
+    stagePredictors[stageIndex]-&gt;branchPlaceholder(
+        tid, pc.instAddr(), false, stage_history);
+    // stage_history 记录到 hist-&gt;stagedBpHistory
+}
+</code></pre>
+<p>这保证了所有 pipeline stage 的 conditional predictor 都生成了正确的 history record，使得后续 squash 能够逐 stage 恢复。</p>
+<hr>
+<h2 id="7-Python-配置接口"><a href="#7-Python-配置接口" class="headerlink" title="7. Python 配置接口"></a>7. Python 配置接口</h2><h3 id="7-1-SimObject-定义"><a href="#7-1-SimObject-定义" class="headerlink" title="7.1 SimObject 定义"></a>7.1 SimObject 定义</h3><p><code>DirectedBTB</code> 继承自 <code>BranchTargetBuffer</code>，在 <code>BranchPredictor.py</code> 中定义：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>类型</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>numEntries</code></td>
+<td>Unsigned</td>
+<td>4096</td>
+<td>BTB entry 总数</td>
+</tr>
+<tr>
+<td><code>tagBits</code></td>
+<td>Unsigned</td>
+<td>16</td>
+<td>tag 位宽</td>
+</tr>
+<tr>
+<td><code>instShiftAmt</code></td>
+<td>Unsigned</td>
+<td>继承 Parent</td>
+<td>指令地址右移位数（对齐）</td>
+</tr>
+<tr>
+<td><code>associativity</code></td>
+<td>Unsigned</td>
+<td>1</td>
+<td>组相联度（1 &#x3D; direct-mapped）</td>
+</tr>
+<tr>
+<td><code>btbReplPolicy</code></td>
+<td>BaseReplacementPolicy</td>
+<td>LRURP</td>
+<td>替换策略</td>
+</tr>
+<tr>
+<td><code>btbIndexingPolicy</code></td>
+<td>BTBIndexingPolicy</td>
+<td>BTBSetAssociative</td>
+<td>索引策略</td>
+</tr>
+<tr>
+<td><code>takenCounterBits</code></td>
+<td>Unsigned</td>
+<td>2</td>
+<td>饱和计数器位宽</td>
+</tr>
+<tr>
+<td><code>initialTakenCounter</code></td>
+<td>Unsigned</td>
+<td>0</td>
+<td>新 entry 计数器初始值</td>
+</tr>
+<tr>
+<td><code>directedTakenThreshold</code></td>
+<td>Unsigned</td>
+<td>2</td>
+<td>达到此阈值时 hint 为 taken</td>
+</tr>
+<tr>
+<td><code>replacementCandidateThreshold</code></td>
+<td>Unsigned</td>
+<td>1</td>
+<td>低于此阈值的 entry 是优先替换候选</td>
+</tr>
+</tbody></table>
+<h3 id="7-2-默认参数分析"><a href="#7-2-默认参数分析" class="headerlink" title="7.2 默认参数分析"></a>7.2 默认参数分析</h3><p>以默认 2-bit counter (位宽&#x3D;2, 取值范围 [0, 3]) 为例：</p>
+<pre><code>  Counter 值:    0      1      2      3
+  direction:   ─────────┼──────────────
+               not-taken │   taken hint
+                         │ (threshold=2)
+  replacement: ──────────┼─────────────
+               weak      │  protected
+              (threshold=1)
+</code></pre>
+<ul>
+<li>新 entry 从 <code>0</code> (Strongly Not-Taken) 开始</li>
+<li>需要至少连续 2 次 taken 才能达到 threshold <code>2</code> 开始给出 hint</li>
+<li>counter 值为 <code>0</code> 的 entry 是 weak replacement candidate（低于 threshold <code>1</code>）</li>
+<li>counter 值 <code>1</code>, <code>2</code>, <code>3</code> 的 entry 受保护，不优先被替换</li>
+</ul>
+<h3 id="7-3-使用示例"><a href="#7-3-使用示例" class="headerlink" title="7.3 使用示例"></a>7.3 使用示例</h3><pre><code class="language-python">from m5.objects import DirectedBTB, PipelinedBPredUnit, LTAGE, LocalBP
+
+system.cpu.branchPred = PipelinedBPredUnit(
+    btb = DirectedBTB(
+        numEntries = 8192,
+        associativity = 4,
+        takenCounterBits = 3,          # 8-state counter
+        initialTakenCounter = 2,       # 初始偏向中性
+        directedTakenThreshold = 5,    # 较高阈值，减少误判
+        replacementCandidateThreshold = 2,
+    ),
+    conditionalBranchPred = LocalBP(),
+    stagePredictors = [LocalBP(), LTAGE()],
+    stageLatencies = [0, 3],
+)
+</code></pre>
+<hr>
+<h2 id="8-数据流与时序"><a href="#8-数据流与时序" class="headerlink" title="8. 数据流与时序"></a>8. 数据流与时序</h2><h3 id="8-1-Predict-阶段完整数据流"><a href="#8-1-Predict-阶段完整数据流" class="headerlink" title="8.1 Predict 阶段完整数据流"></a>8.1 Predict 阶段完整数据流</h3><pre><code>                      ┌──────────────────┐
+          instPC ───→ │  BTB lookup()    │──→ btb_target (地址)
+                      │                  │──→ btbHit (命中/缺失)
+                      └────────┬─────────┘
+                               │
+                 btbHit &amp;&amp; conditional?
+                      ┌────────▼─────────┐
+                      │ lookupDirection-  │
+          instPC ───→ │ Hint()           │──→ directed_taken_hint
+                      └────────┬─────────┘
+                               │
+                  directed_taken_hint == true?
+                    ┌──────────┴────────────┐
+                    │ YES                   │ NO
+                    ▼                       ▼
+           ┌────────────────┐    ┌────────────────────┐
+           │ branchPlace-   │    │ cPred-&gt;lookup()    │
+           │ holder()       │    │ (正常方向预测)       │
+           │ condPred=true  │    │ condPred=预测结果    │
+           └────────────────┘    └────────────────────┘
+                    │                       │
+                    └───────────┬───────────┘
+                                ▼
+                    ┌────────────────────────┐
+                    │  RAS / Indirect 覆盖   │
+                    │  (与 DirectedBTB 无关)  │
+                    └────────────────────────┘
+</code></pre>
+<h3 id="8-2-Commit-Squash-阶段反馈"><a href="#8-2-Commit-Squash-阶段反馈" class="headerlink" title="8.2 Commit&#x2F;Squash 阶段反馈"></a>8.2 Commit&#x2F;Squash 阶段反馈</h3><pre><code>  commit 路径:                     squash 路径:
+  ┌──────────────────┐            ┌──────────────────────────┐
+  │ cPred-&gt;commit()  │            │ cPred-&gt;squash()          │
+  │ (方向预测器更新) │            │ (方向预测器恢复)         │
+  ├──────────────────┤            ├──────────────────────────┤
+  │ btb-&gt;update()    │            │ btb-&gt;update()            │
+  │ (目标地址更新)   │            │ (目标地址更新, if taken) │
+  ├──────────────────┤            ├──────────────────────────┤
+  │ btb-&gt;update-     │            │ btb-&gt;update-             │
+  │ DirectionInfo()  │ ← NEW      │ DirectionInfo()          │ ← NEW
+  │ (direction       │            │ (direction               │
+  │  counter 更新)   │            │  counter 更新)           │
+  └──────────────────┘            └──────────────────────────┘
+</code></pre>
+<hr>
+<h2 id="9-与-SimpleBTB-的对比"><a href="#9-与-SimpleBTB-的对比" class="headerlink" title="9. 与 SimpleBTB 的对比"></a>9. 与 SimpleBTB 的对比</h2><table>
+<thead>
+<tr>
+<th>特性</th>
+<th>SimpleBTB</th>
+<th>DirectedBTB</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Entry 类型</td>
+<td><code>BTBEntry</code></td>
+<td><code>DirectedBTBEntry</code> (继承 BTBEntry)</td>
+</tr>
+<tr>
+<td>方向信息</td>
+<td>无</td>
+<td>每 entry 一个 saturating counter</td>
+</tr>
+<tr>
+<td><code>lookupDirectionHint()</code></td>
+<td>基类默认 <code>return false</code></td>
+<td>基于 counter 阈值判断</td>
+</tr>
+<tr>
+<td><code>updateDirectionInfo()</code></td>
+<td>基类默认 no-op</td>
+<td>更新 counter</td>
+</tr>
+<tr>
+<td>替换策略</td>
+<td>标准 LRU</td>
+<td>两层优先级 (weak candidate + LRU)</td>
+</tr>
+<tr>
+<td>存储开销 (每 entry)</td>
+<td><code>target</code> + <code>inst</code> + <code>tag</code> + <code>valid</code></td>
+<td>同上 + <code>counterBits</code> + <code>takenCounter</code> + <code>conditional</code></td>
+</tr>
+<tr>
+<td>额外存储估算 (每 entry)</td>
+<td>—</td>
+<td>~2 bytes (1 byte SatCounter8 + 1 bit conditional + padding)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="10-统计量-Statistics"><a href="#10-统计量-Statistics" class="headerlink" title="10. 统计量 (Statistics)"></a>10. 统计量 (Statistics)</h2><p>DirectedBTB 复用基类 <code>BranchTargetBufferStats</code> 中已有的统计量：</p>
+<table>
+<thead>
+<tr>
+<th>统计量</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>stats.lookups[type]</code></td>
+<td>Vector</td>
+<td>按 BranchType 分类的 BTB 查找次数</td>
+</tr>
+<tr>
+<td><code>stats.misses[type]</code></td>
+<td>Vector</td>
+<td>按 BranchType 分类的 BTB 缺失次数</td>
+</tr>
+<tr>
+<td><code>stats.updates[type]</code></td>
+<td>Vector</td>
+<td>按 BranchType 分类的 BTB 更新次数</td>
+</tr>
+<tr>
+<td><code>stats.mispredict[type]</code></td>
+<td>Vector</td>
+<td>按 BranchType 分类的错误预测次数</td>
+</tr>
+<tr>
+<td><code>stats.evictions</code></td>
+<td>Scalar</td>
+<td>BTB entry 被替换淘汰的次数</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>注意</strong>：当前实现中 DirectedBTB 未新增专门的 direction hint 相关统计量（如 hint 触发次数、hint 准确率等）。这些信息可通过后续扩展添加。</p>
+</blockquote>
+<hr>
+<h2 id="11-构建集成"><a href="#11-构建集成" class="headerlink" title="11. 构建集成"></a>11. 构建集成</h2><h3 id="11-1-SConscript"><a href="#11-1-SConscript" class="headerlink" title="11.1 SConscript"></a>11.1 SConscript</h3><ul>
+<li><code>Source(&#39;directed_btb.cc&#39;)</code>：注册编译单元</li>
+<li><code>SimObject</code> 列表中添加 <code>&#39;DirectedBTB&#39;</code>：注册 Python SimObject</li>
+</ul>
+<h3 id="11-2-依赖关系"><a href="#11-2-依赖关系" class="headerlink" title="11.2 依赖关系"></a>11.2 依赖关系</h3><p>DirectedBTB 依赖以下 gem5 基础设施：</p>
+<table>
+<thead>
+<tr>
+<th>依赖</th>
+<th>头文件</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>AssociativeCache</code></td>
+<td><code>base/cache/associative_cache.hh</code></td>
+<td>组相联缓存容器</td>
+</tr>
+<tr>
+<td><code>SatCounter8</code></td>
+<td><code>base/sat_counter.hh</code></td>
+<td>8-bit 饱和计数器</td>
+</tr>
+<tr>
+<td><code>BTBEntry</code></td>
+<td><code>cpu/pred/btb_entry.hh</code></td>
+<td>基础 BTB entry</td>
+</tr>
+<tr>
+<td><code>BranchTargetBuffer</code></td>
+<td><code>cpu/pred/btb.hh</code></td>
+<td>BTB 基类</td>
+</tr>
+<tr>
+<td><code>replacement_policy::Base</code></td>
+<td><code>mem/cache/replacement_policies/base.hh</code></td>
+<td>可插拔替换策略</td>
+</tr>
+<tr>
+<td><code>BTBIndexingPolicy</code></td>
+<td><code>mem/cache/tags/indexing_policies/base.hh</code></td>
+<td>可插拔索引策略</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="12-架构决策与-Trade-off-分析"><a href="#12-架构决策与-Trade-off-分析" class="headerlink" title="12. 架构决策与 Trade-off 分析"></a>12. 架构决策与 Trade-off 分析</h2><h3 id="12-1-为什么在-BTB-中嵌入-direction-classifier-而非独立组件"><a href="#12-1-为什么在-BTB-中嵌入-direction-classifier-而非独立组件" class="headerlink" title="12.1 为什么在 BTB 中嵌入 direction classifier 而非独立组件"></a>12.1 为什么在 BTB 中嵌入 direction classifier 而非独立组件</h3><p><strong>选择</strong>：将 direction counter 作为 BTB entry 的扩展字段。</p>
+<p><strong>理由</strong>：</p>
+<ul>
+<li>BTB entry 的生命周期管理（allocation、eviction、invalidation）天然与该分支的”存在”绑定；独立组件需要额外同步</li>
+<li>在 BTB lookup 的同一拍内即可获取 direction hint，无额外的延迟开销</li>
+<li>利用 BTB entry 的 valid bit 和 tag matching 机制，无需单独的 tag 存储</li>
+</ul>
+<p><strong>代价</strong>：</p>
+<ul>
+<li>DirectedBTB entry 的存储开销略大于 SimpleBTB</li>
+<li>DirectedBTB 与 BTB 容量耦合——高 associativity 的大 BTB 才能充分发挥 direction classifier 的效果</li>
+</ul>
+<h3 id="12-2-branchPlaceholder-vs-忽略-conditional-predictor"><a href="#12-2-branchPlaceholder-vs-忽略-conditional-predictor" class="headerlink" title="12.2 branchPlaceholder vs. 忽略 conditional predictor"></a>12.2 branchPlaceholder vs. 忽略 conditional predictor</h3><p><strong>选择</strong>：即使 direction hint 覆盖了预测结果，仍调用 <code>branchPlaceholder()</code> 为 conditional predictor 创建 history。</p>
+<p><strong>理由</strong>：</p>
+<ul>
+<li>conditional predictor（如 TAGE、Perceptron）通常维护 speculative history（GHR、path history 等）。跳过 history 创建会导致后续 squash 时无法正确恢复</li>
+<li><code>branchPlaceholder()</code> 已经是 gem5 中用于”BTB miss 但 pre-decode 检测到分支”场景的既有模式，语义明确</li>
+<li>保证了 predictor training 在 commit 路径上仍然正常工作</li>
+</ul>
+<p><strong>代价</strong>：</p>
+<ul>
+<li>每次 direction hint 覆盖时仍有一次 <code>branchPlaceholder()</code> 调用的开销（但该调用本身设计为轻量级）</li>
+</ul>
+<h3 id="12-3-两层优先级替换-vs-纯-LRU"><a href="#12-3-两层优先级替换-vs-纯-LRU" class="headerlink" title="12.3 两层优先级替换 vs. 纯 LRU"></a>12.3 两层优先级替换 vs. 纯 LRU</h3><p><strong>选择</strong>：优先淘汰 counter 低于 <code>replacementCandidateThreshold</code> 的 entry。</p>
+<p><strong>理由</strong>：</p>
+<ul>
+<li>高 counter 值的 entry 意味着该分支频繁 taken，direction hint 价值高，应尽量保留</li>
+<li>低 counter 值的 entry 贡献的 direction hint 较少，替换它们的损失较小</li>
+<li>当所有 entry 的 counter 都高于阈值时，自动退化为标准 replacement policy，不会造成死锁</li>
+</ul>
+<p><strong>代价</strong>：</p>
+<ul>
+<li>替换路径上需要两轮遍历（收集 weak candidates + 选择 victim），略增加 <code>findVictim()</code> 的计算开销</li>
+<li>在 set 较大（高 associativity）时，遍历成本线性增长</li>
+</ul>
+<hr>
+<h2 id="13-潜在改进方向"><a href="#13-潜在改进方向" class="headerlink" title="13. 潜在改进方向"></a>13. 潜在改进方向</h2><ol>
+<li><strong>Direction hint 统计量</strong>：新增 <code>directionHints</code>、<code>directionHitRate</code> 等统计量，便于性能分析</li>
+<li><strong>Hysteresis 初始值策略</strong>：考虑根据分支类型（如 loop back-edge vs. if-else）设置不同的 <code>initialTakenCounter</code></li>
+<li><strong>Adaptive threshold</strong>：根据运行时 misprediction rate 动态调整 <code>directedTakenThreshold</code></li>
+<li><strong>与 multi-stage predictor 的深度集成</strong>：当前 direction hint 完全绕过所有 stage；可以考虑仅绕过 slow stage 而保留 fast stage 的精确预测</li>
+<li><strong>C++ 单元测试补充</strong>：为 <code>DirectedBTBEntry</code> 和 <code>DirectedBTB</code> 补充 GTest，覆盖 counter 边界行为和替换策略逻辑</li>
+</ol>

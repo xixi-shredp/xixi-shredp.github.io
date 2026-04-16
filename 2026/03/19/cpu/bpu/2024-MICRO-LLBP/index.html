@@ -1,0 +1,795 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>2024 MICRO: The Last-Level Branch Predictor | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="2024 MICRO 论文阅读：The Last-Level Branch Predictor">
+<meta property="og:type" content="article">
+<meta property="og:title" content="2024 MICRO: The Last-Level Branch Predictor">
+<meta property="og:url" content="https://xixi-shredp.github.io/2026/03/19/cpu/bpu/2024-MICRO-LLBP/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="2024 MICRO 论文阅读：The Last-Level Branch Predictor">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2026-03-19T03:24:31.000Z">
+<meta property="article:modified_time" content="2026-04-16T06:13:34.305Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="2024">
+<meta property="article:tag" content="MICRO">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "2024 MICRO: The Last-Level Branch Predictor",
+  "url": "https://xixi-shredp.github.io/2026/03/19/cpu/bpu/2024-MICRO-LLBP/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2026-03-19T03:24:31.000Z",
+  "dateModified": "2026-04-16T06:13:34.305Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2026/03/19/cpu/bpu/2024-MICRO-LLBP/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '2024 MICRO: The Last-Level Branch Predictor',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background: linear-gradient(180deg, black, black, #23064D);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">86</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">48</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">2024 MICRO: The Last-Level Branch Predictor</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">2024 MICRO: The Last-Level Branch Predictor</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-03-19T03:24:31.000Z" title="Created 2026-03-19 11:24:31">2026-03-19</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-04-16T06:13:34.305Z" title="Updated 2026-04-16 14:13:34">2026-04-16</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/">cpu</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/bpu/">bpu</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="核心问题"><a href="#核心问题" class="headerlink" title="核心问题"></a>核心问题</h1><ul>
+<li>现代高性能 CPU，尤其是 server workload 上，分支预测器已经成为明显瓶颈</li>
+<li>但不能简单把现有 TAGE 预测器无限做大，因为面积、延迟、能耗都会失控</li>
+</ul>
+<p>那能不能像 cache 一样，为分支预测也做一个“层次化设计”？</p>
+<p>由于分支预测状态不是“按 PC 直接索引”的，而是按 <strong>PC + History</strong> 索引；<br>因此，传统按空间局部性分页&#x2F;分块的方法不适合 TAGE 这种 heavily-hashed predictor</p>
+<p>论文提出一种新的组织方式 LLBP:</p>
+<ol>
+<li>用“程序上下文（program context）”来重组分支预测状态</li>
+<li>难预测分支需要的大量 pattern 分散到不同 context 中，每个 context 内只保留很少的 pattern</li>
+<li>然后再通过 context 预测 + 预取把这些 pattern 提前搬到核内小 buffer 中</li>
+</ol>
+<hr>
+<h2 id="动机：真实服务器场景"><a href="#动机：真实服务器场景" class="headerlink" title="动机：真实服务器场景"></a>动机：真实服务器场景</h2><p>作者先用真实服务器和仿真做了动机分析，结论很直接：</p>
+<ul>
+<li>在 Intel Sapphire Rapids 服务器上，条件分支误预测会浪费 <strong>3.6%–20%</strong> 的执行周期，平均 <strong>9.2%</strong></li>
+<li>用 64KiB TAGE-SC-L 作为基线时，14 个工作负载上的 MPKI 为 <strong>0.29–6.4，平均 2.91</strong>。</li>
+<li>如果把 TAGE-SC-L 的容量放到“无限”，平均可把误预测再降 <strong>36.5%</strong><ul>
+<li>这部分收益里，<strong>87% 基本来自 TAGE 主体表容量增大</strong><br>(真正的痛点还是 <strong>TAGE pattern table 容量不足</strong>)</li>
+</ul>
+</li>
+</ul>
+<p>所以论文真正研究的是：<strong>怎样用一种更“可物理实现”的方式，逼近大容量 TAGE 的收益</strong></p>
+<hr>
+<h2 id="现有方法的局限"><a href="#现有方法的局限" class="headerlink" title="现有方法的局限"></a>现有方法的局限</h2><h3 id="1-直接增加-TAGE-容量"><a href="#1-直接增加-TAGE-容量" class="headerlink" title="1. 直接增加 TAGE 容量"></a>1. 直接增加 TAGE 容量</h3><ul>
+<li>TAGE 在前端关键路径上，容量一大，访问延迟和能耗都会上升</li>
+<li>虽然 overriding 之类技术能缓和延迟问题，但存在极限</li>
+<li>在考虑延迟后，更大的 predictor 可能让 IPC 反而下降<ul>
+<li>作者用 CACTI 估算出，若把 TAGE 容量增大 8 倍，访问能耗会增长到 <strong>4.58 倍</strong></li>
+</ul>
+</li>
+</ul>
+<p>所以问题在于<strong>边际收益递减</strong>：</p>
+<ul>
+<li>精度收益增长很慢</li>
+<li>延迟&#x2F;能耗代价增长很快</li>
+</ul>
+<h3 id="2-传统层次化-分页式-TAGE-virtualized-TAGE-paged-TAGE"><a href="#2-传统层次化-分页式-TAGE-virtualized-TAGE-paged-TAGE" class="headerlink" title="2. 传统层次化&#x2F;分页式 TAGE: virtualized TAGE &#x2F; paged TAGE"></a>2. 传统层次化&#x2F;分页式 TAGE: virtualized TAGE &#x2F; paged TAGE</h3><p>思路：把某段代码相关的 predictor metadata 聚在同一个 page 里，再像 cache 一样换入换出<br>(data prefetcher 中对于 Pointer-Chasing Prefetcher 的 prefetch table 也有类似的做法)</p>
+<p>问题: TAGE 的索引是 hash(PC, history)：</p>
+<ol>
+<li><strong>hash 影响了空间局部性</strong><ul>
+<li>相邻代码的分支，predictor entry 并不相邻</li>
+<li>很难像 I-cache 那样高效预取一组“附近的 predictor 状态</li>
+</ul>
+</li>
+<li><strong>每个静态分支所需 pattern 数量极度不均匀</strong><ul>
+<li>大多数分支只需要很少 pattern</li>
+<li>少数复杂分支需要上百甚至上千个 pattern</li>
+<li>固定 page 大小：<ul>
+<li>page 小: 装不下复杂分支</li>
+<li>page 大: 又浪费大量容量</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h1 id="LLBP-的核心研究点-Context-Locality"><a href="#LLBP-的核心研究点-Context-Locality" class="headerlink" title="LLBP 的核心研究点: Context Locality"></a>LLBP 的核心研究点: Context Locality</h1><p>论文的关键不是“再造一个更大的表”，而是先找到一种新的状态组织单位，使 predictor metadata 同时具备：</p>
+<ul>
+<li>可分层搬运的粒度</li>
+<li>相对紧凑的容量分布</li>
+<li>足够好的局部性</li>
+</ul>
+<p>这就引出了论文最重要的观察：<strong>context locality</strong></p>
+<ol>
+<li>一个分支如果需要很多 pattern，本质上说明它依赖很长的 history</li>
+<li>很长 history 会跨越多个函数和代码区域，其中会穿过大量 <strong>无条件控制流转移</strong>，例如 jump&#x2F;call&#x2F;return</li>
+<li>这些无条件转移序列，可以看成当前程序执行状态的一种“指纹”，也就是 <strong>program context</strong></li>
+<li>如果用这个 context 去切分 branch behavior，那么原来“一个静态分支对应海量 pattern”的问题，会变成“一个 context 只对应很少 pattern”</li>
+</ol>
+<p>实验验证：</p>
+<ul>
+<li>对最复杂的分支，useful pattern 的历史长度可达到 <strong>5–1500</strong> 条 branch，平均约 <strong>200</strong></li>
+<li>平均每两个无条件分支之间约有 <strong>3.89</strong> 个条件分支，因此历史长度 200 的 branch，大约跨越 <strong>50 多个</strong> 无条件分支，确实已经跨了很多上下文边界</li>
+<li>在不做 context 切分时（W&#x3D;0），前 128 个复杂分支中，50% 需要超过 <strong>298</strong> 个 pattern，95% 需要 <strong>2384</strong> 个。</li>
+<li>如果 context 仅由前 <strong>2 个</strong> 无条件分支构成（W&#x3D;2），50% 的 context 只需 <strong>3</strong> 个 useful pattern，95% 少于 <strong>40</strong> 个；</li>
+</ul>
+<ul>
+<li>如果 W&#x3D;32，95% 的 context 最多只需 <strong>9</strong> 个 pattern</li>
+</ul>
+<p>说明：<br><strong>pattern 数量之所以爆炸，不只是 branch 本身复杂，而是传统分支预测器不区分不同程序的上下文，只看历史 pattern</strong></p>
+<p>一旦按 context 拆开，pattern working set 会急剧收缩</p>
+<hr>
+<h1 id="LLBP-设计思路"><a href="#LLBP-设计思路" class="headerlink" title="LLBP 设计思路"></a>LLBP 设计思路</h1><p>LLBP 不是替代 TAGE，而是给 TAGE-SC-L 增加一个高容量的后备层</p>
+<p>其定位类似于“last-level cache”</p>
+<p>设计点：</p>
+<ol>
+<li>把 predictor metadata 按 context 重新组织成 pattern set</li>
+<li>大容量存储放在核外&#x2F;慢层，小容量活跃集放在核内</li>
+<li>当前 context 和即将到来的 context 的 pattern set 被预取到核内的小 buffer</li>
+<li>预测时，LLBP 与原始 TAGE 并行工作，采用匹配到更长 history 的作为真实预测结果</li>
+</ol>
+<h2 id="硬件组成"><a href="#硬件组成" class="headerlink" title="硬件组成"></a>硬件组成</h2><p>LLBP 主要由四个硬件部件组成：</p>
+<p><img src="/2026/03/19/cpu/bpu/2024-MICRO-LLBP/llbp.svg" alt="LLBP"></p>
+<h3 id="1-LLBP-大容量存储阵列"><a href="#1-LLBP-大容量存储阵列" class="headerlink" title="1. LLBP 大容量存储阵列"></a>1. LLBP 大容量存储阵列</h3><p>bulk storage: 保存大量 pattern set</p>
+<ul>
+<li>每个 entry 对应一个 context 以及该 context 对应的一组 pattern</li>
+<li>主要追求存储密度，不追求单周期低延迟<ul>
+<li>因为真正预测时访问的是前面的小 buffer，而不是每次都直达 bulk storage</li>
+</ul>
+</li>
+</ul>
+<p>每个 pattern 包含：</p>
+<ul>
+<li>prediction counter</li>
+<li>pattern tag</li>
+<li>history length 字段</li>
+</ul>
+<blockquote>
+<p>和 TAGE 的区别：</p>
+<ol>
+<li>TAGE 把不同 history length 分布在不同表里</li>
+<li>LLBP 允许多个不同 history length 的 pattern 共存在同一个 pattern set</li>
+</ol>
+</blockquote>
+<h3 id="2-Pattern-Buffer（PB）"><a href="#2-Pattern-Buffer（PB）" class="headerlink" title="2. Pattern Buffer（PB）"></a>2. Pattern Buffer（PB）</h3><p>核内的小 buffer，缓存：</p>
+<ul>
+<li>当前 active context 的 pattern set</li>
+<li>最近访问过的若干 context 的 pattern set</li>
+<li>即将到来的 context 的预取结果</li>
+</ul>
+<p>相当于 LLBP 的 L1</p>
+<h3 id="3-Rolling-Context-Register（RCR）"><a href="#3-Rolling-Context-Register（RCR）" class="headerlink" title="3. Rolling Context Register（RCR）"></a>3. Rolling Context Register（RCR）</h3><ol>
+<li>记录最近 <code>W</code> 个无条件分支 PC</li>
+<li>通过 rolling XOR hash 生成当前 context ID（CCID）</li>
+</ol>
+<p>代表当前代码区域的上下文</p>
+<h3 id="4-Context-Directory（CD）"><a href="#4-Context-Directory（CD）" class="headerlink" title="4. Context Directory（CD）"></a>4. Context Directory（CD）</h3><ul>
+<li>类似 cache tag array</li>
+<li>负责用 context ID 查到对应的 pattern set 是否存在，以及它在 LLBP 中的位置</li>
+</ul>
+<hr>
+<h2 id="预测流程"><a href="#预测流程" class="headerlink" title="预测流程"></a>预测流程</h2><p>对当前 branch：</p>
+<ul>
+<li>和 TAGE 一样，先基于 branch PC 与 GHR 计算各个历史长度下的 hash；</li>
+<li>PB 中当前 context 的 pattern set 会并行比较 tag</li>
+<li>命中后由 counter 给出 taken&#x2F;not-taken</li>
+</ul>
+<h3 id="选择命中“最长-history”"><a href="#选择命中“最长-history”" class="headerlink" title="选择命中“最长 history”"></a>选择命中“最长 history”</h3><p>TAGE 的一个核心原则是：长历史匹配优先于短历史匹配</p>
+<p>LLBP 把不同 history length 放进同一个 set</p>
+<ul>
+<li>pattern set 内部按 history length 排序</li>
+<li>匹配后的优先级仲裁，用与 TAGE 类似的 mux cascade 实现</li>
+</ul>
+<h3 id="LLBP-与基线-TAGE-仲裁"><a href="#LLBP-与基线-TAGE-仲裁" class="headerlink" title="LLBP 与基线 TAGE 仲裁"></a>LLBP 与基线 TAGE 仲裁</h3><p>LLBP 与 TAGE 并行预测，然后比较二者命中的 history length：</p>
+<p>如果 LLBP 命中的 history length 不短于 TAGE 的 provider 则 LLBP override TAGE ，否则沿用 TAGE 结果</p>
+<hr>
+<h2 id="PB-Prefetching"><a href="#PB-Prefetching" class="headerlink" title="PB Prefetching"></a>PB Prefetching</h2><p>不用额外预测器来预测 context，而是“用过去的 context 预取未来”: 把当前 context 的定义滞后 <code>D</code> 个无条件分支：</p>
+<ul>
+<li>当前用于预测的 CCID，不包含最近的 D 个无条件分支；</li>
+<li>而“prefetch CID”则用更近的历史来表示即将到来的上下文</li>
+</ul>
+<p>这样做的效果是：<br>当某个即将生效的 context 已经“可知”时，真正进入该 context 还要再经过 D 个无条件分支，这段时间就成了预取窗口</p>
+<p>论文实验中使用：</p>
+<ul>
+<li>context window <code>W = 8</code> 个无条件分支</li>
+<li>prefetch distance <code>D = 4</code> 个无条件分支</li>
+<li>预取延迟建模为 <code>6 cycles</code></li>
+</ul>
+<hr>
+<h2 id="LLBP-训练与替换"><a href="#LLBP-训练与替换" class="headerlink" title="LLBP 训练与替换"></a>LLBP 训练与替换</h2><p>如果 LLBP override 了 TAGE，那么 TAGE 会取消本次更新，只更新 LLBP 的 provider</p>
+<h3 id="分配-pattern-策略-根据置信度而非时间局部性"><a href="#分配-pattern-策略-根据置信度而非时间局部性" class="headerlink" title="分配 pattern 策略: 根据置信度而非时间局部性"></a>分配 pattern 策略: 根据置信度而非时间局部性</h3><p>当 provider 预测错时，LLBP 分配一个更长 history 的新 pattern。过程大致四步：</p>
+<ol>
+<li>若当前 context 还没被 LLBP 跟踪，则先为其创建新的 pattern set</li>
+<li>在当前 pattern set 中选一个置信度最低的 pattern 作为 victim</li>
+<li>填入新 tag &#x2F; history length &#x2F; 初始 counter</li>
+<li>维护 pattern set 内按 history length 排序</li>
+</ol>
+<h3 id="Pattern-Set-分-Bucket-排序"><a href="#Pattern-Set-分-Bucket-排序" class="headerlink" title="Pattern Set 分 Bucket 排序"></a>Pattern Set 分 Bucket 排序</h3><p>一个 set 内 16 个 pattern 任意 history length 排序: 复杂度太高</p>
+<p>策略：把 16 个 pattern 分成 4 个 bucket，每个 bucket 只允许放一段历史长度范围内的 pattern</p>
+<p>好处：</p>
+<ul>
+<li>分配时只需在 bucket 内局部排序</li>
+<li>mux 复杂度和延迟更低</li>
+<li>history length 字段只需 2 位</li>
+</ul>
+<hr>
+<h1 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h1><h2 id="Workload-and-Setup"><a href="#Workload-and-Setup" class="headerlink" title="Workload and Setup"></a>Workload and Setup</h2><p>14 个 workload，包括：</p>
+<ul>
+<li>NodeApp、PHPWiki 两个 web 服务</li>
+<li>DaCapo、Renaissance、BenchBase 中的多种 Java workload</li>
+<li>Google 提供的 4 个数据中心 trace</li>
+</ul>
+<p>仿真平台是 ChampSim，基线 core 为：</p>
+<ul>
+<li>4GHz</li>
+<li>6-way OoO</li>
+<li>512 ROB</li>
+<li>64KiB TAGE-SC-L</li>
+<li>16K-entry BTB</li>
+<li>32KiB L1I &#x2F; 48KiB L1D &#x2F; 2MiB L2 &#x2F; 8MiB LLC</li>
+</ul>
+<p>LLBP 的具体配置是：</p>
+<ul>
+<li>每个 pattern：18 bits</li>
+<li>每个 pattern set：16 个 pattern，共 288 bits</li>
+<li>LLBP 使用 16 个 history length（从基线 TAGE 的 21 个中选取）</li>
+<li>CD + LLBP 共可容纳约 <strong>14K pattern sets</strong></li>
+<li>CD 容量 <strong>8.75KiB</strong></li>
+<li>LLBP 容量 <strong>504KiB</strong></li>
+<li>PB 容量 <strong>2.25KiB</strong>，缓存 64 个最近 pattern set</li>
+</ul>
+<ul>
+<li><code>W</code>: context ID 由几个无条件分支 hash 得到，设置为 8</li>
+<li><code>D</code>: prefetch distance , Prefetch CID 和 CCID 之间滞后的无条件分支数，设置为 4</li>
+</ul>
+<hr>
+<h2 id="MPKI-降低"><a href="#MPKI-降低" class="headerlink" title="MPKI 降低"></a>MPKI 降低</h2><p>主结果是：</p>
+<ul>
+<li>512KB LLBP + 64KB TAGE-SC-L</li>
+<li>baseline: 64KB TAGE-SC-L</li>
+<li>MPKI 降低 <strong>0.5%–25.9%</strong></li>
+<li>平均 <strong>8.9%</strong>。</li>
+</ul>
+<p>理想无延迟版本 LLBP-0Lat 的平均提升是 <strong>9.9%</strong></p>
+<p>说明真实实现（带预取延迟）已经达到了理想情况的大约 <strong>90%</strong></p>
+<p>缺陷：</p>
+<ul>
+<li>同等大致存储预算的“512K TAGE-SC-L”平均能降 <strong>27.3%</strong> MPKI</li>
+<li>但 512K TAGE-SC-L 并不现实，因为延迟太高</li>
+</ul>
+<h2 id="IPC-提升"><a href="#IPC-提升" class="headerlink" title="IPC 提升"></a>IPC 提升</h2><ul>
+<li>平均 speedup <strong>0.63%</strong></li>
+<li>LLBP-0Lat 为 <strong>0.71%</strong></li>
+<li>512K TAGE-SC-L 为 <strong>1.26%</strong></li>
+<li>ideal bpu 的平均 speedup 为 <strong>3.6%</strong><ul>
+<li>ideal bpu 的收益明显低于先前工作和真实硬件上的 Top-Down 分析结果</li>
+<li>作者归因于 ChampSim 的 core model 可能低估了分支预测改进的真实性能收益</li>
+</ul>
+</li>
+</ul>
+<h2 id="工程可实现性"><a href="#工程可实现性" class="headerlink" title="工程可实现性"></a>工程可实现性</h2><h3 id="1-带宽"><a href="#1-带宽" class="headerlink" title="1. 带宽"></a>1. 带宽</h3><p>LLBP 与 PB 之间传输的是整个 pattern set:</p>
+<ul>
+<li>16-entry PB 时，总带宽约 <strong>12.1 bits&#x2F;instruction</strong></li>
+<li>64-entry PB 时降到 <strong>9.9 bits&#x2F;instruction</strong></li>
+<li>256-entry PB 时低于 <strong>1 byte&#x2F;instruction</strong>。</li>
+</ul>
+<p>论文选用 64-entry PB，认为这是容量与带宽的折中</p>
+<p>和 L1I-L2 流量：64-entry PB 下，LLBP 的读带宽比 L1I miss 流量还低 41%</p>
+<p>从互连带宽角度，LLBP 至少不是一个完全不切实际的方案</p>
+<h3 id="2-延迟"><a href="#2-延迟" class="headerlink" title="2. 延迟"></a>2. 延迟</h3><p>CACTI 估算结果显示：</p>
+<ul>
+<li>64KiB TAGE-SC-L：约 2 cycle</li>
+<li>512KiB TAGE-SC-L：约 4 cycle</li>
+<li>LLBP lookup：约 4 cycle</li>
+<li>CD &#x2F; PB：1 cycle 内</li>
+</ul>
+<p>所以作者在仿真中把 LLBP 的预取延迟设为 <strong>6 cycles</strong>，用于覆盖 CD + LLBP 顺序访问和额外逻辑延迟</p>
+<h3 id="3-能耗"><a href="#3-能耗" class="headerlink" title="3 能耗"></a>3 能耗</h3><p>单次访问能耗上：</p>
+<ul>
+<li>512KiB TAGE-SC-L 是 64K TAGE-SC-L 的 <strong>4.58 倍</strong></li>
+<li>LLBP 本体单次访问是 <strong>4.44 倍</strong></li>
+<li>但 CD 和 PB 的单次访问只分别是 <strong>0.3 倍</strong> 和 <strong>0.25 倍</strong></li>
+</ul>
+<p>访问频率：</p>
+<ul>
+<li>基线 TAGE 和 PB 每周期都用</li>
+<li>CD 只在 context 切换时用，平均约每 <strong>6.3 cycles</strong></li>
+<li>LLBP 本体只在 PB miss 且存在该 context 时访问，平均约每 <strong>7.7 cycles</strong> 一次</li>
+</ul>
+<p>综合访问频率: LLBP 全部结构合计能耗大约是 <strong>64K TAGE-SC-L 的 51%–57%</strong></p>
+<hr>
+<h2 id="敏感性与有效性分析"><a href="#敏感性与有效性分析" class="headerlink" title="敏感性与有效性分析"></a>敏感性与有效性分析</h2><h3 id="1-prefetch-distance-与-history-选择"><a href="#1-prefetch-distance-与-history-选择" class="headerlink" title="1. prefetch distance 与 history 选择"></a>1. prefetch distance 与 history 选择</h3><p>作者比较了不同 history 类型用于 context 的效果，发现：</p>
+<ul>
+<li>只用 <strong>unconditional branch history</strong> 最好</li>
+<li><code>D = 4</code> 时达到最佳 MPKI reduction</li>
+<li>若把 conditional branch 也混进 context history，会引入噪声，反而更差</li>
+</ul>
+<p>说明对“context”定义很重要：抓的是 <strong>跨代码区域的全局控制流骨架</strong>，而不是所有控制流细节</p>
+<ul>
+<li>若 context 太细，会过拟合；</li>
+<li>若太粗，又无法区分</li>
+</ul>
+<h3 id="2-pattern-set-的大小与-context-数量"><a href="#2-pattern-set-的大小与-context-数量" class="headerlink" title="2. pattern set 的大小与 context 数量"></a>2. pattern set 的大小与 context 数量</h3><ul>
+<li>16K contexts，每个 8 patterns 时，就能得到约 <strong>11%</strong> 的 MPKI reduction</li>
+<li>每个 context 从 8 patterns 提到 16 patterns，还能再多拿 <strong>2.6%</strong></li>
+<li>再继续加到 32 或 64，收益已经明显递减</li>
+</ul>
+<p>同时，增加 context 数量基本接近线性提升，直到大约 14K sets 后才开始放缓。</p>
+<p>作者据此认为，LLBP 的收益主要还是由总体存储容量驱动，而 context-based 组织能有效把高度偏斜的 working set 打散。</p>
+<h3 id="3-LLBP-实际预测覆盖率"><a href="#3-LLBP-实际预测覆盖率" class="headerlink" title="3. LLBP 实际预测覆盖率"></a>3. LLBP 实际预测覆盖率</h3><ul>
+<li>LLBP 只为 <strong>14.8%</strong> 的动态条件分支提供预测；</li>
+<li>一旦提供预测，其中 <strong>77%</strong> 的情况下会 override 基线；</li>
+<li>但坏 override 只有 <strong>6.8%</strong>；</li>
+<li>不过其中 <strong>59%</strong> 的 override 实际是“冗余的”: 即使 override 了，结果也和基线一致</li>
+</ul>
+<p>表明：</p>
+<ol>
+<li><strong>LLBP 不是一个通用大而全 predictor，而是一个针对复杂分支的专门补丁层</strong></li>
+<li><strong>很准，但存储效率不够高</strong></li>
+</ol>
+<hr>
+<h1 id="Futurn-Work"><a href="#Futurn-Work" class="headerlink" title="Futurn Work"></a>Futurn Work</h1><h2 id="1-MPKI-收益明显，但提升有限"><a href="#1-MPKI-收益明显，但提升有限" class="headerlink" title="1. MPKI 收益明显，但提升有限"></a>1. MPKI 收益明显，但提升有限</h2><ul>
+<li>同等大致容量预算的 512K TAGE-SC-L 参考值是 <strong>27.3%</strong> (因延迟不可实现)</li>
+<li>LLBP 平均 MPKI 降低 <strong>8.9%</strong> (从“精度上限”看，LLBP 提升有限)</li>
+</ul>
+<h2 id="2-IPC-收益偏小"><a href="#2-IPC-收益偏小" class="headerlink" title="2. IPC 收益偏小"></a>2. IPC 收益偏小</h2><ul>
+<li>平均 speedup 只有 0.63%</li>
+<li>作者解释: 用 Top-Down 和 prior work 来说明这更可能是 ChampSim 的问题，而不是设计本身无用</li>
+</ul>
+<h2 id="3-对间接分支、pipeline-reset-较敏感"><a href="#3-对间接分支、pipeline-reset-较敏感" class="headerlink" title="3. 对间接分支、pipeline reset 较敏感"></a>3. 对间接分支、pipeline reset 较敏感</h2><p>针对某些 workload 例如 PHPWiki 上，由于 indirect call misprediction 多，pipeline flush 会重置 LLBP 的预取过程，导致收益明显不如理想情况</p>
+<p>说明 LLBP 对“前端频繁清空”的场景有脆弱性，其有效性依赖于预取窗口能稳定存在</p>
+<h2 id="4-context-hash-是近似，不是精确调用链"><a href="#4-context-hash-是近似，不是精确调用链" class="headerlink" title="4. context hash 是近似，不是精确调用链"></a>4. context hash 是近似，不是精确调用链</h2><ul>
+<li>RCR 使用的是无条件分支 PC 的 rolling XOR hash，并不是精确的 call chain</li>
+<li>成本低，但一定会引入 collision 和信息丢失</li>
+</ul>
+<h2 id="5-存储效率低"><a href="#5-存储效率低" class="headerlink" title="5. 存储效率低"></a>5. 存储效率低</h2><ul>
+<li>LLBP 只覆盖 14.8% 的动态条件分支</li>
+<li>59% 的 override 其实和基线相同</li>
+</ul>
+<p>说明有不少存储和带宽花在“正确但不必要的重复确认”上</p>
+<p>这篇论文的后续工作：<a href="/2026/03/19/cpu/bpu/2026-HPCA-LLBPX/" title="2026 HPCA: The Last-Level Branch Predictor Revisited">2026 HPCA: The Last-Level Branch Predictor Revisited</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2026/03/19/cpu/bpu/2024-MICRO-LLBP/">https://xixi-shredp.github.io/2026/03/19/cpu/bpu/2024-MICRO-LLBP/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/MICRO/">MICRO</a><a class="post-meta__tags" href="/tags/2024/">2024</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/03/19/cpu/bpu/2026-HPCA-LLBPX/" title="2026 HPCA: The Last-Level Branch Predictor Revisited"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">2026 HPCA: The Last-Level Branch Predictor Revisited</div></div><div class="info-2"><div class="info-item-1">2026 HPCA 论文阅读：The Last-Level Branch Predictor Revisited</div></div></div></a><a class="pagination-related" href="/2026/03/13/cpu/matrix/riscv/pulp_quadrilatero/" title="RISC-V Matrix: PULP Quadrilatero"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">RISC-V Matrix: PULP Quadrilatero</div></div><div class="info-2"><div class="info-item-1">RISC-V Matrix 自定义扩展（AME）：PULP Quadrilatero</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">86</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">48</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E9%97%AE%E9%A2%98"><span class="toc-number">1.</span> <span class="toc-text">核心问题</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8A%A8%E6%9C%BA%EF%BC%9A%E7%9C%9F%E5%AE%9E%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%9C%BA%E6%99%AF"><span class="toc-number">1.1.</span> <span class="toc-text">动机：真实服务器场景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8E%B0%E6%9C%89%E6%96%B9%E6%B3%95%E7%9A%84%E5%B1%80%E9%99%90"><span class="toc-number">1.2.</span> <span class="toc-text">现有方法的局限</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E7%9B%B4%E6%8E%A5%E5%A2%9E%E5%8A%A0-TAGE-%E5%AE%B9%E9%87%8F"><span class="toc-number">1.2.1.</span> <span class="toc-text">1. 直接增加 TAGE 容量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E4%BC%A0%E7%BB%9F%E5%B1%82%E6%AC%A1%E5%8C%96-%E5%88%86%E9%A1%B5%E5%BC%8F-TAGE-virtualized-TAGE-paged-TAGE"><span class="toc-number">1.2.2.</span> <span class="toc-text">2. 传统层次化&#x2F;分页式 TAGE: virtualized TAGE &#x2F; paged TAGE</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#LLBP-%E7%9A%84%E6%A0%B8%E5%BF%83%E7%A0%94%E7%A9%B6%E7%82%B9-Context-Locality"><span class="toc-number">2.</span> <span class="toc-text">LLBP 的核心研究点: Context Locality</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#LLBP-%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF"><span class="toc-number">3.</span> <span class="toc-text">LLBP 设计思路</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A1%AC%E4%BB%B6%E7%BB%84%E6%88%90"><span class="toc-number">3.1.</span> <span class="toc-text">硬件组成</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-LLBP-%E5%A4%A7%E5%AE%B9%E9%87%8F%E5%AD%98%E5%82%A8%E9%98%B5%E5%88%97"><span class="toc-number">3.1.1.</span> <span class="toc-text">1. LLBP 大容量存储阵列</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Pattern-Buffer%EF%BC%88PB%EF%BC%89"><span class="toc-number">3.1.2.</span> <span class="toc-text">2. Pattern Buffer（PB）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Rolling-Context-Register%EF%BC%88RCR%EF%BC%89"><span class="toc-number">3.1.3.</span> <span class="toc-text">3. Rolling Context Register（RCR）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-Context-Directory%EF%BC%88CD%EF%BC%89"><span class="toc-number">3.1.4.</span> <span class="toc-text">4. Context Directory（CD）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A2%84%E6%B5%8B%E6%B5%81%E7%A8%8B"><span class="toc-number">3.2.</span> <span class="toc-text">预测流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%89%E6%8B%A9%E5%91%BD%E4%B8%AD%E2%80%9C%E6%9C%80%E9%95%BF-history%E2%80%9D"><span class="toc-number">3.2.1.</span> <span class="toc-text">选择命中“最长 history”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LLBP-%E4%B8%8E%E5%9F%BA%E7%BA%BF-TAGE-%E4%BB%B2%E8%A3%81"><span class="toc-number">3.2.2.</span> <span class="toc-text">LLBP 与基线 TAGE 仲裁</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#PB-Prefetching"><span class="toc-number">3.3.</span> <span class="toc-text">PB Prefetching</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#LLBP-%E8%AE%AD%E7%BB%83%E4%B8%8E%E6%9B%BF%E6%8D%A2"><span class="toc-number">3.4.</span> <span class="toc-text">LLBP 训练与替换</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%86%E9%85%8D-pattern-%E7%AD%96%E7%95%A5-%E6%A0%B9%E6%8D%AE%E7%BD%AE%E4%BF%A1%E5%BA%A6%E8%80%8C%E9%9D%9E%E6%97%B6%E9%97%B4%E5%B1%80%E9%83%A8%E6%80%A7"><span class="toc-number">3.4.1.</span> <span class="toc-text">分配 pattern 策略: 根据置信度而非时间局部性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Pattern-Set-%E5%88%86-Bucket-%E6%8E%92%E5%BA%8F"><span class="toc-number">3.4.2.</span> <span class="toc-text">Pattern Set 分 Bucket 排序</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C"><span class="toc-number">4.</span> <span class="toc-text">实验</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Workload-and-Setup"><span class="toc-number">4.1.</span> <span class="toc-text">Workload and Setup</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MPKI-%E9%99%8D%E4%BD%8E"><span class="toc-number">4.2.</span> <span class="toc-text">MPKI 降低</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#IPC-%E6%8F%90%E5%8D%87"><span class="toc-number">4.3.</span> <span class="toc-text">IPC 提升</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B7%A5%E7%A8%8B%E5%8F%AF%E5%AE%9E%E7%8E%B0%E6%80%A7"><span class="toc-number">4.4.</span> <span class="toc-text">工程可实现性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%B8%A6%E5%AE%BD"><span class="toc-number">4.4.1.</span> <span class="toc-text">1. 带宽</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%BB%B6%E8%BF%9F"><span class="toc-number">4.4.2.</span> <span class="toc-text">2. 延迟</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E8%83%BD%E8%80%97"><span class="toc-number">4.4.3.</span> <span class="toc-text">3 能耗</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%8F%E6%84%9F%E6%80%A7%E4%B8%8E%E6%9C%89%E6%95%88%E6%80%A7%E5%88%86%E6%9E%90"><span class="toc-number">4.5.</span> <span class="toc-text">敏感性与有效性分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-prefetch-distance-%E4%B8%8E-history-%E9%80%89%E6%8B%A9"><span class="toc-number">4.5.1.</span> <span class="toc-text">1. prefetch distance 与 history 选择</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-pattern-set-%E7%9A%84%E5%A4%A7%E5%B0%8F%E4%B8%8E-context-%E6%95%B0%E9%87%8F"><span class="toc-number">4.5.2.</span> <span class="toc-text">2. pattern set 的大小与 context 数量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-LLBP-%E5%AE%9E%E9%99%85%E9%A2%84%E6%B5%8B%E8%A6%86%E7%9B%96%E7%8E%87"><span class="toc-number">4.5.3.</span> <span class="toc-text">3. LLBP 实际预测覆盖率</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Futurn-Work"><span class="toc-number">5.</span> <span class="toc-text">Futurn Work</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-MPKI-%E6%94%B6%E7%9B%8A%E6%98%8E%E6%98%BE%EF%BC%8C%E4%BD%86%E6%8F%90%E5%8D%87%E6%9C%89%E9%99%90"><span class="toc-number">5.1.</span> <span class="toc-text">1. MPKI 收益明显，但提升有限</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-IPC-%E6%94%B6%E7%9B%8A%E5%81%8F%E5%B0%8F"><span class="toc-number">5.2.</span> <span class="toc-text">2. IPC 收益偏小</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%AF%B9%E9%97%B4%E6%8E%A5%E5%88%86%E6%94%AF%E3%80%81pipeline-reset-%E8%BE%83%E6%95%8F%E6%84%9F"><span class="toc-number">5.3.</span> <span class="toc-text">3. 对间接分支、pipeline reset 较敏感</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-context-hash-%E6%98%AF%E8%BF%91%E4%BC%BC%EF%BC%8C%E4%B8%8D%E6%98%AF%E7%B2%BE%E7%A1%AE%E8%B0%83%E7%94%A8%E9%93%BE"><span class="toc-number">5.4.</span> <span class="toc-text">4. context hash 是近似，不是精确调用链</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%AD%98%E5%82%A8%E6%95%88%E7%8E%87%E4%BD%8E"><span class="toc-number">5.5.</span> <span class="toc-text">5. 存储效率低</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/15/cpu/cache/prefetch/multi-pf/Alecto/" title="Alecto (HPCA 2025): Integrating Prefetcher Selection with Dynamic Request Allocation Improves Prefetching Efficiency">Alecto (HPCA 2025): Integrating Prefetcher Selection with Dynamic Request Allocation Improves Prefetching Efficiency</a><time datetime="2026-04-15T15:56:20.000Z" title="Created 2026-04-15 23:56:20">2026-04-15</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/15/cpu/cache/prefetch/data-pf/overview/" title="L2 Cache Data Prefetcher Overview">L2 Cache Data Prefetcher Overview</a><time datetime="2026-04-15T11:55:41.000Z" title="Created 2026-04-15 19:55:41">2026-04-15</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/15/cpu/simulator/gem5/custom-gem5/" title="Custom Gem5 实现汇总">Custom Gem5 实现汇总</a><time datetime="2026-04-15T07:58:35.000Z" title="Created 2026-04-15 15:58:35">2026-04-15</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/15/cpu/simulator/gem5/bpu/btb/directed_simple_btb/" title="DirectedBTB in Gem5">DirectedBTB in Gem5</a><time datetime="2026-04-15T07:52:25.000Z" title="Created 2026-04-15 15:52:25">2026-04-15</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/15/cpu/cache/prefetch/multi-pf/overview/" title="多预取器管理 Overview">多预取器管理 Overview</a><time datetime="2026-04-15T03:13:46.000Z" title="Created 2026-04-15 11:13:46">2026-04-15</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

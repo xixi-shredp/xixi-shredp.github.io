@@ -1,0 +1,825 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Gem5: Fetch Target Queue(FTQ) | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Gem5 FTQ 解读">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Gem5: Fetch Target Queue(FTQ)">
+<meta property="og:url" content="https://xixi-shredp.github.io/2026/04/08/cpu/simulator/gem5/frontend/ftq/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="Gem5 FTQ 解读">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2026-04-08T09:26:32.000Z">
+<meta property="article:modified_time" content="2026-04-13T07:48:10.546Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="CPU, Computer Architechture, OS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Gem5: Fetch Target Queue(FTQ)",
+  "url": "https://xixi-shredp.github.io/2026/04/08/cpu/simulator/gem5/frontend/ftq/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2026-04-08T09:26:32.000Z",
+  "dateModified": "2026-04-13T07:48:10.546Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2026/04/08/cpu/simulator/gem5/frontend/ftq/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Gem5: Fetch Target Queue(FTQ)',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background: linear-gradient(180deg, black, black, #23064D);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">86</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">48</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Gem5: Fetch Target Queue(FTQ)</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Gem5: Fetch Target Queue(FTQ)</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-04-08T09:26:32.000Z" title="Created 2026-04-08 17:26:32">2026-04-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-04-13T07:48:10.546Z" title="Updated 2026-04-13 15:48:10">2026-04-13</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/">cpu</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/simulator/">simulator</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/simulator/gem5/">gem5</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/simulator/gem5/frontend/">frontend</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>当前 O3 前端里的 <code>FTQ</code> 的定位是：</p>
+<ol>
+<li><code>BAC</code>(Branch Address Calculation) 生成 <code>FetchTarget</code> 后，用于在 <code>BAC</code> 与 <code>Fetch</code> 之间传递取指目标的队列。</li>
+<li><code>FetchTarget</code> 的承载体，用来描述一段连续的 fetch 范围，以及该范围退出点的预测信息。</li>
+<li>一个临时托管 <code>BPU PredictorHistory</code> 的结构，用于桥接“预测发生时刻”与“预译码拿到真实 branch&#x2F;seqNum 时刻”之间的时间差。</li>
+</ol>
+<p>当前实现中：</p>
+<ul>
+<li><code>BAC</code> 是 <code>FTQ</code> 的生产者。</li>
+<li><code>Fetch</code> 是 <code>FTQ</code> 的消费者。</li>
+<li><code>BPU</code> 是预测与恢复逻辑的真正拥有者。</li>
+<li><code>FTQ</code> 是 <code>FetchTarget</code> 和尚未正式入账的 <code>PredictorHistory</code> 的过渡驻留点。</li>
+</ul>
+<blockquote>
+<p>与 FTQ 直接相关的文件是：</p>
+<ul>
+<li><code>ftq.hh/cc</code>：定义 <code>FetchTarget</code> 与 <code>FTQ</code>。</li>
+<li><code>bac.hh/cc</code>：负责生成 <code>FetchTarget</code>、把它放入 FTQ、在 fetch 阶段把历史迁回 BPU。</li>
+<li><code>fetch.cc</code>：负责消费 FTQ 头部的 <code>FetchTarget</code>。</li>
+</ul>
+</blockquote>
+<hr>
+<h1 id="前端组织方式"><a href="#前端组织方式" class="headerlink" title="前端组织方式"></a>前端组织方式</h1><h2 id="BAC-被拆成两部分"><a href="#BAC-被拆成两部分" class="headerlink" title="BAC 被拆成两部分"></a>BAC 被拆成两部分</h2><p><code>BAC</code> 的职责：</p>
+<ol>
+<li><strong>Branch prediction &#x2F; FTQ feeding 部分</strong><ul>
+<li>在 decoupled frontend 模式下作为一个独立活动阶段运行。</li>
+<li>负责利用 <code>BTB</code> 扫描地址流、发现可能的 branch、调用 BPU 产生预测，并构造 <code>FetchTarget</code> 插入 <code>FTQ</code></li>
+</ul>
+</li>
+<li><strong>PC update &#x2F; predecode 协调部分</strong><ul>
+<li>与 <code>Fetch</code> 紧耦合</li>
+<li><code>Fetch</code> 每预译码一条指令，就调用 <code>BAC::updatePC()</code> 决定下一条 PC</li>
+<li>在 decoupled 模式下，真正把 <code>FTQ</code> 里暂存的预测历史迁回 BPU，也发生在这里</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>源码注释也明确指出，这种组织方式并不完美，但目的是把 decoupling 逻辑主要收敛在 <code>BAC</code> 内，而不是进一步复杂化 <code>Fetch</code></p>
+</blockquote>
+<h2 id="Coupled-frontend-与-decoupled-frontend-的差异"><a href="#Coupled-frontend-与-decoupled-frontend-的差异" class="headerlink" title="Coupled frontend 与 decoupled frontend 的差异"></a>Coupled frontend 与 decoupled frontend 的差异</h2><p>当前代码同时支持两种模式：</p>
+<h4 id="Coupled-frontend"><a href="#Coupled-frontend" class="headerlink" title="Coupled frontend"></a>Coupled frontend</h4><ul>
+<li><code>Fetch</code> 在预译码到 branch 时，直接调用 <code>bpu-&gt;predict(...)</code></li>
+<li>不需要 <code>FTQ</code> 介入预测流程</li>
+<li>预测和 <code>Fetch</code> 更同步</li>
+</ul>
+<h4 id="Decoupled-frontend"><a href="#Decoupled-frontend" class="headerlink" title="Decoupled frontend"></a>Decoupled frontend</h4><ul>
+<li><code>BAC</code> 提前基于 <code>BTB</code> 扫描地址流，先生成 <code>FetchTarget</code></li>
+<li><code>Fetch</code> 后续只按 FTQ 第一项取指</li>
+<li><code>Fetch</code> 在预译码到 branch 后，不再重新做预测，而是从 <code>FTQ</code> 里取出已生成的预测历史</li>
+</ul>
+<hr>
+<h1 id="FTQ"><a href="#FTQ" class="headerlink" title="FTQ"></a>FTQ</h1><h2 id="FetchTarget"><a href="#FetchTarget" class="headerlink" title="FetchTarget"></a>FetchTarget</h2><p><code>FetchTarget</code> 可以近似理解成一个“前端预测驱动的连续取指块”。它和传统基本块 <code>basic block</code> 有相似性，但并不完全等价：</p>
+<ul>
+<li>有一个 <code>startPC</code> 和一个 <code>endPC</code></li>
+<li>可能包含 <code>surprise branch</code>: BAC 当时看不到、只能在后续 predecode 才发现的 branch</li>
+</ul>
+<p><code>FetchTarget</code> 包含以下信息：</p>
+<ul>
+<li><code>startPC</code>: fetch target 的起始地址</li>
+<li><code>endPC</code>: fetch target 的结束地址，对应退出 instruction 的 PC。</li>
+<li><code>predPC</code><ul>
+<li>如果退出 instruction 是 branch，则这是该退出 branch 对应的预测目标地址</li>
+<li>如果退出 instruction 不是 branch，那么这个字段仍会在 <code>finalize()</code> 时被填入“下一个 FT 的起点”</li>
+</ul>
+</li>
+<li><code>ftSeqNum</code>: <code>FetchTarget</code> 自己的编号，不是指令的 <code>seqNum</code>(因为 FT 是在真正生成动态指令之前就构建出来的)</li>
+<li><code>tid</code>: 线程 id</li>
+<li><code>is_branch</code>: 退出 instruction 是否是 branch。</li>
+<li><code>taken</code>: 退出 branch 是否预测为 taken。</li>
+<li><code>bpuHistory</code>: <code>BPredUnit::PredictorHistory *</code>，用于在 FT 等待于 FTQ 期间暂存该 fetch target 对应的分支预测历史</li>
+</ul>
+<p><code>FetchTarget</code> 结束的条件：</p>
+<ul>
+<li>找到 branch</li>
+<li>达到最大搜索宽度</li>
+<li>在复杂 micro-op 场景下触发特殊处理后被保守截断</li>
+</ul>
+<blockquote>
+<p><strong>为什么 <code>bpuHistory</code> 需要在 FetchTarget 上?</strong>  </p>
+<p>因为在 decoupled frontend 中，预测发生得更早，而真正动态指令的 <code>seqNum</code> 更晚才出现<br>在 gem5 当前实现里：</p>
+<ul>
+<li>BPU 的正式历史管理以指令序号 <code>seqNum</code> 为核心</li>
+<li>但 BAC 构造 FT 的时候，还没有真实的动态指令，拿不到最终 <code>seqNum</code></li>
+</ul>
+<p>于是实现采用一个过渡策略：</p>
+<ol>
+<li>在 BAC 生成 FT 并调用 <code>bpu-&gt;predict(...)</code> 时，先拿到一份 <code>PredictorHistory</code></li>
+<li>这份历史不立即放进 BPU 的 <code>predHist</code> 正式队列</li>
+<li>它先挂到 <code>ft-&gt;bpuHistory</code> 上，在 FTQ 中临时保存</li>
+<li>等 <code>Fetch</code> 真正预译码到那个 branch，拿到动态指令和真实 <code>seqNum</code> 后，再把这份历史转移回 BPU 主历史队列</li>
+</ol>
+</blockquote>
+<hr>
+<h2 id="FTQ-任务"><a href="#FTQ-任务" class="headerlink" title="FTQ 任务"></a>FTQ 任务</h2><p><code>FTQ</code> 本身主要负责：</p>
+<ul>
+<li>存放 <code>FetchTarget</code></li>
+<li>提供头尾插入和弹出</li>
+<li>提供一些状态控制接口，如 <code>invalidate()</code>、<code>lock()</code></li>
+<li>在 squash 时清空队列</li>
+<li>为外部逻辑提供遍历接口，以便 BAC 回滚 FTQ 中仍未正式转入 BPU 的历史</li>
+</ul>
+<p>FTQ 状态：</p>
+<ul>
+<li><code>Valid</code>: 可以安全读取和消费队列</li>
+<li><code>Invalid</code><ul>
+<li>当前队列中的 fetch target 不再可信</li>
+<li>进入该状态后，需要依靠 <code>resteer/squash</code> 来恢复</li>
+</ul>
+</li>
+<li><code>Locked</code><ul>
+<li>头部 fetch target 仍然可用，但其后的项不再可信</li>
+<li>常出现在复杂指令或多 branch micro-op 的保守处理路径中</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>FTQ 还有 <code>Full</code> 的相关概念，但严格来说“是否已满”主要通过 <code>size &gt;= numEntries</code> 计算，不是一个单独用于外部语义判断的常驻状态机值；<code>BAC</code> 侧会据此进入 <code>FTQFull</code> 阻塞状态</p>
+</blockquote>
+<h2 id="FTQ-API"><a href="#FTQ-API" class="headerlink" title="FTQ API"></a>FTQ API</h2><p><code>insert()</code>:</p>
+<ul>
+<li>将 <code>FetchTarget</code> 压入队尾</li>
+<li>由 <code>BAC</code> 调用</li>
+</ul>
+<p><code>readHead()</code>:</p>
+<ul>
+<li>返回当前头部 <code>FetchTarget</code></li>
+<li>如果 <code>FTQ</code> 已 <code>Invalid</code> 或队列为空，则返回 <code>nullptr</code></li>
+</ul>
+<p><code>isHeadReady()</code>:</p>
+<ul>
+<li>只有在队列非空且不为 <code>Invalid</code> 时才为真</li>
+<li><code>Fetch</code> 在 decoupled 模式下会依赖这个条件来判断能否继续取指</li>
+</ul>
+<p><code>popHead()</code>:</p>
+<ul>
+<li>消费当前 FTQ 头项</li>
+<li>如果头项仍然携带 <code>bpuHistory</code>，则弹出失败，并将 FTQ 置为 <code>Invalid</code></li>
+</ul>
+<blockquote>
+<p>任意 <code>FetchTarget</code> 在被真正弹出 FTQ 之前，挂在它上面的 <code>bpuHistory</code> 必须已经被转移走，或者在 squash 路径中被清空</p>
+</blockquote>
+<p><code>squash()</code>:</p>
+<ul>
+<li>清空队列</li>
+<li>但它内部假设所有 <code>FetchTarget</code> 上的 <code>bpuHistory</code> 已经先被外部清掉</li>
+<li>因此正常顺序是：<ol>
+<li>BAC 先调用 <code>squashBpuHistories()</code> 倒序回滚历史</li>
+<li>再调用 <code>ftq-&gt;squash()</code> 清队列</li>
+</ol>
+</li>
+</ul>
+<hr>
+<h2 id="FTQ-填充：BAC-生成-FetchTarget"><a href="#FTQ-填充：BAC-生成-FetchTarget" class="headerlink" title="FTQ 填充：BAC 生成 FetchTarget"></a>FTQ 填充：BAC 生成 FetchTarget</h2><h3 id="输入：BAC-维护自己的前端-PC"><a href="#输入：BAC-维护自己的前端-PC" class="headerlink" title="输入：BAC 维护自己的前端 PC"></a>输入：BAC 维护自己的前端 PC</h3><p>在 decoupled frontend 中，<code>BAC</code> 维护自己的 <code>bacPC</code><br>(不是 <code>Fetch</code> 正在使用的 <code>fetch PC</code>，而是“预测生产侧”的 PC)</p>
+<ul>
+<li><code>Fetch</code> 消费 FTQ 中已有的 fetch targets</li>
+<li><code>BAC</code> 则在后台持续尝试生成后续 fetch targets</li>
+</ul>
+<h3 id="搜索-branch"><a href="#搜索-branch" class="headerlink" title="搜索 branch"></a>搜索 branch</h3><p><code>BAC::generateFetchTargets()</code> 的基本策略是：</p>
+<ol>
+<li>从当前 <code>bacPC</code> 开始</li>
+<li>逐地址检查 <code>BTB</code> 是否命中</li>
+<li>如果未命中，则继续向前扫描，直到：<ul>
+<li>找到 branch，或</li>
+<li>扫描宽度达到 <code>fetchTargetWidth</code></li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p><code>BAC</code> 并不依赖预译码来识别 branch，而是纯粹依赖 <code>BTB</code> 来发现 branch</p>
+<ul>
+<li>只有进入过 <code>BTB</code> 的 branch，BAC 才能在生成 FT 时看到</li>
+<li><code>never-taken branch</code>、首次遇到的 branch、被 BTB 驱逐的 branch，都可能在 BAC 阶段完全不可见</li>
+</ul>
+</blockquote>
+<h3 id="预测-branch"><a href="#预测-branch" class="headerlink" title="预测 branch"></a>预测 branch</h3><p>一旦 <code>BTB</code> 命中：</p>
+<ol>
+<li><code>BAC</code> 通过 <code>BTBGetInst()</code> 取出对应的 <code>StaticInst</code></li>
+<li>调用 <code>BAC::predict()</code></li>
+<li><code>BAC::predict()</code> 内部进一步调用 <code>bpu-&gt;predict(...)</code></li>
+<li>BPU 返回预测方向，同时更新传入的 <code>pc</code> 为预测目标或 fallthrough</li>
+<li>BPU 生成的 <code>PredictorHistory</code> 不进入 BPU 正式历史队列，而是直接挂到 <code>ft-&gt;bpuHistory</code></li>
+</ol>
+<h3 id="完成-FetchTarget"><a href="#完成-FetchTarget" class="headerlink" title="完成 FetchTarget"></a>完成 FetchTarget</h3><p>无论是否发现 branch，<code>BAC</code> 都会调用 <code>curFT-&gt;finalize(...)</code>，设置：</p>
+<ul>
+<li><code>endPC</code></li>
+<li><code>is_branch</code></li>
+<li><code>taken</code></li>
+<li><code>predPC</code></li>
+</ul>
+<p>随后将该 FT 插入 FTQ</p>
+<h3 id="确定下一-FT-的起点"><a href="#确定下一-FT-的起点" class="headerlink" title="确定下一 FT 的起点"></a>确定下一 FT 的起点</h3><ul>
+<li>如果当前 branch 预测为 taken：下一个 FT 的起点就是预测目标 <code>predPC</code></li>
+<li>如果当前 branch 预测为 not-taken，或根本没有 branch： 下一个 FT 的起点就是顺序地址</li>
+</ul>
+<hr>
+<h2 id="FTQ-消费-Fetch-读取并-pop-FetchTarget"><a href="#FTQ-消费-Fetch-读取并-pop-FetchTarget" class="headerlink" title="FTQ 消费: Fetch 读取并 pop FetchTarget"></a>FTQ 消费: Fetch 读取并 pop FetchTarget</h2><h3 id="Fetch-只处理头部-FT"><a href="#Fetch-只处理头部-FT" class="headerlink" title="Fetch 只处理头部 FT"></a>Fetch 只处理头部 FT</h3><p><code>Fetch</code> 在 decoupled 模式下，首先会检查 FTQ 是否 ready：</p>
+<ul>
+<li>若 FTQ 为空或无效，则 <code>Fetch</code> 进入 <code>FtqWait</code></li>
+<li>若 FTQ 可用，则读取头部 <code>FetchTarget</code></li>
+</ul>
+<h3 id="当前-PC-必须落在当前-FT-的范围内"><a href="#当前-PC-必须落在当前-FT-的范围内" class="headerlink" title="当前 PC 必须落在当前 FT 的范围内"></a>当前 PC 必须落在当前 FT 的范围内</h3><p><code>Fetch</code> 会验证当前 <code>fetch PC</code> 是否在 <code>curFT-&gt;inRange(...)</code> 范围内</p>
+<p>如果不在范围内，说明前端状态与 FTQ 内容已经不同步，需要触发 <code>bacResteer()</code> 进行恢复</p>
+<h3 id="Fetch-在-FT-范围内顺序取指"><a href="#Fetch-在-FT-范围内顺序取指" class="headerlink" title="Fetch 在 FT 范围内顺序取指"></a>Fetch 在 FT 范围内顺序取指</h3><p>只要当前 PC 仍然位于 <code>curFT</code> 内：</p>
+<ul>
+<li><code>Fetch</code> 就继续从 I-cache &#x2F; decoder 中取出指令</li>
+<li>每生成一条 <code>DynInst</code>，都调用 <code>bac-&gt;updatePC(instruction, next_pc, curFT)</code></li>
+</ul>
+<h3 id="Fetch-预译码到-branch-后，分支历史从-FTQ-转回-BPU"><a href="#Fetch-预译码到-branch-后，分支历史从-FTQ-转回-BPU" class="headerlink" title="Fetch 预译码到 branch 后，分支历史从 FTQ 转回 BPU"></a>Fetch 预译码到 branch 后，分支历史从 FTQ 转回 BPU</h3><p>当 <code>Fetch</code> 发现当前 instruction 是 control instruction：</p>
+<ul>
+<li>在 coupled 模式下，直接在这里调用 <code>bpu-&gt;predict(...)</code></li>
+<li>在 decoupled 模式下，不再重新预测，而是调用 <code>BAC::updatePreDecode(...)</code></li>
+</ul>
+<p><code>updatePreDecode()</code> 的处理：</p>
+<h4 id="情况-A：是当前-FT-的-exit-branch，且-FT-上有-bpuHistory"><a href="#情况-A：是当前-FT-的-exit-branch，且-FT-上有-bpuHistory" class="headerlink" title="情况 A：是当前 FT 的 exit branch，且 FT 上有 bpuHistory"></a>情况 A：是当前 FT 的 exit branch，且 FT 上有 <code>bpuHistory</code></h4><p>这说明：</p>
+<ul>
+<li>BAC 之前已经对这个 branch 做过预测</li>
+<li>现在到了真正的预译码阶段，需要把历史正式转入 BPU</li>
+</ul>
+<p>流程是：</p>
+<ol>
+<li>将 <code>ft-&gt;bpuHistory</code> 取出</li>
+<li>给这份 history 填入真实 <code>seqNum</code></li>
+<li>调用 <code>bpu-&gt;insertPredictorHistory(...)</code> 插入 BPU 主历史队列</li>
+<li>按 history 中记录的预测结果更新 <code>fetch PC</code></li>
+</ol>
+<h4 id="情况-B：FT-上没有对应-history"><a href="#情况-B：FT-上没有对应-history" class="headerlink" title="情况 B：FT 上没有对应 history"></a>情况 B：FT 上没有对应 history</h4><p>这意味着：</p>
+<ul>
+<li>BAC 生成 FT 时没发现这个 branch</li>
+<li>常见原因是 <code>BTB miss</code>、首次出现、从未 taken、或者 BTB entry 被替换</li>
+</ul>
+<p>此时采用一个保守恢复机制：</p>
+<ol>
+<li>新建一个 <code>PredictorHistory</code></li>
+<li>调用 <code>bpu-&gt;branchPlaceholder(...)</code> 构造 predictor-specific 的占位历史</li>
+<li>假设该 branch 的预测是 not-taken</li>
+<li>先把这份 dummy history 插入 BPU 正式历史体系</li>
+<li>如果后续 decode&#x2F;commit 发现真实情况不是这样，再依赖 squash 路径纠正</li>
+</ol>
+<blockquote>
+<p><strong>为什么不能在 BAC 预测时直接插入 BPU 主历史?</strong>  </p>
+<ol>
+<li><strong>当时没有真实 <code>seqNum</code></strong><ul>
+<li>BPU 主历史以动态指令序号管理 in-flight branch</li>
+</ul>
+</li>
+<li><strong>当时 branch 类型信息可能不够稳定</strong><ul>
+<li>特别是复杂 instruction &#x2F; micro-op 场景下，单纯依赖 BTB 中保存的静态信息可能还不够安全</li>
+</ul>
+</li>
+<li><strong>需要允许“预测已发生，但尚未被真正消费”</strong><ul>
+<li>FTQ 本质上就是为了支持这种 decoupling</li>
+</ul>
+</li>
+</ol>
+</blockquote>
+<h3 id="FT-消费完成的处理"><a href="#FT-消费完成的处理" class="headerlink" title="FT 消费完成的处理"></a>FT 消费完成的处理</h3><p>如果满足以下任一条件，当前 <code>ft</code> 指针会被置空：</p>
+<ul>
+<li>当前 instruction 是 FT 的 exit instruction，且若是 micro-op 则必须是最后一个 micro-op</li>
+<li>FTQ 已变为 not ready</li>
+</ul>
+<p>一旦当前 FT 被置空，<code>Fetch</code> 就尝试：</p>
+<ol>
+<li><code>ftq-&gt;popHead()</code></li>
+<li>若成功，读取下一个 FT</li>
+<li>若失败，则认为状态异常并触发 <code>bacResteer()</code></li>
+</ol>
+<blockquote>
+<p><strong><code>popHead</code> 为什么可能失败?</strong></p>
+<p>头部 <code>FetchTarget</code> 上仍残留 <code>bpuHistory</code></p>
+<p>这意味着某个关键步骤没有按预期发生，例如：</p>
+<ul>
+<li>exit branch 的 history 没有在 <code>updatePreDecode()</code> 中成功取走</li>
+<li>或者发生了复杂 corner case，导致 FT 被消费结束，但对应分支历史还没有完成迁移</li>
+</ul>
+<p>当前实现对这种情况的处理非常保守：</p>
+<ul>
+<li>不尝试在 <code>popHead()</code> 时“补救性处理”历史</li>
+<li>而是直接把 FTQ 置 <code>Invalid</code>，让外层走 squash&#x2F;resteer 恢复</li>
+</ul>
+</blockquote>
+<hr>
+<h1 id="squash-mispredict-resteer-时的恢复流程"><a href="#squash-mispredict-resteer-时的恢复流程" class="headerlink" title="squash, mispredict, resteer 时的恢复流程"></a>squash, mispredict, resteer 时的恢复流程</h1><h2 id="恢复顺序"><a href="#恢复顺序" class="headerlink" title="恢复顺序"></a>恢复顺序</h2><ol>
+<li>先回滚 FTQ 中尚未正式进入 BPU 主历史队列的历史</li>
+<li>再清空 FTQ</li>
+<li>再根据 decode&#x2F;commit&#x2F;fetch 反馈，对 BPU 正式历史进行 squash&#x2F;update</li>
+<li>重设 BAC 的 PC，重新开始生成 FT</li>
+</ol>
+<h2 id="BAC-squashBpuHistories"><a href="#BAC-squashBpuHistories" class="headerlink" title="BAC::squashBpuHistories()"></a><code>BAC::squashBpuHistories()</code></h2><ul>
+<li>倒序遍历 FTQ</li>
+<li>对每个仍带有 <code>bpuHistory</code> 的 FT，调用 <code>bpu-&gt;squashHistory(...)</code></li>
+<li>清空对应 <code>ft-&gt;bpuHistory</code></li>
+</ul>
+<p>之所以倒序，是因为这些 history 代表的是按预测路径逐步累积的 speculative history update，恢复时必须反向回滚</p>
+<h2 id="不同来源的-squash"><a href="#不同来源的-squash" class="headerlink" title="不同来源的 squash"></a>不同来源的 squash</h2><p>会从多个来源触发恢复：</p>
+<ul>
+<li><code>commit</code>: 例如真实 branch mispredict 在提交时被确认</li>
+<li><code>decode</code>: 例如更早发现的控制流纠错</li>
+<li><code>fetch</code>: 例如前端发现当前 FT 与实际 PC 不一致，或在消费 FT 过程中检测到异常</li>
+</ul>
+<hr>
+<h1 id="复杂指令与多-branch-micro-op-的处理"><a href="#复杂指令与多-branch-micro-op-的处理" class="headerlink" title="复杂指令与多 branch micro-op 的处理"></a>复杂指令与多 branch micro-op 的处理</h1><p>最复杂的 corner case 是：</p>
+<ul>
+<li>一个 instruction 含多个 branch 语义</li>
+<li>或 branch 不在最后一个 micro-op</li>
+<li>或 BTB 中保存的 branch 类型与最终预译码出的真实类型不一致</li>
+</ul>
+<p>当前实现对这些情况采取的是非常保守的策略</p>
+<h2 id="branch-type-mismatch"><a href="#branch-type-mismatch" class="headerlink" title="branch type mismatch"></a>branch type mismatch</h2><p>如果从 FT 上取下来的 history 所记录的 branch 类型，与当前预译码得到的 branch 类型不同：</p>
+<ul>
+<li>认为当前预测历史不可信</li>
+<li>先把 history 放回 FT</li>
+<li>立刻回滚 FTQ 中所有悬挂历史</li>
+<li>将 FTQ 置 <code>Locked</code></li>
+</ul>
+<p>这样做的含义是：</p>
+<ul>
+<li>不再信任当前队列后续项</li>
+<li>等当前复杂 instruction 处理完，再通过 resteer 重建前端状态</li>
+</ul>
+<h2 id="多-branch-complex-instruction"><a href="#多-branch-complex-instruction" class="headerlink" title="多 branch complex instruction"></a>多 branch complex instruction</h2><p>对于包含多个 branch 的复杂 instruction，当前实现只在 BAC 生成 FT 时预测“第一个可见 branch”</p>
+<p>如果在后续 predecode 发现：</p>
+<ul>
+<li>当前 micro-op 并不是最后一个</li>
+<li>但已经没有可用 history</li>
+</ul>
+<p>则会：</p>
+<ol>
+<li>先回滚 FTQ 中现有悬挂历史</li>
+<li>将 FTQ <code>lock</code></li>
+<li>对当前 instruction 重新做一次新预测</li>
+</ol>
+<p>这表明当前实现并不试图为复杂 instruction 提供完美的细粒度多 branch FT 建模，而是通过锁定和重建来保守处理</p>
+<p>优点：</p>
+<ul>
+<li>实现简单</li>
+<li>一致性风险较低</li>
+</ul>
+<p>代价：</p>
+<ul>
+<li>会频繁走 <code>lock -&gt; squash/resteer</code> 路径</li>
+<li>不适合用来精确模拟非常激进、能在复杂 macro-op 内做高精度 branch streaming 的工业前端</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2026/04/08/cpu/simulator/gem5/frontend/ftq/">https://xixi-shredp.github.io/2026/04/08/cpu/simulator/gem5/frontend/ftq/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/04/12/cpu/cache/prefetch/multi-pf/IPCP/" title="IPCP(2020 ISCA): Bouquet of Instruction Pointers: Instruction Pointer Classifier-based Spatial Hardware Prefetching"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">IPCP(2020 ISCA): Bouquet of Instruction Pointers: Instruction Pointer Classifier-based Spatial Hardware Prefetching</div></div><div class="info-2"><div class="info-item-1">2020 ISCA IPCP 论文解读：面向 L1 的基于 PC 分类路由请求的多预取器集成</div></div></div></a><a class="pagination-related" href="/2026/04/08/cpu/simulator/xs-gem5/frontend/" title="xs-gem5: Frontend"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">xs-gem5: Frontend</div></div><div class="info-2"><div class="info-item-1">xs-gem5 前端实现简介</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">86</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">48</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%89%8D%E7%AB%AF%E7%BB%84%E7%BB%87%E6%96%B9%E5%BC%8F"><span class="toc-number">1.</span> <span class="toc-text">前端组织方式</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#BAC-%E8%A2%AB%E6%8B%86%E6%88%90%E4%B8%A4%E9%83%A8%E5%88%86"><span class="toc-number">1.1.</span> <span class="toc-text">BAC 被拆成两部分</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Coupled-frontend-%E4%B8%8E-decoupled-frontend-%E7%9A%84%E5%B7%AE%E5%BC%82"><span class="toc-number">1.2.</span> <span class="toc-text">Coupled frontend 与 decoupled frontend 的差异</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Coupled-frontend"><span class="toc-number">1.2.1.</span> <span class="toc-text">Coupled frontend</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Decoupled-frontend"><span class="toc-number">1.2.2.</span> <span class="toc-text">Decoupled frontend</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#FTQ"><span class="toc-number">2.</span> <span class="toc-text">FTQ</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#FetchTarget"><span class="toc-number">2.1.</span> <span class="toc-text">FetchTarget</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FTQ-%E4%BB%BB%E5%8A%A1"><span class="toc-number">2.2.</span> <span class="toc-text">FTQ 任务</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FTQ-API"><span class="toc-number">2.3.</span> <span class="toc-text">FTQ API</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FTQ-%E5%A1%AB%E5%85%85%EF%BC%9ABAC-%E7%94%9F%E6%88%90-FetchTarget"><span class="toc-number">2.4.</span> <span class="toc-text">FTQ 填充：BAC 生成 FetchTarget</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BE%93%E5%85%A5%EF%BC%9ABAC-%E7%BB%B4%E6%8A%A4%E8%87%AA%E5%B7%B1%E7%9A%84%E5%89%8D%E7%AB%AF-PC"><span class="toc-number">2.4.1.</span> <span class="toc-text">输入：BAC 维护自己的前端 PC</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%90%9C%E7%B4%A2-branch"><span class="toc-number">2.4.2.</span> <span class="toc-text">搜索 branch</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A2%84%E6%B5%8B-branch"><span class="toc-number">2.4.3.</span> <span class="toc-text">预测 branch</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%8C%E6%88%90-FetchTarget"><span class="toc-number">2.4.4.</span> <span class="toc-text">完成 FetchTarget</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A1%AE%E5%AE%9A%E4%B8%8B%E4%B8%80-FT-%E7%9A%84%E8%B5%B7%E7%82%B9"><span class="toc-number">2.4.5.</span> <span class="toc-text">确定下一 FT 的起点</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FTQ-%E6%B6%88%E8%B4%B9-Fetch-%E8%AF%BB%E5%8F%96%E5%B9%B6-pop-FetchTarget"><span class="toc-number">2.5.</span> <span class="toc-text">FTQ 消费: Fetch 读取并 pop FetchTarget</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Fetch-%E5%8F%AA%E5%A4%84%E7%90%86%E5%A4%B4%E9%83%A8-FT"><span class="toc-number">2.5.1.</span> <span class="toc-text">Fetch 只处理头部 FT</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BD%93%E5%89%8D-PC-%E5%BF%85%E9%A1%BB%E8%90%BD%E5%9C%A8%E5%BD%93%E5%89%8D-FT-%E7%9A%84%E8%8C%83%E5%9B%B4%E5%86%85"><span class="toc-number">2.5.2.</span> <span class="toc-text">当前 PC 必须落在当前 FT 的范围内</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Fetch-%E5%9C%A8-FT-%E8%8C%83%E5%9B%B4%E5%86%85%E9%A1%BA%E5%BA%8F%E5%8F%96%E6%8C%87"><span class="toc-number">2.5.3.</span> <span class="toc-text">Fetch 在 FT 范围内顺序取指</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Fetch-%E9%A2%84%E8%AF%91%E7%A0%81%E5%88%B0-branch-%E5%90%8E%EF%BC%8C%E5%88%86%E6%94%AF%E5%8E%86%E5%8F%B2%E4%BB%8E-FTQ-%E8%BD%AC%E5%9B%9E-BPU"><span class="toc-number">2.5.4.</span> <span class="toc-text">Fetch 预译码到 branch 后，分支历史从 FTQ 转回 BPU</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%83%85%E5%86%B5-A%EF%BC%9A%E6%98%AF%E5%BD%93%E5%89%8D-FT-%E7%9A%84-exit-branch%EF%BC%8C%E4%B8%94-FT-%E4%B8%8A%E6%9C%89-bpuHistory"><span class="toc-number">2.5.4.1.</span> <span class="toc-text">情况 A：是当前 FT 的 exit branch，且 FT 上有 bpuHistory</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%83%85%E5%86%B5-B%EF%BC%9AFT-%E4%B8%8A%E6%B2%A1%E6%9C%89%E5%AF%B9%E5%BA%94-history"><span class="toc-number">2.5.4.2.</span> <span class="toc-text">情况 B：FT 上没有对应 history</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#FT-%E6%B6%88%E8%B4%B9%E5%AE%8C%E6%88%90%E7%9A%84%E5%A4%84%E7%90%86"><span class="toc-number">2.5.5.</span> <span class="toc-text">FT 消费完成的处理</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#squash-mispredict-resteer-%E6%97%B6%E7%9A%84%E6%81%A2%E5%A4%8D%E6%B5%81%E7%A8%8B"><span class="toc-number">3.</span> <span class="toc-text">squash, mispredict, resteer 时的恢复流程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%81%A2%E5%A4%8D%E9%A1%BA%E5%BA%8F"><span class="toc-number">3.1.</span> <span class="toc-text">恢复顺序</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#BAC-squashBpuHistories"><span class="toc-number">3.2.</span> <span class="toc-text">BAC::squashBpuHistories()</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8D%E5%90%8C%E6%9D%A5%E6%BA%90%E7%9A%84-squash"><span class="toc-number">3.3.</span> <span class="toc-text">不同来源的 squash</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%A4%8D%E6%9D%82%E6%8C%87%E4%BB%A4%E4%B8%8E%E5%A4%9A-branch-micro-op-%E7%9A%84%E5%A4%84%E7%90%86"><span class="toc-number">4.</span> <span class="toc-text">复杂指令与多 branch micro-op 的处理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#branch-type-mismatch"><span class="toc-number">4.1.</span> <span class="toc-text">branch type mismatch</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%9A-branch-complex-instruction"><span class="toc-number">4.2.</span> <span class="toc-text">多 branch complex instruction</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/15/cpu/cache/prefetch/multi-pf/Alecto/" title="Alecto (HPCA 2025): Integrating Prefetcher Selection with Dynamic Request Allocation Improves Prefetching Efficiency">Alecto (HPCA 2025): Integrating Prefetcher Selection with Dynamic Request Allocation Improves Prefetching Efficiency</a><time datetime="2026-04-15T15:56:20.000Z" title="Created 2026-04-15 23:56:20">2026-04-15</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/15/cpu/cache/prefetch/data-pf/overview/" title="L2 Cache Data Prefetcher Overview">L2 Cache Data Prefetcher Overview</a><time datetime="2026-04-15T11:55:41.000Z" title="Created 2026-04-15 19:55:41">2026-04-15</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/15/cpu/simulator/gem5/custom-gem5/" title="Custom Gem5 实现汇总">Custom Gem5 实现汇总</a><time datetime="2026-04-15T07:58:35.000Z" title="Created 2026-04-15 15:58:35">2026-04-15</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/15/cpu/simulator/gem5/bpu/btb/directed_simple_btb/" title="DirectedBTB in Gem5">DirectedBTB in Gem5</a><time datetime="2026-04-15T07:52:25.000Z" title="Created 2026-04-15 15:52:25">2026-04-15</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/15/cpu/cache/prefetch/multi-pf/overview/" title="多预取器管理 Overview">多预取器管理 Overview</a><time datetime="2026-04-15T03:13:46.000Z" title="Created 2026-04-15 11:13:46">2026-04-15</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
