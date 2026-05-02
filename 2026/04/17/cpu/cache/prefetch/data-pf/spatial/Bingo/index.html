@@ -1,0 +1,775 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Bingo (2019 HPCA): Bingo Spatial Data Prefetcher | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="2019 HPCA Bingo 论文解读：用一张统一的 history table 通过长事件&#x2F;短事件双重查找来兼顾 spatial prefetch 的 accuracy 和 coverage">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Bingo (2019 HPCA): Bingo Spatial Data Prefetcher">
+<meta property="og:url" content="https://xixi-shredp.github.io/2026/04/17/cpu/cache/prefetch/data-pf/spatial/Bingo/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="2019 HPCA Bingo 论文解读：用一张统一的 history table 通过长事件&#x2F;短事件双重查找来兼顾 spatial prefetch 的 accuracy 和 coverage">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2026-04-16T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-04-17T03:46:41.800Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="2019">
+<meta property="article:tag" content="HPCA">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Bingo (2019 HPCA): Bingo Spatial Data Prefetcher",
+  "url": "https://xixi-shredp.github.io/2026/04/17/cpu/cache/prefetch/data-pf/spatial/Bingo/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2026-04-16T16:00:00.000Z",
+  "dateModified": "2026-04-17T03:46:41.800Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2026/04/17/cpu/cache/prefetch/data-pf/spatial/Bingo/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Bingo (2019 HPCA): Bingo Spatial Data Prefetcher',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background: linear-gradient(180deg, black, black, #23064D);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">102</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">21</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">49</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Bingo (2019 HPCA): Bingo Spatial Data Prefetcher</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Bingo (2019 HPCA): Bingo Spatial Data Prefetcher</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-04-16T16:00:00.000Z" title="Created 2026-04-17 00:00:00">2026-04-17</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-04-17T03:46:41.800Z" title="Updated 2026-04-17 11:46:41">2026-04-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/">cpu</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/">cache</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/prefetch/">prefetch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/prefetch/data-pf/">data-pf</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>这篇论文提出的是 <strong>Bingo Spatial Data Prefetcher (2019 HPCA)</strong>：一种基于 Per-Page History (PPH) 的空间数据预取器，用 TAGE 思想把一个 page 的 footprint 同时关联到多个”事件（event）”上，但把所有事件的元数据折叠到同一张 history table 中。</p>
+<p>TLDR：</p>
+<ol>
+<li>现有空间预取器（SMS&#x2F;SFP&#x2F;AMPM&#x2F;VLDP&#x2F;SPP&#x2F;BOP 等）把 page footprint 只绑定到 <strong>单一 event</strong>：长事件（如 <code>PC+Address</code>）准确但不常触发，短事件（如 <code>Offset</code>）常触发但不准。鱼和熊掌不可兼得。</li>
+<li>Insight：借鉴 TAGE，把每个 footprint 同时关联到多个事件（长+短），查找时先用最长事件，miss 后逐级退到更短事件，从而同时得到高 accuracy 和高 coverage。</li>
+<li>观察到 TAGE 的级联多表存储开销大、冗余高（两级 table 预测相同的情况占 26%–93%）。Bingo 把所有事件的 metadata 合并到 <strong>一张</strong> history table：用 <strong>短事件的 hash 做 index</strong>，<strong>长事件的位做 tag</strong>，使得同一份 footprint 只存一次即可被长、短事件查到。</li>
+<li>在 ChampSim 上评估，Bingo 相比 no-prefetcher 带来平均 <strong>60% 性能提升（最高 285%）</strong>，比最好的前序空间预取器（SMS）再高 <strong>11%（最高 67%）</strong>，只占 LLC 容量的 6%。</li>
+</ol>
+<hr>
+<h1 id="背景和动机"><a href="#背景和动机" class="headerlink" title="背景和动机"></a>背景和动机</h1><h2 id="空间数据预取（Spatial-Data-Prefetcher）"><a href="#空间数据预取（Spatial-Data-Prefetcher）" class="headerlink" title="空间数据预取（Spatial Data Prefetcher）"></a>空间数据预取（Spatial Data Prefetcher）</h2><p>应用访问内存时，数据对象（结构体、数组元素）通常按固定 layout 布置，导致 <strong>access pattern 在 page（几 KB 的连续区域）粒度上重复出现</strong>。Spatial prefetcher 利用这个 <em>spatial correlation</em>，对每个 page 记录一张位图（footprint）表示该 page 中哪些 block 被访问，再把 footprint 绑定到某个 <strong>event</strong>，下次同一 event 再现时就直接按 footprint 发起预取。</p>
+<p>空间预取器相比 temporal 预取器的几大优点：</p>
+<ul>
+<li>存储 offset&#x2F;delta 即可，不用存整条地址流，metadata 小得多</li>
+<li>可预取 compulsory miss（footprint 可迁移到未访问过的新 page）</li>
+<li>能把一个 DRAM row 里的 block 一次性取出，减少 DRAM row activation，对能效友好</li>
+</ul>
+<h2 id="两类空间预取器"><a href="#两类空间预取器" class="headerlink" title="两类空间预取器"></a>两类空间预取器</h2><ol>
+<li><strong>SHared History (SHH)</strong>: 全局共享的 delta&#x2F;pattern 表。例：BOP、SPP、VLDP。优点是存储紧凑；缺点是不同 page 的行为被糅到一起，在行为差异大的 workload 上 coverage 低；而且多 degree 预取容易产生大量 overprediction。</li>
+<li><strong>Per-Page History (PPH)</strong>: 为每个 page 记 footprint，page 结束时将 <code>&lt;event, footprint&gt;</code> 存入 history table。例：SFP（<code>PC+Address</code>）、SMS（<code>PC+Offset</code>）、AMPM。优势是一次就能把整张 footprint 发出，timeliness 好、coverage 高。</li>
+</ol>
+<p>Bingo 属于 <strong>PPH 路线</strong>。</p>
+<h2 id="核心痛点：单一-event-的两难"><a href="#核心痛点：单一-event-的两难" class="headerlink" title="核心痛点：单一 event 的两难"></a>核心痛点：单一 event 的两难</h2><p>作者对比了 5 种 event 的 accuracy 与 match probability（图 2）：</p>
+<table>
+<thead>
+<tr>
+<th>Event (从长到短)</th>
+<th>Accuracy</th>
+<th>Match Probability</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>PC+Address</code></td>
+<td>最高 (~90%)</td>
+<td>很低 (~50%)</td>
+</tr>
+<tr>
+<td><code>PC+Offset</code></td>
+<td>高</td>
+<td>中</td>
+</tr>
+<tr>
+<td><code>Address</code></td>
+<td>中</td>
+<td>中</td>
+</tr>
+<tr>
+<td><code>PC</code></td>
+<td>较低</td>
+<td>较高</td>
+</tr>
+<tr>
+<td><code>Offset</code></td>
+<td>最低 (~50%)</td>
+<td>最高 (&gt;75%)</td>
+</tr>
+</tbody></table>
+<p>长事件 &#x3D; 多个具体事实同时发生（指令 + 地址），短事件 &#x3D; 只需一个事实。长事件准但不常；短事件常但不准。<strong>只选一个，必定牺牲 coverage 或 accuracy</strong>。</p>
+<hr>
+<h1 id="Insight"><a href="#Insight" class="headerlink" title="Insight"></a>Insight</h1><p><strong>把一个 page 的 footprint 同时关联到”多个长度不同的事件”上</strong>（即 TAGE-like 思想在 prefetcher 上的应用）：</p>
+<ul>
+<li>预取时先用最长事件查（最准），找不到再退到次长事件、再短事件……</li>
+<li>实验证明从 1 个 event 扩到 2 个 event（<code>PC+Address</code> + <code>PC+Offset</code>），coverage 有质的飞跃；扩到 5 个事件收益饱和。因此 Bingo <strong>只用 2 个事件</strong>即可。</li>
+</ul>
+<p>但原生 TAGE-like 方案需要多张级联 history table，存储开销大，而且这些表的预测存在大量冗余（两表同样预测的情况在 benchmark 上最高达 93%，平均明显）。</p>
+<hr>
+<h1 id="核心设计"><a href="#核心设计" class="headerlink" title="核心设计"></a>核心设计</h1><p>Bingo 的核心设计一句话：<strong>一个 page 的 footprint 被同时绑定到长事件 <code>PC+Address</code> 和短事件 <code>PC+Offset</code>，但只存一份；用一张 history table，通过两次查找覆盖两个事件。</strong></p>
+<ol>
+<li>Auxiliary Table（辅助存储，记录正在 active 的 page 的 footprint）</li>
+<li>History Table（训练完成后的 footprint 存放处，统一单表）</li>
+<li>核心诀窍：<strong>用短事件 <code>PC+Offset</code> 的 hash 作 index，用长事件 <code>PC+Address</code> 的全位作 tag</strong></li>
+<li>查找流程：先按 <code>PC+Address</code> tag 匹配 → 若不中，再比较同 set 中其他表项的 <code>PC+Offset</code> 位是否匹配 → 若多个匹配，取若干 footprint 聚合（某 block 在 ≥20% 匹配项中出现就预取它）</li>
+</ol>
+<hr>
+<h2 id="1-Auxiliary-Storage（追踪-active-pages，实为两级）"><a href="#1-Auxiliary-Storage（追踪-active-pages，实为两级）" class="headerlink" title="1. Auxiliary Storage（追踪 active pages，实为两级）"></a>1. Auxiliary Storage（追踪 active pages，实为两级）</h2><p>论文只笼统地称 “auxiliary storage”，开源实现里它其实被拆成<strong>两张表</strong>以节省面积并过滤”只访问一次就结束”的 page：</p>
+<h3 id="1-1-FilterTable（FT）"><a href="#1-1-FilterTable（FT）" class="headerlink" title="1.1 FilterTable（FT）"></a>1.1 FilterTable（FT）</h3><ul>
+<li>规模：64 项，全相联 LRU。</li>
+<li>每项存：<code>region_number</code>（key） + 首次访问的 <code>&lt;PC, offset&gt;</code>。</li>
+<li>作用：一个 page 第一次被触达时登记在 FT 里；若这个 page 自始至终只被访问过同一个 offset（即”一次性 scan”），它不会被 promote 到 AT，也就<strong>不会污染 PHT</strong>。</li>
+</ul>
+<h3 id="1-2-AccumulationTable（AT）"><a href="#1-2-AccumulationTable（AT）" class="headerlink" title="1.2 AccumulationTable（AT）"></a>1.2 AccumulationTable（AT）</h3><ul>
+<li>规模：128 项，全相联 LRU。</li>
+<li>每项存：触发访问的 <code>&lt;PC, offset&gt;</code> + 长度为 <code>pattern_len</code> 的位图（<code>vector&lt;bool&gt;</code>）。</li>
+<li>进入条件：FT 中的 page <strong>再被访问到一个不同的 offset</strong> 时，把 FT 项”升格”到 AT 并开始累积 footprint；FT 中的同一项同时擦除。</li>
+<li>退出条件：该 page 被 LLC evict（收到 <code>eviction()</code> 回调）→ 将 <code>&lt;trigger PC+Address, footprint&gt;</code> 写入 PHT。</li>
+</ul>
+<blockquote>
+<p>开源里的 <code>access()</code> 每次 LLC 访问都会调用：先查 AT（命中则仅置位），再查 FT。这与论文正文描述一致，但<strong>双表结构</strong>在论文图里没有突出体现。</p>
+</blockquote>
+<h2 id="2-History-Table（PHT）：单表-TAGE-风格双查"><a href="#2-History-Table（PHT）：单表-TAGE-风格双查" class="headerlink" title="2. History Table（PHT）：单表 + TAGE 风格双查"></a>2. History Table（PHT）：单表 + TAGE 风格双查</h2><ul>
+<li><strong>Index</strong>：由一个 CRC-式折叠函数从”key”产生。Key 的布局是 <code>base | PC | offset</code>（高位到低位），然后用 <code>tag = PC|offset</code> 反复右移 <code>index_len</code> 位并 XOR 折叠回 key 的低 <code>index_len</code> 位，得到最终 set index。</li>
+<li><strong>Tag</strong>：整条 key（包含 base&#x2F;PC&#x2F;offset 全部有效位）在选中 set 后整体做比较。</li>
+<li><strong>两种匹配</strong>（通过两个 mask 同时检查）：<ul>
+<li><code>max_tag_mask = (1 &lt;&lt; (PC_WIDTH + MAX_ADDR_WIDTH - index_len)) - 1</code> → 等价于 <strong><code>PC+Address</code> 全匹配</strong>（称 <code>max_match</code>）。</li>
+<li><code>min_tag_mask = (1 &lt;&lt; (PC_WIDTH + MIN_ADDR_WIDTH - index_len)) - 1</code> → 只比较 <code>PC + offset</code> 部分（称 <code>min_match</code>），即 <code>PC+Offset</code>。</li>
+</ul>
+</li>
+<li><strong>查找优先级</strong>：遍历该 set 的所有 way，一旦出现 <code>max_match</code> 就立即采用其 pattern，记 <code>last_event = PC_ADDRESS</code>；否则把所有 <code>min_match</code> 的 pattern 收集起来投票，记 <code>last_event = PC_OFFSET</code>。</li>
+<li><strong>Pattern 旋转</strong>：存入 PHT 前 pattern 会按 <code>-offset</code> 旋转归一（使 trigger offset 在位 0），查出时再按 <code>+offset</code> 还原。这样<strong>不同 offset 触发但形状相同的 footprint 可以共享同一条 PHT 表项</strong>，显著提升命中率——这是论文正文没强调的一个实现细节。</li>
+<li><strong>投票阈值</strong>：<code>#define THRESH 0.20</code>。被 ≥20% 的 min-match 条目在同一位置置位的 block 才会进入 prefetch 列表。代码里还提供了 <code>bingo_thresh001…bingo_thresh100</code> 等变体用于灵敏度研究。</li>
+</ul>
+<h3 id="存储配置（与源码常量对齐）"><a href="#存储配置（与源码常量对齐）" class="headerlink" title="存储配置（与源码常量对齐）"></a>存储配置（与源码常量对齐）</h3><p>开源实现 <code>prefetcher/bingo.llc_pref</code> 末尾的硬编码常量：</p>
+<table>
+<thead>
+<tr>
+<th>常量</th>
+<th>值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>REGION_SIZE</code></td>
+<td>2048 B</td>
+<td>page &#x2F; region 大小（&#x3D; 32 × 64B block；<strong>注意论文正文的”几 KB 的 page”在代码里就是 2KB</strong>）</td>
+</tr>
+<tr>
+<td><code>MIN_ADDR_WIDTH</code></td>
+<td>5 bit</td>
+<td>offset 宽度（对应 32 个 block 需 5 位）</td>
+</tr>
+<tr>
+<td><code>MAX_ADDR_WIDTH</code></td>
+<td>16 bit</td>
+<td>address 字段使用的总宽度（含 base + offset）</td>
+</tr>
+<tr>
+<td><code>PC_WIDTH</code></td>
+<td>16 bit</td>
+<td>PC 截取宽度</td>
+</tr>
+<tr>
+<td><code>PHT_SIZE</code></td>
+<td>16 K 项</td>
+<td>PHT 总条目（默认 16-way → 1024 set，index_len &#x3D; 10）</td>
+</tr>
+<tr>
+<td><code>FT_SIZE</code></td>
+<td>64 项</td>
+<td>FilterTable</td>
+</tr>
+<tr>
+<td><code>AT_SIZE</code></td>
+<td>128 项</td>
+<td>AccumulationTable</td>
+</tr>
+<tr>
+<td><code>THRESH</code></td>
+<td>0.20</td>
+<td>min-match 投票阈值</td>
+</tr>
+</tbody></table>
+<p>PHT 每项含 valid &#x2F; LRU &#x2F; tag(~27 bit) &#x2F; 32 位 footprint。总大小约 <strong>119 KB ≈ LLC 的 6%</strong>。灵敏度分析表明 16K 项后 coverage 饱和。</p>
+<hr>
+<h1 id="代码解读（基于作者开源-ChampSim-实现）"><a href="#代码解读（基于作者开源-ChampSim-实现）" class="headerlink" title="代码解读（基于作者开源 ChampSim 实现）"></a>代码解读（基于作者开源 ChampSim 实现）</h1><p>开源地址: <a target="_blank" rel="noopener" href="https://github.com/bakhshalipour/Bingo">https://github.com/bakhshalipour/Bingo</a></p>
+<p>关键源文件 <code>prefetcher/bingo.llc_pref</code>（795 行，单文件自包含；<code>inc/</code> 里没有头文件依赖）。仓库还包含 <code>sms.llc_pref / bop.llc_pref / spp.llc_pref / vldp.llc_pref / ampm.llc_pref</code> 以及 <code>bingo_01k … bingo_64k</code>、<code>bingo_thresh001 … bingo_thresh100</code>、<code>bingo_multitable_*</code>（用于 TAGE 级联表对比）、<code>bingo_plus</code> 等变体，正好对应论文的几组灵敏度&#x2F;消融实验。</p>
+<h2 id="1-模块组织"><a href="#1-模块组织" class="headerlink" title="1. 模块组织"></a>1. 模块组织</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">SetAssociativeCache&lt;T&gt;</span><br><span class="line">  └── LRUSetAssociativeCache&lt;T&gt;</span><br><span class="line">         ├── LRUFullyAssociativeCache&lt;T&gt; ──┬── FilterTable</span><br><span class="line">         │                                  └── AccumulationTable</span><br><span class="line">         └── PatternHistoryTable</span><br><span class="line">Bingo  ─ 持有 FT / AT / PHT 三者，暴露 access() / eviction()</span><br></pre></td></tr></table></figure>
+
+<p>所有表都自带一个 per-set CAM (<code>unordered_map&lt;tag, way&gt;</code>)，使得 <code>find()</code> 不用线性扫描整个 set——这只是模拟器的便利写法，硬件上依然是并行 tag 比较。</p>
+<h2 id="2-主流程-Bingo-access-block-number-pc"><a href="#2-主流程-Bingo-access-block-number-pc" class="headerlink" title="2. 主流程 Bingo::access(block_number, pc)"></a>2. 主流程 <code>Bingo::access(block_number, pc)</code></h2><p>对每一次到达 LLC 的访问执行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">region_number = block_number / pattern_len         // pattern_len = 32</span><br><span class="line">region_offset = block_number % pattern_len</span><br><span class="line">if AT.set_pattern(region_number, offset):          // AT 命中 → 仅置位</span><br><span class="line">    return &#123;&#125;                                      // 不发预取、不更新 FT</span><br><span class="line">if FT.find(region_number) == null:                 // ——trigger access——</span><br><span class="line">    FT.insert(region_number, pc, offset)</span><br><span class="line">    pattern = PHT.find(pc, block_number)</span><br><span class="line">    return expand(pattern, region_number)</span><br><span class="line">else if FT 里的 offset != 当前 offset:              // &quot;第二个 offset&quot; 出现</span><br><span class="line">    victim = AT.insert(FT entry)                   // 升格到 AT</span><br><span class="line">    AT.set_pattern(...)</span><br><span class="line">    FT.erase(region_number)</span><br><span class="line">    if victim.valid: PHT.insert(victim)            // AT 满时淘汰者训练 PHT</span><br><span class="line">return &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>要点：</p>
+<ul>
+<li><strong>只有 trigger access 会向 LLC 发 prefetch</strong>；后续同一 page 的访问只是更新位图。</li>
+<li><strong>只”来过一次 offset”的 page 永远不会进入 AT</strong>，避免污染 PHT（这是一种隐式过滤）。</li>
+<li>AT 满时 LRU victim 会立即训练 PHT，不必等待 eviction 回调——对于<strong>常驻工作集</strong>也能持续更新。</li>
+</ul>
+<h2 id="3-何时训练-PHT：两条路径"><a href="#3-何时训练-PHT：两条路径" class="headerlink" title="3. 何时训练 PHT：两条路径"></a>3. 何时训练 PHT：两条路径</h2><ol>
+<li>AT 满溢出 → 受害 entry 直接 <code>insert_in_phts</code>（在 <code>access()</code> 中触发）。</li>
+<li>LLC evict 某 block → <code>Bingo::eviction(block_number)</code> 同时擦除 FT&#x2F;AT 对应 region；若在 AT 里则同时训练 PHT。</li>
+</ol>
+<p>所以文字描述的”page 结束 residency 后训练”其实更精确地是”region 的整张 footprint 从 AT 离开时训练”，<strong>无论是被 LRU 挤掉还是被真的 evict</strong>。</p>
+<h2 id="4-PatternHistoryTable-build-key-——-CRC-折叠"><a href="#4-PatternHistoryTable-build-key-——-CRC-折叠" class="headerlink" title="4. PatternHistoryTable::build_key —— CRC 折叠"></a>4. <code>PatternHistoryTable::build_key</code> —— CRC 折叠</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">key_raw = (base &lt;&lt; (PC_WIDTH + MIN_ADDR_WIDTH))</span><br><span class="line">        | (pc   &lt;&lt;  MIN_ADDR_WIDTH)</span><br><span class="line">        | offset</span><br><span class="line">tag_folded = (pc &lt;&lt; MIN_ADDR_WIDTH) | offset</span><br><span class="line">do &#123;</span><br><span class="line">    tag_folded &gt;&gt;= index_len;</span><br><span class="line">    key_raw    ^= tag_folded &amp; (set_mask);</span><br><span class="line">&#125; while (tag_folded &gt; 0);</span><br></pre></td></tr></table></figure>
+
+<p>这段循环把 <code>PC|offset</code> 不断右移 <code>index_len</code> 位并 XOR 进 key 的低 <code>index_len</code> 位；等价于对 <code>PC+Offset</code> 的一次 CRC-like 哈希，只不过与 base 拼接后再按 <code>set_mask</code> 取模选 set。效果：<strong>set index 由 <code>hash(PC+Offset)</code> 决定，tag 仍为 <code>PC+Address</code>（隐式包含 PC+Offset）</strong>。这完美对应论文”短事件 index + 长事件 tag”的设计。</p>
+<h2 id="5-PatternHistoryTable-find-——-max-min-匹配与投票"><a href="#5-PatternHistoryTable-find-——-max-min-匹配与投票" class="headerlink" title="5. PatternHistoryTable::find —— max&#x2F;min 匹配与投票"></a>5. <code>PatternHistoryTable::find</code> —— max&#x2F;min 匹配与投票</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">for each valid way in set:</span><br><span class="line">    max_match = (tag &amp; max_tag_mask) == (trigger_tag &amp; max_tag_mask)  // PC+Address</span><br><span class="line">    min_match = (tag &amp; min_tag_mask) == (trigger_tag &amp; min_tag_mask)  // PC+Offset</span><br><span class="line">    if max_match: 立即返回该 pattern，标记 last_event = PC_ADDRESS</span><br><span class="line">    elif min_match: 加入候选集合</span><br><span class="line">若无 max_match：对候选集合按位投票，任一位 ≥THRESH (0.20) 置 1</span><br></pre></td></tr></table></figure>
+
+<p>三个细节与论文图示有出入：</p>
+<ol>
+<li><strong>所有候选 pattern 平权投票</strong>，<code>THRESH=0.20</code> 是硬编码，没用 recency 加权（论文脚注 7 说明作者测试过 recency，最终选阈值法）。</li>
+<li><code>max_match</code> 命中后会 <code>set_mru(key)</code>，但 <code>min_match</code> 投票时<strong>不更新 LRU</strong>——只有成功预测的长事件项会续命，短事件项更易被淘汰。</li>
+<li>因 <code>MAX_ADDR_WIDTH &gt; MIN_ADDR_WIDTH</code>，<code>max_tag_mask ⊇ min_tag_mask</code>，所以 <code>max_match ⇒ min_match</code>；代码用 <code>break</code> 保证 max 优先。</li>
+</ol>
+<h2 id="6-Pattern-旋转归一"><a href="#6-Pattern-旋转归一" class="headerlink" title="6. Pattern 旋转归一"></a>6. Pattern 旋转归一</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// insert:</span><br><span class="line">pattern = rotate(pattern, -offset)</span><br><span class="line">// find:</span><br><span class="line">pattern = rotate(result, +offset)</span><br></pre></td></tr></table></figure>
+
+<p>trigger offset 总是被归一化到 bit 0 才存入 PHT。论文正文未强调这点，但它对 coverage 很重要：<strong>同一个 PC 以不同 offset 触发”相同形状”的 pattern 时</strong>（例如扫描 array 时每次从不同元素起步），它们可以共用同一条 PHT 表项。</p>
+<h2 id="7-统计（区分两种事件来源）"><a href="#7-统计（区分两种事件来源）" class="headerlink" title="7. 统计（区分两种事件来源）"></a>7. 统计（区分两种事件来源）</h2><p>代码里 <code>events[region_number]</code> 记录当次预测由 <code>PC_ADDRESS</code> 还是 <code>PC_OFFSET</code> 触发，并在 fill&#x2F;evict 回调里分别计数 <code>prefetch_cnt / cover_cnt / overpredict_cnt</code>。论文里看不出的经验事实是：<strong>作者在开源里还为这两种事件分别统计 coverage 和 overprediction</strong>，方便做事后归因（哪部分收益真的来自”短事件兜底”）。</p>
+<h2 id="8-与论文描述的对应关系-差异"><a href="#8-与论文描述的对应关系-差异" class="headerlink" title="8. 与论文描述的对应关系 &#x2F; 差异"></a>8. 与论文描述的对应关系 &#x2F; 差异</h2><table>
+<thead>
+<tr>
+<th>论文描述</th>
+<th>代码实现</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>“auxiliary storage”</td>
+<td>FilterTable(64) + AccumulationTable(128)</td>
+<td>两级结构，用 FT 过滤 one-shot page</td>
+</tr>
+<tr>
+<td>“page 结束时训练 PHT”</td>
+<td>AT 满溢出 <strong>或</strong> LLC evict 时训练</td>
+<td>两条路径</td>
+</tr>
+<tr>
+<td>“hash(PC+Offset) 索引, PC+Address tag”</td>
+<td>CRC-style fold；tag 用 max&#x2F;min 双掩码</td>
+<td>完全一致</td>
+</tr>
+<tr>
+<td>“20% 阈值”</td>
+<td><code>#define THRESH 0.20</code></td>
+<td>硬编码；提供 001…100 变体</td>
+</tr>
+<tr>
+<td>“LRU 替换”</td>
+<td>Super::set_mru &#x2F; select_victim</td>
+<td>只在 <code>max_match</code> 和 insert 时续命</td>
+</tr>
+<tr>
+<td>论文未提</td>
+<td><strong>pattern 按 offset 旋转归一</strong></td>
+<td>提升跨 offset 泛化能力</td>
+</tr>
+<tr>
+<td>论文未提</td>
+<td><strong>AT 溢出也训练 PHT</strong></td>
+<td>常驻 page 也能持续更新</td>
+</tr>
+</tbody></table>
+<hr>
+<h1 id="实验-Setup"><a href="#实验-Setup" class="headerlink" title="实验 Setup"></a>实验 Setup</h1><p>实验平台：ChampSim（DPC-2 的基础设施）</p>
+<p>Workload 选择：</p>
+<ul>
+<li>服务器级 big-data workload：Data Serving、SAT Solver、Streaming、Zeus、em3d</li>
+<li>5 个 SPEC 混合（Mix 1–Mix 5，每个 4 个内存密集 SPEC program）</li>
+<li>服务器负载用 SimFlex 方法，从 warmed checkpoint 跑 200K insns（其中 40K 填 ROB&#x2F;队列，后续测量），95% 置信、&lt;4% 误差</li>
+<li>SPEC：每核跑 ≥100M insns，前 20M warmup，之后 80M 测量</li>
+</ul>
+<p>系统设置：</p>
+<ul>
+<li>14nm、4GHz、4 核（4-wide OoO, 256-entry ROB, 64-entry LSQ）</li>
+<li>L1 D&#x2F;I：各 64KB，8-way, 4-cycle，8 MSHR</li>
+<li>L2（&#x3D; LLC）：8MB，16-way，4-bank，15 cycle hit</li>
+<li>主存：60 ns，37.5 GB&#x2F;s，2 通道</li>
+<li>每核独立 prefetcher（核间不共享 metadata），所有方法触发于 LLC 访问并直接 prefetch 到 LLC</li>
+</ul>
+<p>对比对象（均做 sensitivity 调到合理 coverage）：</p>
+<ul>
+<li>BOP（DPC-2 冠军，256-entry RRT）</li>
+<li>SPP（256 Signature &#x2F; 512 Pattern &#x2F; 1024 Prefetch Filter）</li>
+<li>VLDP（16 DHB &#x2F; 64 OPT &#x2F; 3×64 DPT）</li>
+<li>AMPM（表扩到 LLC 全容量）</li>
+<li>SMS（16K-entry, 16-way，Bingo 的基座）</li>
+<li>Bingo（16K-entry, 16-way）</li>
+</ul>
+<hr>
+<h1 id="实验结果"><a href="#实验结果" class="headerlink" title="实验结果"></a>实验结果</h1><h2 id="实验-1：存储灵敏度"><a href="#实验-1：存储灵敏度" class="headerlink" title="实验 1：存储灵敏度"></a>实验 1：存储灵敏度</h2><p>设计：改变 Bingo 的 history table 大小（1K→64K）观察 miss coverage。</p>
+<p>结果：miss coverage 随 size 增加而上升，16K 项后进入平台期。</p>
+<p>结论：Bingo 固定 16K 项 &#x2F; 119KB（LLC 的 6%），在容量和 coverage 间取得最佳平衡。</p>
+<h2 id="实验-2：miss-coverage-overprediction"><a href="#实验-2：miss-coverage-overprediction" class="headerlink" title="实验 2：miss coverage &amp; overprediction"></a>实验 2：miss coverage &amp; overprediction</h2><p>设计：比较所有方法 covered &#x2F; uncovered &#x2F; overprediction（错预取数 &#x2F; baseline 的 miss 数）。</p>
+<p>结果：</p>
+<ul>
+<li>Bingo 平均 coverage <strong>&gt;63%</strong>，比第二名高 <strong>8%</strong></li>
+<li>Overprediction 与其它主流预取器相当，无显著恶化</li>
+<li>SHH 类（BOP&#x2F;SPP&#x2F;VLDP）在服务器负载上 coverage 显著偏低；VLDP 多 degree 预取带来不准</li>
+<li>PPH 类（AMPM&#x2F;SMS）coverage 较高但 Bingo 仍领先</li>
+</ul>
+<p>结论：<strong>多事件关联 + 最长事件优先匹配</strong> 的确能同时把 accuracy 和 opportunity 吃满。</p>
+<h2 id="实验-3：系统性能"><a href="#实验-3：系统性能" class="headerlink" title="实验 3：系统性能"></a>实验 3：系统性能</h2><p>结果：</p>
+<ul>
+<li>相对 no-prefetcher，Bingo 平均 <strong>+60%</strong>，最高 <strong>+285%（em3d）</strong></li>
+<li>对 SMS 再提升 <strong>+11%</strong>，最高 +67%</li>
+<li>Zeus 上提升仅 11%，因该 workload 更偏 temporal correlation，OoO 已覆盖大多数 spatial miss</li>
+</ul>
+<p>结论：Bingo 在各种 workload 上一致领先，timeliness（一次性发出整页需要的 block）+ multi-event 匹配 是关键。</p>
+<h2 id="实验-4：Performance-density（单位面积性能）"><a href="#实验-4：Performance-density（单位面积性能）" class="headerlink" title="实验 4：Performance density（单位面积性能）"></a>实验 4：Performance density（单位面积性能）</h2><p>设计：计算每种方案”性能提升 &#x2F; 芯片面积”，衡量硅利用效率。</p>
+<p>结果：Bingo 的 performance density 比 baseline 高 <strong>59%</strong>，比第二名高 10%。面积开销 &lt; LLC 的 6%，导致 density 相对 performance 只掉 &lt;1%。</p>
+<p>结论：哪怕把 prefetcher 面积的机会成本计入，Bingo 也是”划算”的设计。</p>
+<h2 id="实验-5：ISO-degree-比较"><a href="#实验-5：ISO-degree-比较" class="headerlink" title="实验 5：ISO-degree 比较"></a>实验 5：ISO-degree 比较</h2><p>设计：解开 SHH 方法的 degree 限制（BOP&#x2F;VLDP → 32，SPP 门槛 → 1%），让它们也尝试多发预取以追平 PPH 的 timeliness。</p>
+<p>结果：SHH 系方法性能略升但 overprediction 大幅增加（VLDP overpred 从 14% 涨到 31%；SPP 从 25% 涨到 286%！）。Bingo 仍明显领先。</p>
+<p>结论：SHH 类方案即使被允许”激进发射”，其数据结构本质不知道一页到底还需要多少块，因此无法在不污染带宽的前提下达到 Bingo 的 timeliness。</p>
+<hr>
+<h1 id="Limits"><a href="#Limits" class="headerlink" title="Limits"></a>Limits</h1><ol>
+<li><strong>两事件已够用？</strong> 论文自述 event 数增至 5 时收益饱和，因此仅用 2 个。但这个饱和结论建立在一个选定的事件集合之上（<code>PC+Address / PC+Offset / Address / PC / Offset</code>），未必对其他 workload 成立。</li>
+<li><strong>短事件撞 set 时的融合策略比较简陋</strong>：20% 阈值为经验值，作者只对比了 “recency” 等少数替代。当集合内匹配条目的 footprint 差异大时，融合后可能产生 overfetch 或 underfetch。</li>
+<li><strong>仍然是 PPH 范式</strong>：每个 page 都需 auxiliary storage 跟踪，对超大 working set 或扫描型 workload 的 active-page 并发量仍有限制（虽然 auxiliary 存储本身不大）。</li>
+<li><strong>依赖 page residency 信号训练</strong>：footprint 只在 page 结束 residency 时才被提交到 history table。若 page 长时间驻留，训练样本产生滞后，对新 pattern 的收敛会慢。</li>
+<li><strong>跨核&#x2F;多线程共享未探索</strong>：本文每核独立 prefetcher，未考察服务器多租户场景下 PC 别名与共享数据的干扰。</li>
+<li><strong>相关替代思路未对比</strong>：IMP、TEMPO、Domino、B-Fetch 等走 indirect &#x2F; temporal &#x2F; 分支-驱动路线，与 Bingo 正交。Bingo 没有与这些做叠加实验。</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2026/04/17/cpu/cache/prefetch/data-pf/spatial/Bingo/">https://xixi-shredp.github.io/2026/04/17/cpu/cache/prefetch/data-pf/spatial/Bingo/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/HPCA/">HPCA</a><a class="post-meta__tags" href="/tags/2019/">2019</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/04/17/cpu/cache/prefetch/data-pf/temporal/Kairos/" title="Kairos (2025 MICRO): Elevating Temporal Prefetching Through Instruction Correlation"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Kairos (2025 MICRO): Elevating Temporal Prefetching Through Instruction Correlation</div></div><div class="info-2"><div class="info-item-1">2025 MICRO Kairos 论文解读：通过指令关联识别 key IP，提升片上 temporal prefetcher 的元数据利用率</div></div></div></a><a class="pagination-related" href="/2026/04/16/cpu/cache/prefetch/multi-pf/Sandbox/" title="SBP (2014 HPCA): Sandbox Prefetching: Safe Run-Time Evaluation of Aggressive Prefetchers"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">SBP (2014 HPCA): Sandbox Prefetching: Safe Run-Time Evaluation of Aggressive Prefetchers</div></div><div class="info-2"><div class="info-item-1">2014 HPCA SBP 论文解读：用 Bloom filter 沙箱安全评估激进 offset prefetcher，择优部署到真实内存层次</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/03/22/cpu/cache/prefetch/multi-pf/IPOP/" title="2026 HPCA: I-POP: Ignite Positive Prefetchers"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-22</div><div class="info-item-2">2026 HPCA: I-POP: Ignite Positive Prefetchers</div></div><div class="info-2"><div class="info-item-1">2026 HPCA 论文阅读：I-POP 多预取器管理</div></div></div></a><a class="pagination-related" href="/2026/03/24/cpu/cache/prefetch/data-pf/2026-HPCA-Athena/" title="2026 HPCA: Athena: Synergizing Data Prefetching and Off-Chip Prediction via Online Reinforcement Learning"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-24</div><div class="info-item-2">2026 HPCA: Athena: Synergizing Data Prefetching and Off-Chip Prediction via Online Reinforcement Learning</div></div><div class="info-2"><div class="info-item-1">2026 HPCA 论文阅读：Athena 通过强化学习调节管理 Prefetcher 和 OCP</div></div></div></a><a class="pagination-related" href="/2026/04/17/cpu/cache/prefetch/data-pf/temporal/Streamline/" title="Streamline (2026 HPCA): Streamlined On-Chip Temporal Prefetching"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-04-17</div><div class="info-item-2">Streamline (2026 HPCA): Streamlined On-Chip Temporal Prefetching</div></div><div class="info-2"><div class="info-item-1">2026 HPCA Streamline 论文解读：用 stream-based 元数据表示替代 pairwise 表示，提升片上时序预取器的存储效率、预取覆盖率和带宽效率</div></div></div></a><a class="pagination-related" href="/2026/04/16/cpu/cache/prefetch/multi-pf/Sandbox/" title="SBP (2014 HPCA): Sandbox Prefetching: Safe Run-Time Evaluation of Aggressive Prefetchers"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-04-16</div><div class="info-item-2">SBP (2014 HPCA): Sandbox Prefetching: Safe Run-Time Evaluation of Aggressive Prefetchers</div></div><div class="info-2"><div class="info-item-1">2014 HPCA SBP 论文解读：用 Bloom filter 沙箱安全评估激进 offset prefetcher，择优部署到真实内存层次</div></div></div></a><a class="pagination-related" href="/2026/04/16/cpu/cache/prefetch/multi-pf/Alecto/" title="Alecto (2025 HPCA): Integrating Prefetcher Selection with Dynamic Request Allocation Improves Prefetching Efficiency"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-04-16</div><div class="info-item-2">Alecto (2025 HPCA): Integrating Prefetcher Selection with Dynamic Request Allocation Improves Prefetching Efficiency</div></div><div class="info-2"><div class="info-item-1">2025 HPCA Alecto 论文解读：通过动态 demand request 分配实现细粒度预取器选择，同时优化 accuracy、coverage 和 timeliness</div></div></div></a><a class="pagination-related" href="/2026/03/19/cpu/bpu/2026-HPCA-LLBPX/" title="2026 HPCA: The Last-Level Branch Predictor Revisited"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-19</div><div class="info-item-2">2026 HPCA: The Last-Level Branch Predictor Revisited</div></div><div class="info-2"><div class="info-item-1">2026 HPCA 论文阅读：The Last-Level Branch Predictor Revisited</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">102</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">21</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">49</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%83%8C%E6%99%AF%E5%92%8C%E5%8A%A8%E6%9C%BA"><span class="toc-number">1.</span> <span class="toc-text">背景和动机</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A9%BA%E9%97%B4%E6%95%B0%E6%8D%AE%E9%A2%84%E5%8F%96%EF%BC%88Spatial-Data-Prefetcher%EF%BC%89"><span class="toc-number">1.1.</span> <span class="toc-text">空间数据预取（Spatial Data Prefetcher）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%A4%E7%B1%BB%E7%A9%BA%E9%97%B4%E9%A2%84%E5%8F%96%E5%99%A8"><span class="toc-number">1.2.</span> <span class="toc-text">两类空间预取器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E7%97%9B%E7%82%B9%EF%BC%9A%E5%8D%95%E4%B8%80-event-%E7%9A%84%E4%B8%A4%E9%9A%BE"><span class="toc-number">1.3.</span> <span class="toc-text">核心痛点：单一 event 的两难</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Insight"><span class="toc-number">2.</span> <span class="toc-text">Insight</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1"><span class="toc-number">3.</span> <span class="toc-text">核心设计</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-Auxiliary-Storage%EF%BC%88%E8%BF%BD%E8%B8%AA-active-pages%EF%BC%8C%E5%AE%9E%E4%B8%BA%E4%B8%A4%E7%BA%A7%EF%BC%89"><span class="toc-number">3.1.</span> <span class="toc-text">1. Auxiliary Storage（追踪 active pages，实为两级）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-FilterTable%EF%BC%88FT%EF%BC%89"><span class="toc-number">3.1.1.</span> <span class="toc-text">1.1 FilterTable（FT）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-AccumulationTable%EF%BC%88AT%EF%BC%89"><span class="toc-number">3.1.2.</span> <span class="toc-text">1.2 AccumulationTable（AT）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-History-Table%EF%BC%88PHT%EF%BC%89%EF%BC%9A%E5%8D%95%E8%A1%A8-TAGE-%E9%A3%8E%E6%A0%BC%E5%8F%8C%E6%9F%A5"><span class="toc-number">3.2.</span> <span class="toc-text">2. History Table（PHT）：单表 + TAGE 风格双查</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AD%98%E5%82%A8%E9%85%8D%E7%BD%AE%EF%BC%88%E4%B8%8E%E6%BA%90%E7%A0%81%E5%B8%B8%E9%87%8F%E5%AF%B9%E9%BD%90%EF%BC%89"><span class="toc-number">3.2.1.</span> <span class="toc-text">存储配置（与源码常量对齐）</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E8%A7%A3%E8%AF%BB%EF%BC%88%E5%9F%BA%E4%BA%8E%E4%BD%9C%E8%80%85%E5%BC%80%E6%BA%90-ChampSim-%E5%AE%9E%E7%8E%B0%EF%BC%89"><span class="toc-number">4.</span> <span class="toc-text">代码解读（基于作者开源 ChampSim 实现）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%A8%A1%E5%9D%97%E7%BB%84%E7%BB%87"><span class="toc-number">4.1.</span> <span class="toc-text">1. 模块组织</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%B8%BB%E6%B5%81%E7%A8%8B-Bingo-access-block-number-pc"><span class="toc-number">4.2.</span> <span class="toc-text">2. 主流程 Bingo::access(block_number, pc)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E4%BD%95%E6%97%B6%E8%AE%AD%E7%BB%83-PHT%EF%BC%9A%E4%B8%A4%E6%9D%A1%E8%B7%AF%E5%BE%84"><span class="toc-number">4.3.</span> <span class="toc-text">3. 何时训练 PHT：两条路径</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-PatternHistoryTable-build-key-%E2%80%94%E2%80%94-CRC-%E6%8A%98%E5%8F%A0"><span class="toc-number">4.4.</span> <span class="toc-text">4. PatternHistoryTable::build_key —— CRC 折叠</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-PatternHistoryTable-find-%E2%80%94%E2%80%94-max-min-%E5%8C%B9%E9%85%8D%E4%B8%8E%E6%8A%95%E7%A5%A8"><span class="toc-number">4.5.</span> <span class="toc-text">5. PatternHistoryTable::find —— max&#x2F;min 匹配与投票</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-Pattern-%E6%97%8B%E8%BD%AC%E5%BD%92%E4%B8%80"><span class="toc-number">4.6.</span> <span class="toc-text">6. Pattern 旋转归一</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E7%BB%9F%E8%AE%A1%EF%BC%88%E5%8C%BA%E5%88%86%E4%B8%A4%E7%A7%8D%E4%BA%8B%E4%BB%B6%E6%9D%A5%E6%BA%90%EF%BC%89"><span class="toc-number">4.7.</span> <span class="toc-text">7. 统计（区分两种事件来源）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-%E4%B8%8E%E8%AE%BA%E6%96%87%E6%8F%8F%E8%BF%B0%E7%9A%84%E5%AF%B9%E5%BA%94%E5%85%B3%E7%B3%BB-%E5%B7%AE%E5%BC%82"><span class="toc-number">4.8.</span> <span class="toc-text">8. 与论文描述的对应关系 &#x2F; 差异</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-Setup"><span class="toc-number">5.</span> <span class="toc-text">实验 Setup</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E7%BB%93%E6%9E%9C"><span class="toc-number">6.</span> <span class="toc-text">实验结果</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-1%EF%BC%9A%E5%AD%98%E5%82%A8%E7%81%B5%E6%95%8F%E5%BA%A6"><span class="toc-number">6.1.</span> <span class="toc-text">实验 1：存储灵敏度</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-2%EF%BC%9Amiss-coverage-overprediction"><span class="toc-number">6.2.</span> <span class="toc-text">实验 2：miss coverage &amp; overprediction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-3%EF%BC%9A%E7%B3%BB%E7%BB%9F%E6%80%A7%E8%83%BD"><span class="toc-number">6.3.</span> <span class="toc-text">实验 3：系统性能</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-4%EF%BC%9APerformance-density%EF%BC%88%E5%8D%95%E4%BD%8D%E9%9D%A2%E7%A7%AF%E6%80%A7%E8%83%BD%EF%BC%89"><span class="toc-number">6.4.</span> <span class="toc-text">实验 4：Performance density（单位面积性能）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-5%EF%BC%9AISO-degree-%E6%AF%94%E8%BE%83"><span class="toc-number">6.5.</span> <span class="toc-text">实验 5：ISO-degree 比较</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Limits"><span class="toc-number">7.</span> <span class="toc-text">Limits</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RegionPatternMatching/" title="Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher">Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher</a><time datetime="2026-04-26T16:00:00.000Z" title="Created 2026-04-27 00:00:00">2026-04-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RIP-TaggedRegion/" title="RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher">RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher</a><time datetime="2026-04-26T16:00:00.000Z" title="Created 2026-04-27 00:00:00">2026-04-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/cache-arch-aware/" title="Cache Architechture-Aware Cache Replacement">Cache Architechture-Aware Cache Replacement</a><time datetime="2026-04-23T09:36:07.000Z" title="Created 2026-04-23 17:36:07">2026-04-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/prefetcher-aware/" title="Prefetch-Aware Cache Replacement">Prefetch-Aware Cache Replacement</a><time datetime="2026-04-23T09:28:22.000Z" title="Created 2026-04-23 17:28:22">2026-04-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/multicore-aware/" title="Multi-Core-Aware Cache Replacement">Multi-Core-Aware Cache Replacement</a><time datetime="2026-04-23T06:37:22.000Z" title="Created 2026-04-23 14:37:22">2026-04-23</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

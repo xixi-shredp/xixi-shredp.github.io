@@ -1,0 +1,574 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Cost-Aware Cache Replacement Policies | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="Cost 感知的 Cache 替换策略简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Cost-Aware Cache Replacement Policies">
+<meta property="og:url" content="https://xixi-shredp.github.io/2026/04/22/cpu/cache/replacement/cost-aware/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="Cost 感知的 Cache 替换策略简介">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2026-04-22T15:15:03.000Z">
+<meta property="article:modified_time" content="2026-04-23T09:27:10.757Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="CPU, Computer Architechture, OS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Cost-Aware Cache Replacement Policies",
+  "url": "https://xixi-shredp.github.io/2026/04/22/cpu/cache/replacement/cost-aware/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2026-04-22T15:15:03.000Z",
+  "dateModified": "2026-04-23T09:27:10.757Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2026/04/22/cpu/cache/replacement/cost-aware/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Cost-Aware Cache Replacement Policies',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background: linear-gradient(180deg, black, black, #23064D);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">102</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">21</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">49</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Cost-Aware Cache Replacement Policies</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Cost-Aware Cache Replacement Policies</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-04-22T15:15:03.000Z" title="Created 2026-04-22 23:15:03">2026-04-22</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-04-23T09:27:10.757Z" title="Updated 2026-04-23 17:27:10">2026-04-23</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/">cpu</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/">cache</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/replacement/">replacement</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>大多数替换策略旨在最小化整体 cache miss rate ，其前提是所有 cache miss 的代价是相等的。然而不同的 cache miss 对整体性能的影响可能天差地别</p>
+<ul>
+<li>孤立的 miss（低内存级并行性）往往比聚集的 miss（高内存级并行性）代价更高，因为更高的并行性意味着有更强的能力来隐藏单个 cache miss 的延迟</li>
+<li>位于程序关键路径上的 miss 比不在关键路径上的 miss 对程序性能的影响更为重要</li>
+</ul>
+<p>一个考虑这些成本的智能替换策略可以优先缓存高成本的 miss（以较低的 hit rate 为代价），从而实现更好的程序性能</p>
+<hr>
+<h1 id="Optimal-Cost-Aware-Replacement-Policy-CSOPT-2006"><a href="#Optimal-Cost-Aware-Replacement-Policy-CSOPT-2006" class="headerlink" title="Optimal Cost-Aware Replacement Policy (CSOPT, 2006)"></a>Optimal Cost-Aware Replacement Policy (CSOPT, 2006)</h1><blockquote>
+<p>Jaeheon Jeong and Michel Dubois. Cache replacement algorithms with nonuniform miss costs. IEEE Transactions on Computers, 55(4):353–365, 2006.</p>
+</blockquote>
+<p>CSOPT 旨在最小化所有 misses 的总成本，而非最小化 miss 的次数<br>基本思想: </p>
+<ul>
+<li>基本遵循 Belady 的最优页面替换算法</li>
+<li>当该算法会踢出一个其 miss 成本高于其他 cacheline 的 line 时，CSOPT 会探索多种替换策略序列，直到它能确定出使总成本最小化的替换策略序列</li>
+</ul>
+<p>CSOPT 的一种简单实现：以搜索树的形式展开所有可能的替换策略序列</p>
+<ul>
+<li>搜索树的深度等于 cache 访问的次数，因为每次新的 cache 访问都会增加一个新层级，而其宽度等于 cache 大小 s，因为搜索过程在每次 eviction 时最多会考虑 s 种替换选择</li>
+<li>贪婪地在树中任意节点缓存一个高成本 cacheline, 从长远来看可能无法转化为最佳替换序列<ul>
+<li>可能会阻碍缓存另一个成本更高的 cacheline   </li>
+<li>可能会替换掉多个低成本 cacheline ，而这些 cacheline 的总成本高于单个高成本 cacheline</li>
+</ul>
+</li>
+</ul>
+<p>因此，最佳替换决策取决于未来多条竞争路径的行为，从而产生一个庞大的解决方案搜索空间</p>
+<p>CSOPT 的分支定界方法在 cache 访问次数上是指数级的，而 MIN 在缓存访问次数上是线性的</p>
+<p>可以采用启发式方法来修剪搜索树并减少搜索空间:</p>
+<ul>
+<li>对于一些科学工作负载，这些启发式方法被证明可以使 CSOPT 的计算变得可行——即离线分析能够完成</li>
+<li>但通常并不能降低最坏情况下的复杂度</li>
+</ul>
+<blockquote>
+<p>实验证明，CSOPT 相对于 MIN 的成本节省随着成本比率的增加而增加，并且在高成本访问占总访问次数20‑30%时最为显著，因为当成本差异较大且低成本未命中的百分比较高时，CSOPT 相对于 MIN 的优势会增长，在这些情况下，MIN更有可能做出错误的选择。</p>
+</blockquote>
+<p>与 MIN 一样，CSOPT 也是硬件不可实现的，因为需要预知未来的访问</p>
+<p>实用的成本感知缓存替换解决方案依赖于直观的启发式方法：</p>
+<ol>
+<li>识别高成本的 cache 访问</li>
+<li>优先缓存高成本负载而非低成本负载</li>
+</ol>
+<hr>
+<h1 id="MLP-Aware-Linear-Replacement-Policy-LIN-2006"><a href="#MLP-Aware-Linear-Replacement-Policy-LIN-2006" class="headerlink" title="MLP-Aware Linear Replacement Policy (LIN, 2006)"></a>MLP-Aware Linear Replacement Policy (LIN, 2006)</h1><blockquote>
+<p>Moinuddin K Qureshi and Yale N Patt. Utility-based cache partitioning: A lowoverhead, high-performance, runtime mechanism to partition shared caches. In 2006 39th Annual IEEE&#x2F;ACM International Symposium on Microarchitecture (MICRO’06), pages 423–432. IEEE, 2006.</p>
+</blockquote>
+<p>核心思想：孤立 miss（低MLP）对性能的影响比并行 miss（高MLP）更大，因为一个孤立 miss 会阻碍其后的所有依赖指令，并导致处理器长时间停顿。相比之下，并行缺失的成本则不那么高，因为处理器可以通过并行发出多个 load 请求来隐藏其延迟。</p>
+<p>MLP 感知缓存替换策略可以通过减少孤立 miss 次数来提升性能(理论上可以优于 Belady MIN)</p>
+<p>MLP感知线性（LIN）策略包含两个组成部分：</p>
+<ol>
+<li>一个预测未来 miss MLP 成本的算法</li>
+<li>一个综合考虑最近使用和基于 MLP 成本的替换策略</li>
+</ol>
+<p>cache miss 对应的 MLP-based cost 被定义为: 该 miss 等待被服务所花费的周期数</p>
+<ul>
+<li>可以轻松地使用 MSHR 进行追踪</li>
+<li>对于并行 misses ，周期数在所有并发 misses 之间平均分配</li>
+<li>更高的基于 MLP 的成本意味着该 cacheline 很可能导致孤立 miss，因此更希望将其保留在 cache 中</li>
+</ul>
+<p>LIN 替换策略线性结合 recency 和 MLP-based cost，并踢出聚合成本最低的 cacheline: $R(i) + \lambda ∗ cost_q(i)$</p>
+<ul>
+<li>$R(i)$ 是一个 cacheline 的 recency （最大值表示 MRU，最小值表示 LRU）</li>
+<li>$costq(i)$ 是其量化的 MLP-based cost，那么 LIN 策略将踢出 MLP-based cost 最小的 cacheline<ul>
+<li>λ 是 costq 在选择 victim lines 时的权重</li>
+<li>λ 值高表示 LIN 很可能保留具有高 MLP-based cost 的 MRU cacheline</li>
+<li>λ 值低则表示 LIN 可能更侧重于 MRU</li>
+<li>论文设置 λ 为 4</li>
+</ul>
+</li>
+</ul>
+<p>由于 LIN 并非总是优于 LRU，论文最终使用set dueling 在 LIN 和 LRU 策略之间动态选择</p>
+<hr>
+<h1 id="ReMAP-2014"><a href="#ReMAP-2014" class="headerlink" title="ReMAP(2014)"></a>ReMAP(2014)</h1><blockquote>
+<p>Akhil Arunkumar and Carole-Jean Wu. Remap: Reuse and memory access cost aware eviction policy for last level cache management. In 2014 IEEE 32nd International Conference on Computer Design (ICCD), pages 110–117. IEEE, 2014.</p>
+</blockquote>
+<p>核心观点: 将踢出后的重用信息纳入成本度量本身</p>
+<p>该策略将一个 cacheline 的总成本定义为: 最近使用, DRAM 延迟和踢出后重用距离的线性组合，其中驱逐后重用距离是使用一个针对被驱逐行的 bloom filter 来计算的</p>
+<hr>
+<h1 id="Locality-Aware-Cost-Sensitive-Cache-Replacement-Policy-LACS-2014"><a href="#Locality-Aware-Cost-Sensitive-Cache-Replacement-Policy-LACS-2014" class="headerlink" title="Locality-Aware Cost-Sensitive Cache Replacement Policy (LACS, 2014)"></a>Locality-Aware Cost-Sensitive Cache Replacement Policy (LACS, 2014)</h1><blockquote>
+<p>Mazen Kharbutli and Rami Sheikh. Lacs: A locality-aware cost-sensitive cache replacement algorithm. IEEE Transactions on Computers, 63(8):1975–1987, 2014.</p>
+</blockquote>
+<p>该策略通过统计一个 cacheline 发生 LLC miss 期间所发出的指令数量来估算其成本</p>
+<ul>
+<li>这种成本定义反映了处理器隐藏 miss 惩罚的能力(与 MLP 类似)</li>
+<li>cacheline 根据发出的指令数量是高于还是低于一个阈值，被分类为低成本或高成本</li>
+<li>对于每个 cacheline ，LACS 维护一个 2 bits 的成本值(二元的成本分类)</li>
+</ul>
+<p>LACS 结合了基于局部性和基于成本的替换策略的优势: </p>
+<ul>
+<li>在发生 cache miss 时，LACS 选择一个低成本 cacheline 踢出，以便高成本 cacheline 保留在 cache 中</li>
+<li>高成本 cacheline 会通过递减其 2 位成本值来老化，这样如果它们在 cache 中停留时间过长，就会放弃保留状态</li>
+<li>低成本 cacheline 会通过递增其 2 位成本值来提升，这样如果它们表现出较高的时间局部性，就会被保留在 cache 中</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2026/04/22/cpu/cache/replacement/cost-aware/">https://xixi-shredp.github.io/2026/04/22/cpu/cache/replacement/cost-aware/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/04/23/cpu/cache/replacement/criticality-driven/" title="Criticality-Driven Cache Optimizations"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Criticality-Driven Cache Optimizations</div></div><div class="info-2"><div class="info-item-1">Criticality 感知的 Cache 替换策略简介</div></div></div></a><a class="pagination-related" href="/2026/04/17/cpu/cache/prefetch/data-pf/temporal/Streamline/" title="Streamline (2026 HPCA): Streamlined On-Chip Temporal Prefetching"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Streamline (2026 HPCA): Streamlined On-Chip Temporal Prefetching</div></div><div class="info-2"><div class="info-item-1">2026 HPCA Streamline 论文解读：用 stream-based 元数据表示替代 pairwise 表示，提升片上时序预取器的存储效率、预取覆盖率和带宽效率</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">102</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">21</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">49</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Optimal-Cost-Aware-Replacement-Policy-CSOPT-2006"><span class="toc-number">1.</span> <span class="toc-text">Optimal Cost-Aware Replacement Policy (CSOPT, 2006)</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#MLP-Aware-Linear-Replacement-Policy-LIN-2006"><span class="toc-number">2.</span> <span class="toc-text">MLP-Aware Linear Replacement Policy (LIN, 2006)</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#ReMAP-2014"><span class="toc-number">3.</span> <span class="toc-text">ReMAP(2014)</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Locality-Aware-Cost-Sensitive-Cache-Replacement-Policy-LACS-2014"><span class="toc-number">4.</span> <span class="toc-text">Locality-Aware Cost-Sensitive Cache Replacement Policy (LACS, 2014)</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RegionPatternMatching/" title="Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher">Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher</a><time datetime="2026-04-26T16:00:00.000Z" title="Created 2026-04-27 00:00:00">2026-04-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RIP-TaggedRegion/" title="RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher">RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher</a><time datetime="2026-04-26T16:00:00.000Z" title="Created 2026-04-27 00:00:00">2026-04-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/cache-arch-aware/" title="Cache Architechture-Aware Cache Replacement">Cache Architechture-Aware Cache Replacement</a><time datetime="2026-04-23T09:36:07.000Z" title="Created 2026-04-23 17:36:07">2026-04-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/prefetcher-aware/" title="Prefetch-Aware Cache Replacement">Prefetch-Aware Cache Replacement</a><time datetime="2026-04-23T09:28:22.000Z" title="Created 2026-04-23 17:28:22">2026-04-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/multicore-aware/" title="Multi-Core-Aware Cache Replacement">Multi-Core-Aware Cache Replacement</a><time datetime="2026-04-23T06:37:22.000Z" title="Created 2026-04-23 14:37:22">2026-04-23</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

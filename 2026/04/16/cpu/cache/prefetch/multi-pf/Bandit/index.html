@@ -1,0 +1,815 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Micro-Armed Bandit (2023 MICRO): Lightweight &amp; Reusable Reinforcement Learning for Microarchitecture Decision-Making | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="2023 MICRO Micro-Armed Bandit 论文解读：利用动作空间的时间同质性，用 Multi-Armed Bandit 实现轻量级可复用的微架构决策 RL agent">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Micro-Armed Bandit (2023 MICRO): Lightweight &amp; Reusable Reinforcement Learning for Microarchitecture Decision-Making">
+<meta property="og:url" content="https://xixi-shredp.github.io/2026/04/16/cpu/cache/prefetch/multi-pf/Bandit/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="2023 MICRO Micro-Armed Bandit 论文解读：利用动作空间的时间同质性，用 Multi-Armed Bandit 实现轻量级可复用的微架构决策 RL agent">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2026-04-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-04-21T12:25:16.036Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="2023">
+<meta property="article:tag" content="MICRO">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Micro-Armed Bandit (2023 MICRO): Lightweight & Reusable Reinforcement Learning for Microarchitecture Decision-Making",
+  "url": "https://xixi-shredp.github.io/2026/04/16/cpu/cache/prefetch/multi-pf/Bandit/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2026-04-15T16:00:00.000Z",
+  "dateModified": "2026-04-21T12:25:16.036Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2026/04/16/cpu/cache/prefetch/multi-pf/Bandit/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Micro-Armed Bandit (2023 MICRO): Lightweight & Reusable Reinforcement Learning for Microarchitecture Decision-Making',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background: linear-gradient(180deg, black, black, #23064D);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">102</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">21</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">49</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Micro-Armed Bandit (2023 MICRO): Lightweight &amp; Reusable Reinforcement Learning for Microarchitecture Decision-Making</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Micro-Armed Bandit (2023 MICRO): Lightweight &amp; Reusable Reinforcement Learning for Microarchitecture Decision-Making</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-04-15T16:00:00.000Z" title="Created 2026-04-16 00:00:00">2026-04-16</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-04-21T12:25:16.036Z" title="Updated 2026-04-21 20:25:16">2026-04-21</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/">cpu</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/">cache</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/prefetch/">prefetch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/prefetch/multi-pf/">multi-pf</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>这篇论文提出的是 <strong>Micro-Armed Bandit（MICRO 2023）</strong>：</p>
+<p>TLDR：</p>
+<ol>
+<li>发现微架构决策问题中动作空间具有<strong>时间同质性（temporal homogeneity）</strong>——在较长时间窗口内，最优动作基本不变</li>
+<li>基于这一性质，用最简单的 RL 形式——<strong>Multi-Armed Bandit (MAB)</strong> 替代复杂的 MDP-RL，大幅降低复杂度和存储开销</li>
+<li>采用 <strong>Discounted Upper Confidence Bound (DUCB)</strong> 算法，存储开销仅约 100 字节</li>
+<li>在 data prefetching 和 SMT instruction fetch 两个用例上验证了有效性和可复用性</li>
+</ol>
+<h1 id="背景和动机"><a href="#背景和动机" class="headerlink" title="背景和动机"></a>背景和动机</h1><p><strong>背景：</strong> 在线强化学习（Online RL）因其高适应性和无需离线训练的特点，被广泛用于微架构决策，如 prefetching、cache replacement、资源管理等。</p>
+<p><strong>现有问题：</strong></p>
+<ol>
+<li><strong>复杂度和存储开销高：</strong> 现有硬件 RL agent（如 Pythia 基于 SARSA）将环境建模为 MDP，需要维护大量状态-动作值，存储开销大（Pythia 需 24KB）</li>
+<li><strong>不可复用：</strong> 大多数 RL agent 为特定问题定制，每个新用例都需要重新设计和验证</li>
+</ol>
+<h2 id="相关工作"><a href="#相关工作" class="headerlink" title="相关工作"></a>相关工作</h2><ul>
+<li><strong>Pythia:</strong> Bera et al., “Pythia: A Customizable Hardware Prefetching Framework Using Online Reinforcement Learning,” MICRO 2021</li>
+<li><strong>MLOP:</strong> Shi et al., “A Hierarchical Neural Model of Data Prefetching,” ASPLOS 2021</li>
+<li><strong>Bingo:</strong> Bakshalipour et al., “Bingo Spatial Data Prefetcher,” HPCA 2019</li>
+<li><strong>Ipek et al.:</strong> “Self-Optimizing Memory Controllers: A Reinforcement Learning Approach,” ISCA 2008</li>
+<li><strong>Cohmeleon:</strong> Zuckerman et al., “Cohmeleon: Learning-Based Orchestration of Accelerator Coherence in Heterogeneous SoCs,” MICRO 2021</li>
+<li><strong>Choi &amp; Yeung:</strong> “Learning-Based SMT Processor Resource Distribution via Hill-Climbing,” ISCA 2006</li>
+</ul>
+<hr>
+<h1 id="Insight-Temporal-Homogeneity"><a href="#Insight-Temporal-Homogeneity" class="headerlink" title="Insight: Temporal Homogeneity"></a>Insight: Temporal Homogeneity</h1><p>微架构决策问题的动作空间具有<strong>时间同质性（temporal homogeneity）</strong>：在给定时间窗口内，最优动作基本保持不变</p>
+<p>论文将 RL 问题分为 3 类:</p>
+<ul>
+<li>MDP-RL：状态多, 复杂度最高</li>
+<li>Contextual Bandit：比 MDP 简化，但保留上下文状态</li>
+<li>Multi-Armed Bandit：直接把环境压成单状态，只学“哪个动作总体最好”</li>
+</ul>
+<p>通常认为 MAB 不适合复杂硬件控制，但作者发现：在一些微体系结构问题里，某一段时间窗口内真正“有用”的动作只占很小一部分，而且最优动作在该时间段内相对稳定。</p>
+<ul>
+<li>这意味着不一定非要精确建模状态转移，只要动作空间在时间上有“局部稳定性”，就可以把问题粗略建模为单状态 RL，用 MAB 来逼近最优决策</li>
+<li>而且可以直接把 RL 的硬件复杂度从“状态数 × 动作数”降到了“动作数”</li>
+</ul>
+<p>在预取场景中，如果直接把动作定义成“offset + degree”的组合，那么不同 degree&#x2F;offset 在不同程序阶段确实有不同效果。</p>
+<p>论文通过观察一个强 RL 预取器 Pythia 的动作分布，发现：</p>
+<ul>
+<li>Pythia 支持 16 个 offset × 4 个 degree &#x3D; 64 个动作；</li>
+<li>在 SPEC 的 1B 指令轨迹上，平均最常选动作占 60%；</li>
+<li>第二常选动作再占 15%；</li>
+<li>即：<strong>整个动作空间的约 3% 就覆盖了 75% 的动作选择</strong></li>
+</ul>
+<p>这说明预取动作空间具有明显的时间同质性。</p>
+<p>但论文也指出 MAB 无法区分 cache line 地址, PC 等细粒度状态，因此不能直接用来给“每一次访问”决定统一的最佳 offset&#x2F;degree；否则会过度粗化</p>
+<p>但是对于多预取器的管理而言，不存在上述问题，MAB 非常适合此类粗粒度动作：</p>
+<ul>
+<li>细粒度模式识别仍由传统预取器完成</li>
+<li>Bandit 只做预取器的管理</li>
+</ul>
+<hr>
+<h1 id="核心设计"><a href="#核心设计" class="headerlink" title="核心设计"></a>核心设计</h1><p>Micro-Armed Bandit（简称 Bandit）是一个轻量级硬件 RL agent，基于 DUCB 算法：</p>
+<ol>
+<li><strong>DUCB 算法</strong>替代简单的 UCB&#x2F;ε-Greedy，通过折扣因子 γ 适应非平稳环境（程序阶段变化）</li>
+<li><strong>两个微架构适配修改</strong>：奖励归一化 + 随机重启机制，解决跨 benchmark IPC 差异和多核干扰问题</li>
+<li>两个应用场景：<strong>prefetching coordinator</strong>（协调多个轻量级预取器的 degree&#x2F;type）和 <strong>SMT fetch PG policy</strong>（同时控制 fetch priority 和 fetch gating）</li>
+</ol>
+<hr>
+<h2 id="1-DUCB-算法"><a href="#1-DUCB-算法" class="headerlink" title="1. DUCB 算法"></a>1. DUCB 算法</h2><p>三种 MAB 算法对比：</p>
+<ul>
+<li><strong>ε-Greedy：</strong><ul>
+<li>以概率 1−ϵ 选当前平均 reward 最高的动作，以概率 ϵ 随机探索</li>
+<li>探索是随机的</li>
+<li>探索不随时间自然衰减</li>
+<li>探索效率较低</li>
+</ul>
+</li>
+<li><strong>UCB(Upper Confidence Bound)：</strong><ul>
+<li>选择公式：平均 reward + 探索边界 $r_i + c\sqrt{\frac{\ln(n_{total})}{n_i}}$</li>
+<li>如果某个动作很少被选过，它的 $n_i$ 小，探索项就大，因此更容易再次被尝试</li>
+<li>随着时间推移，探索项自然衰减</li>
+<li>不遗忘历史，无法适应阶段变化</li>
+</ul>
+</li>
+<li><strong>DUCB(Discounted Upper Confidence Bound)：</strong><ul>
+<li>在 UCB 基础上引入折扣因子 γ（&lt;1）</li>
+<li>在 updSels 中对所有 arm 的选择次数 $n_i$ 乘以 γ 进行衰减，使得 agent 能”遗忘”旧行为，适应程序阶段变化</li>
+</ul>
+</li>
+</ul>
+<p>论文认为微体系结构场景中 workload 行为随时间变化，DUCB 比 UCB 更合适，也更不容易长期困在次优动作。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>ε-Greedy</th>
+<th>Upper Confidence Bound</th>
+<th>Discounted Upper Confidence Bound</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>nextArm</strong></td>
+<td>$arm \leftarrow \begin{cases} \arg\max{r_i} &amp; \text{with prob. } 1-\epsilon \ \text{random arm} &amp; \text{with prob. } \epsilon \end{cases}$</td>
+<td>$arm \leftarrow \arg\max\left{r_i + c\sqrt{\frac{\ln(n_{total})}{n_i}}\right}$</td>
+<td>$arm \leftarrow \arg\max\left{r_i + c\sqrt{\frac{\ln(n_{total})}{n_i}}\right}$</td>
+</tr>
+<tr>
+<td><strong>updSels</strong></td>
+<td>$n_{arm} \leftarrow n_{arm}+1$<br>$n_{total} \leftarrow n_{total}+1$</td>
+<td>$n_{arm} \leftarrow n_{arm}+1$<br>$n_{total} \leftarrow n_{total}+1$</td>
+<td>$n_i \leftarrow \gamma \times n_i,\ \forall i \in [1,M]$<br>$n_{arm} \leftarrow n_{arm}+1$<br>$n_{total} \leftarrow \gamma \times n_{total}+1$</td>
+</tr>
+<tr>
+<td><strong>updRew</strong></td>
+<td>$r_{arm} \leftarrow \dfrac{r_{arm} \ast (n_{arm}-1) + r_{step}}{n_{arm}}$</td>
+<td>$r_{arm} \leftarrow \dfrac{r_{arm} \ast (n_{arm}-1) + r_{step}}{n_{arm}}$</td>
+<td>$r_{arm} \leftarrow \dfrac{r_{arm} \ast (n_{arm}-1) + r_{step}}{n_{arm}}$</td>
+</tr>
+</tbody></table>
+<p>MAB 算法框架：</p>
+<ul>
+<li>Input: M arms</li>
+<li>Variables:<ul>
+<li>$r_i$ : arm i 的平均 reward</li>
+<li>$n_i$ : arm i 被选过的次数</li>
+</ul>
+</li>
+</ul>
+<ol>
+<li>Initial Round Robin Phase<ul>
+<li>ntotal ← 0</li>
+<li>依次对所有的 arm:<ul>
+<li>$n_i +&#x3D; 1$</li>
+<li>$n_{total} +&#x3D; 1$</li>
+<li>接收到 reward 反馈后 $r_i &#x3D; r_{step}$</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Main Loop<ul>
+<li>arm &#x3D; nextArm()</li>
+<li>updSels(arm)</li>
+<li>接收到 reward 反馈后 $r_{arm}$ &#x3D; updRew($r_{step}$)</li>
+</ul>
+</li>
+</ol>
+<h2 id="2-微架构环境适配"><a href="#2-微架构环境适配" class="headerlink" title="2. 微架构环境适配"></a>2. 微架构环境适配</h2><h3 id="Reward-归一化"><a href="#Reward-归一化" class="headerlink" title="Reward 归一化"></a>Reward 归一化</h3><p>问题：如果统一使用 IPC 作为 reward，不同 benchmark 的 IPC 量级差异很大，那么同一个探索常数 c 对低 IPC 程序会显得过强，对高 IPC 程序会显得过弱。<br>结果导致低 IPC 程序被过度探索。</p>
+<p>解决方案：在初始 round-robin 试完所有动作后，计算一个初始平均奖励 $r_{avg}$，用它去归一化后续 reward，这样不同 benchmark 上的探索强度更一致</p>
+<h3 id="多核随机重启"><a href="#多核随机重启" class="headerlink" title="多核随机重启"></a>多核随机重启</h3><p>问题：多个核都在跑 MAB 时，核间干扰会污染 reward。比如某个核选了非常激进的预取动作，把 DRAM 带宽抢走，其他核 IPC 下降，这些核可能误以为“自己当前在尝试的动作不好”，从而错误学习</p>
+<p>解决方案：加入一个小概率 $rr_restart_prob$ 的重新执行 initial round-robin phase 机制，但不清空已有统计($r_i$ 和 $n_i$)。这样每个核有机会在更稳定的环境中重新评估所有动作<br>(但这并不是完美解法，只是一种缓解手段)</p>
+<blockquote>
+<p>Bandit 在多核场景下的根本问题：独立代理 + 局部 reward 会导致竞争与误归因</p>
+<p>2025 MICRO µMama 正是顺着这条线继续做的</p>
+</blockquote>
+<h2 id="3-硬件结构"><a href="#3-硬件结构" class="headerlink" title="3. 硬件结构"></a>3. 硬件结构</h2><p>Bandit 的硬件主要由三部分构成：</p>
+<ul>
+<li>nTable：记录每个 arm 被选过多少次 $n_i$</li>
+<li>rTable：记录每个 arm 当前平均奖励 $r_i$</li>
+<li>算术单元 + 控制逻辑：计算 potential, 更新计数和 reward, 把所选动作通知子预取器</li>
+</ul>
+<p>Bandit 的工作流程：</p>
+<ol>
+<li>顺序读出所有 arm 的 $n_i$ 和 $r_i$</li>
+<li>计算出每个 arm 的 potential</li>
+<li>选出最大的 arm</li>
+<li>把该 arm 配置发给预取器或 SMT fetch 控制逻辑</li>
+<li>bandit step 结束后，根据硬件计数器算出此次 step reward</li>
+<li>更新 rTable&#x2F;nTable</li>
+</ol>
+<h2 id="4-两个应用场景"><a href="#4-两个应用场景" class="headerlink" title="4. 两个应用场景"></a>4. 两个应用场景</h2><h3 id="多预取器管理"><a href="#多预取器管理" class="headerlink" title="多预取器管理"></a>多预取器管理</h3><p>Bandit 作为 coordinator 控制一组轻量预取器（next-line、stream、stride）的开关和 degree</p>
+<ul>
+<li>共 11 个 arm</li>
+<li>每个 arm 编码:<ul>
+<li>next-line 开&#x2F;关</li>
+<li>stream prefetcher 的 degree</li>
+<li>stride prefetcher 的 degree</li>
+</ul>
+</li>
+<li>Bandit step 定义：1000 次 L2 demand access</li>
+</ul>
+<h3 id="SMT-Instruction-Fetch"><a href="#SMT-Instruction-Fetch" class="headerlink" title="SMT Instruction Fetch"></a>SMT Instruction Fetch</h3><p>Bandit 控制 fetch Priority &amp; Gating (PG) policy:</p>
+<ul>
+<li>fetch priority policy：优先从哪个线程 fetch</li>
+<li>fetch gating policy：是否因为某个线程过度占用 IQ&#x2F;ROB&#x2F;IRF&#x2F;LSQ 而暂时停止 fetch instruction</li>
+</ul>
+<p>论文将这两个决策合成 fetch Priority &amp; Gating (PG) policy，扩展了 Choi &amp; Yeung 的 Hill Climbing 方案：</p>
+<ul>
+<li>4 种 fetch priority policy（BrC, IC, LSQC, RR）× 16 种 fetch gating 配置 &#x3D; 64 种 PG policy</li>
+<li>从中裁剪出 6 个高效 arm</li>
+<li>Bandit step &#x3D; 32 个 Hill Climbing epoch（每 epoch &#x3D; 64k cycles）</li>
+<li>Hill Climbing 在 Bandit 选定的 arm 下运行，负责调优 occupancy threshold</li>
+</ul>
+<p>利用 temporal homogeneity：一段时间内，某种 PG policy 往往持续有效</p>
+<h2 id="5-硬件开销"><a href="#5-硬件开销" class="headerlink" title="5. 硬件开销"></a>5. 硬件开销</h2><ul>
+<li>Bandit 的开销随 arm 数线性增长；</li>
+<li>若 r 用 float, n 用 unsigned int，每个 arm 只要 8B</li>
+<li>预取场景中 11 个 arm 时总存储 &lt; 100 字节，面积 0.00044 mm²，功耗 0.11 mW（10nm），相对 server 级 CPU 开销 &lt; 0.003%</li>
+</ul>
+<p>关键路径延迟: &lt; 500 cycle，小于 bandit step 持续时间（128k cycle for prefetching）</p>
+<blockquote>
+<p>在 step 切换的 500 个 cycle 内存在滞后</p>
+</blockquote>
+<hr>
+<h1 id="实验-Setup"><a href="#实验-Setup" class="headerlink" title="实验 Setup"></a>实验 Setup</h1><p><strong>Prefetching：</strong></p>
+<ul>
+<li>实验平台：ChampSim（trace-driven）</li>
+<li>workload：SPEC06, SPEC17, PARSEC, Ligra, CloudSuite, DPC-3 traces</li>
+<li>系统设置：类 Intel Skylake 核，L2&#x3D;256KB 8-way，LLC&#x3D;2MB 16-way；也测试了 L2&#x3D;1MB, LLC&#x3D;1.5MB 配置</li>
+<li>单核跑 1B instructions，4 核跑 250M&#x2F;core</li>
+</ul>
+<p><strong>SMT Instruction Fetch：</strong></p>
+<ul>
+<li>实验平台：Gem5 v20 + SecSMT（支持 2-thread SMT）</li>
+<li>workload：22 个 SPEC17 应用，226 个 2-thread mix</li>
+<li>系统设置：类 Intel Skylake 核，ROB&#x3D;224, IQ&#x3D;97, 16B fetch width</li>
+</ul>
+<ol>
+<li>Prefetch 场景：</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Bandit Algorithm</td>
+<td>DUCB</td>
+</tr>
+<tr>
+<td>γ</td>
+<td>0.999</td>
+</tr>
+<tr>
+<td>c</td>
+<td>0.04</td>
+</tr>
+<tr>
+<td># Arms</td>
+<td>11</td>
+</tr>
+<tr>
+<td>Bandit Step</td>
+<td>1000 L2 acc</td>
+</tr>
+<tr>
+<td># Trackers in Streamer</td>
+<td>64</td>
+</tr>
+<tr>
+<td># Trackers in Stride</td>
+<td>64</td>
+</tr>
+<tr>
+<td>rr_restart_prob (4 cores)</td>
+<td>0.001</td>
+</tr>
+</tbody></table>
+<ol start="2">
+<li>SMT 场景：</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Bandit Algorithm</td>
+<td>DUCB</td>
+</tr>
+<tr>
+<td>γ</td>
+<td>0.975</td>
+</tr>
+<tr>
+<td>c</td>
+<td>0.01</td>
+</tr>
+<tr>
+<td># Arms</td>
+<td>6</td>
+</tr>
+<tr>
+<td>Bandit Step-RR</td>
+<td>32 HillClimb Epochs</td>
+</tr>
+<tr>
+<td>Bandit Step</td>
+<td>2 HillClimb Epochs</td>
+</tr>
+<tr>
+<td>Hill Climbing Epoch</td>
+<td>64k cycles</td>
+</tr>
+<tr>
+<td>Hill Climbing δ</td>
+<td>2</td>
+</tr>
+</tbody></table>
+<hr>
+<h1 id="实验结果"><a href="#实验结果" class="headerlink" title="实验结果"></a>实验结果</h1><h2 id="实验-1-MAB-算法对比（Tune-Set）"><a href="#实验-1-MAB-算法对比（Tune-Set）" class="headerlink" title="实验 1: MAB 算法对比（Tune Set）"></a>实验 1: MAB 算法对比（Tune Set）</h2><p>设计：在 tune set 上比较 Best Static arm、Single（探索后固定）、Periodic、ε-Greedy、UCB、DUCB。</p>
+<p>结果（prefetching，相对 best static arm 的 IPC 百分比）：</p>
+<ul>
+<li>DUCB gmean &#x3D; 99.1%，最佳</li>
+<li>UCB gmean &#x3D; 98.8%</li>
+<li>Pythia gmean &#x3D; 98.4%</li>
+<li>DUCB max &#x3D; 101.6%（超越 best static，因能适应阶段变化）</li>
+</ul>
+<p>结论：DUCB 是最优 MAB 算法，其折扣机制使其能捕捉程序阶段变化，甚至超越静态最优 arm。</p>
+<h2 id="实验-2-Prefetching-单核性能"><a href="#实验-2-Prefetching-单核性能" class="headerlink" title="实验 2: Prefetching 单核性能"></a>实验 2: Prefetching 单核性能</h2><p>设计：比较 Stride、Bingo、MLOP、Pythia、Bandit 在所有 trace 上的 geomean IPC。</p>
+<p>结果（Figure 8，IPC normalized to no-L2-prefetcher）：</p>
+<ul>
+<li>Bandit 超过 Stride 9%、Bingo 2.6%、MLOP 2.3%</li>
+<li>Bandit 与 Pythia 仅差 0.2%（Pythia 存储 24KB vs Bandit &lt; 100B）</li>
+</ul>
+<p>结论：Bandit 以极低存储实现了接近 SOTA 的预取性能。</p>
+<h2 id="实验-3-带宽受限场景"><a href="#实验-3-带宽受限场景" class="headerlink" title="实验 3: 带宽受限场景"></a>实验 3: 带宽受限场景</h2><p>设计：扫描 DRAM 带宽从 150 MTPS 到 9600 MTPS，对比 Bandit 和 Pythia。</p>
+<p>结果：在最受限配置（150 MTPS）下，Bandit 超过 Pythia 2.5%。因为 Bandit 直接以 IPC 为奖励，能自动学会在带宽受限时选择保守配置。</p>
+<p>结论：Bandit 在带宽受限场景下优于 Pythia，无需显式带宽感知。</p>
+<h2 id="实验-4-4-核多核性能"><a href="#实验-4-4-核多核性能" class="headerlink" title="实验 4: 4 核多核性能"></a>实验 4: 4 核多核性能</h2><p>设计：4 核各跑相同或不同应用，对比各预取器。</p>
+<p>结果：Bandit 超过 Stride 6%、MLOP 2.4%、Bingo 4.0%，但略低于 Pythia 1.0%（因多核并行探索时奖励更噪声）。</p>
+<p>结论：多核性能良好，但核间干扰导致的噪声奖励是未来改进方向。</p>
+<h2 id="实验-5-SMT-Fetch-Policy"><a href="#实验-5-SMT-Fetch-Policy" class="headerlink" title="实验 5: SMT Fetch Policy"></a>实验 5: SMT Fetch Policy</h2><p>设计：226 个 2-thread mix，比较 Bandit 相对 Choi policy 的 IPC。</p>
+<p>结果：</p>
+<ul>
+<li>Bandit 在 36 个 mix 中超过 Choi 4% 以上（最高 36%），仅 6 个 mix 中 Choi 更好</li>
+<li>总体 geomean speedup &#x3D; 2.2% over Choi，7% over plain ICount</li>
+<li>Bandit 减少 rename stall，增加 rename running cycle 2.6%（因能感知 SQ 等结构，减少保守的 fetch gating）</li>
+</ul>
+<p>结论：Bandit 作为通用 RL agent 可以有效替代手工设计的 SMT 资源管理策略。</p>
+<hr>
+<h1 id="Limits"><a href="#Limits" class="headerlink" title="Limits"></a>Limits</h1><ol>
+<li><strong>时间同质性是前提假设</strong>：对于动作空间变化极快的问题（temporal heterogeneous），MAB 将无法有效工作</li>
+<li><strong>无法区分环境状态</strong>：Bandit 将所有状态坍缩为单状态，无法为不同 PC 或 cache line 选择不同动作</li>
+<li><strong>多核干扰</strong>：多核并行探索时，一个核的激进选择导致其他核的奖励噪声化。随机重启只是部分缓解，不是根本解决方案</li>
+<li><strong>超参数需要 tune set 调优</strong>：γ、c、bandit step 等参数对不同用例需要不同取值，且最优值因应用而异</li>
+<li><strong>延迟较长</strong>: 在 step 切换的 500 个 cycle 内存在滞后</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2026/04/16/cpu/cache/prefetch/multi-pf/Bandit/">https://xixi-shredp.github.io/2026/04/16/cpu/cache/prefetch/multi-pf/Bandit/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/MICRO/">MICRO</a><a class="post-meta__tags" href="/tags/2023/">2023</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/04/16/cpu/cache/prefetch/multi-pf/ReSemble/" title="ReSemble (2022 SC): Reinforced Ensemble Framework for Data Prefetching"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">ReSemble (2022 SC): Reinforced Ensemble Framework for Data Prefetching</div></div><div class="info-2"><div class="info-item-1">2022 SC ReSemble 论文解读：基于强化学习的集成预取框架，用 MLP 作为 Q-network 动态选择最佳预取器建议</div></div></div></a><a class="pagination-related" href="/2026/04/16/cpu/cache/prefetch/multi-pf/Alecto/" title="Alecto (2025 HPCA): Integrating Prefetcher Selection with Dynamic Request Allocation Improves Prefetching Efficiency"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Alecto (2025 HPCA): Integrating Prefetcher Selection with Dynamic Request Allocation Improves Prefetching Efficiency</div></div><div class="info-2"><div class="info-item-1">2025 HPCA Alecto 论文解读：通过动态 demand request 分配实现细粒度预取器选择，同时优化 accuracy、coverage 和 timeliness</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/04/17/cpu/cache/prefetch/data-pf/temporal/Kairos/" title="Kairos (2025 MICRO): Elevating Temporal Prefetching Through Instruction Correlation"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-04-17</div><div class="info-item-2">Kairos (2025 MICRO): Elevating Temporal Prefetching Through Instruction Correlation</div></div><div class="info-2"><div class="info-item-1">2025 MICRO Kairos 论文解读：通过指令关联识别 key IP，提升片上 temporal prefetcher 的元数据利用率</div></div></div></a><a class="pagination-related" href="/2026/03/19/cpu/bpu/2024-MICRO-LLBP/" title="2024 MICRO: The Last-Level Branch Predictor"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-19</div><div class="info-item-2">2024 MICRO: The Last-Level Branch Predictor</div></div><div class="info-2"><div class="info-item-1">2024 MICRO 论文阅读：The Last-Level Branch Predictor</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">102</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">21</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">49</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%83%8C%E6%99%AF%E5%92%8C%E5%8A%A8%E6%9C%BA"><span class="toc-number">1.</span> <span class="toc-text">背景和动机</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%B8%E5%85%B3%E5%B7%A5%E4%BD%9C"><span class="toc-number">1.1.</span> <span class="toc-text">相关工作</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Insight-Temporal-Homogeneity"><span class="toc-number">2.</span> <span class="toc-text">Insight: Temporal Homogeneity</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1"><span class="toc-number">3.</span> <span class="toc-text">核心设计</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-DUCB-%E7%AE%97%E6%B3%95"><span class="toc-number">3.1.</span> <span class="toc-text">1. DUCB 算法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%BE%AE%E6%9E%B6%E6%9E%84%E7%8E%AF%E5%A2%83%E9%80%82%E9%85%8D"><span class="toc-number">3.2.</span> <span class="toc-text">2. 微架构环境适配</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Reward-%E5%BD%92%E4%B8%80%E5%8C%96"><span class="toc-number">3.2.1.</span> <span class="toc-text">Reward 归一化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%9A%E6%A0%B8%E9%9A%8F%E6%9C%BA%E9%87%8D%E5%90%AF"><span class="toc-number">3.2.2.</span> <span class="toc-text">多核随机重启</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%A1%AC%E4%BB%B6%E7%BB%93%E6%9E%84"><span class="toc-number">3.3.</span> <span class="toc-text">3. 硬件结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E4%B8%A4%E4%B8%AA%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-number">3.4.</span> <span class="toc-text">4. 两个应用场景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%9A%E9%A2%84%E5%8F%96%E5%99%A8%E7%AE%A1%E7%90%86"><span class="toc-number">3.4.1.</span> <span class="toc-text">多预取器管理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SMT-Instruction-Fetch"><span class="toc-number">3.4.2.</span> <span class="toc-text">SMT Instruction Fetch</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E7%A1%AC%E4%BB%B6%E5%BC%80%E9%94%80"><span class="toc-number">3.5.</span> <span class="toc-text">5. 硬件开销</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-Setup"><span class="toc-number">4.</span> <span class="toc-text">实验 Setup</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E7%BB%93%E6%9E%9C"><span class="toc-number">5.</span> <span class="toc-text">实验结果</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-1-MAB-%E7%AE%97%E6%B3%95%E5%AF%B9%E6%AF%94%EF%BC%88Tune-Set%EF%BC%89"><span class="toc-number">5.1.</span> <span class="toc-text">实验 1: MAB 算法对比（Tune Set）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-2-Prefetching-%E5%8D%95%E6%A0%B8%E6%80%A7%E8%83%BD"><span class="toc-number">5.2.</span> <span class="toc-text">实验 2: Prefetching 单核性能</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-3-%E5%B8%A6%E5%AE%BD%E5%8F%97%E9%99%90%E5%9C%BA%E6%99%AF"><span class="toc-number">5.3.</span> <span class="toc-text">实验 3: 带宽受限场景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-4-4-%E6%A0%B8%E5%A4%9A%E6%A0%B8%E6%80%A7%E8%83%BD"><span class="toc-number">5.4.</span> <span class="toc-text">实验 4: 4 核多核性能</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-5-SMT-Fetch-Policy"><span class="toc-number">5.5.</span> <span class="toc-text">实验 5: SMT Fetch Policy</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Limits"><span class="toc-number">6.</span> <span class="toc-text">Limits</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RegionPatternMatching/" title="Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher">Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher</a><time datetime="2026-04-26T16:00:00.000Z" title="Created 2026-04-27 00:00:00">2026-04-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RIP-TaggedRegion/" title="RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher">RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher</a><time datetime="2026-04-26T16:00:00.000Z" title="Created 2026-04-27 00:00:00">2026-04-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/cache-arch-aware/" title="Cache Architechture-Aware Cache Replacement">Cache Architechture-Aware Cache Replacement</a><time datetime="2026-04-23T09:36:07.000Z" title="Created 2026-04-23 17:36:07">2026-04-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/prefetcher-aware/" title="Prefetch-Aware Cache Replacement">Prefetch-Aware Cache Replacement</a><time datetime="2026-04-23T09:28:22.000Z" title="Created 2026-04-23 17:28:22">2026-04-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/multicore-aware/" title="Multi-Core-Aware Cache Replacement">Multi-Core-Aware Cache Replacement</a><time datetime="2026-04-23T06:37:22.000Z" title="Created 2026-04-23 14:37:22">2026-04-23</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

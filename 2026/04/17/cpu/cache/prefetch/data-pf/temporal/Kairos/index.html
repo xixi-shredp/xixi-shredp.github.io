@@ -1,0 +1,811 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Kairos (2025 MICRO): Elevating Temporal Prefetching Through Instruction Correlation | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="2025 MICRO Kairos 论文解读：通过指令关联识别 key IP，提升片上 temporal prefetcher 的元数据利用率">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kairos (2025 MICRO): Elevating Temporal Prefetching Through Instruction Correlation">
+<meta property="og:url" content="https://xixi-shredp.github.io/2026/04/17/cpu/cache/prefetch/data-pf/temporal/Kairos/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="2025 MICRO Kairos 论文解读：通过指令关联识别 key IP，提升片上 temporal prefetcher 的元数据利用率">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2026-04-16T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-04-17T10:15:22.422Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="2025">
+<meta property="article:tag" content="MICRO">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Kairos (2025 MICRO): Elevating Temporal Prefetching Through Instruction Correlation",
+  "url": "https://xixi-shredp.github.io/2026/04/17/cpu/cache/prefetch/data-pf/temporal/Kairos/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2026-04-16T16:00:00.000Z",
+  "dateModified": "2026-04-17T10:15:22.422Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2026/04/17/cpu/cache/prefetch/data-pf/temporal/Kairos/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Kairos (2025 MICRO): Elevating Temporal Prefetching Through Instruction Correlation',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background: linear-gradient(180deg, black, black, #23064D);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">102</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">21</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">49</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Kairos (2025 MICRO): Elevating Temporal Prefetching Through Instruction Correlation</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Kairos (2025 MICRO): Elevating Temporal Prefetching Through Instruction Correlation</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-04-16T16:00:00.000Z" title="Created 2026-04-17 00:00:00">2026-04-17</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-04-17T10:15:22.422Z" title="Updated 2026-04-17 18:15:22">2026-04-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/">cpu</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/">cache</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/prefetch/">prefetch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/prefetch/data-pf/">data-pf</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>这篇论文提出的是 <strong>Kairos（Elevating Temporal Prefetching Through Instruction Correlation）</strong>：一种片上 temporal prefetcher，通过检测”关键访存指令”并跟踪其 prefetch coverage，来筛选和保留真正高价值的 temporal metadata。</p>
+<p>TLDR：</p>
+<ol>
+<li>现有 on-chip temporal prefetcher（STMS, Domino, Triage, Triangel）在片上元数据存储容量受限时，利用率普遍不足 —— 要么无差别缓存导致污染，要么像 Triangel 预采样过程本身损失 prefetch 机会。</li>
+<li>Insight：少量指令（top 10 IP）贡献绝大多数 cache miss（&gt;90%），且这些 miss 的地址绝大多数会被重用，因此应以”指令”为粒度筛选 metadata，而不是以”地址序列”为粒度统计重复性。</li>
+<li>Kairos 三阶段设计：Key IP Detection（miss 贡献 &gt;12.5% 即判为 critical）→ Prefetch Evaluation（用 useful prefetch coverage 把指令分为 positive&#x2F;negative&#x2F;neutral 三类以控制 metadata 保留策略）→ Dynamic Partition（PID 控制器动态调整 LLC 中 metadata 区大小）。</li>
+<li>相比 Triangel 在 SPEC irregular 上 15.1% 的加速，Kairos 达到 25.2%（即 +10.1%），而且总固定硬件开销仅 251 B，约为 Triangel 17.6 KiB 的 1.4%（两个数量级降低）。</li>
+</ol>
+<h1 id="背景和动机"><a href="#背景和动机" class="headerlink" title="背景和动机"></a>背景和动机</h1><p>Temporal prefetcher 的基本思路是记录历史访存地址序列，用于预测未来的不规则访存（如 pointer chasing、图遍历）。早期方案（STMS、Domino、ISB、MISB）都因 metadata 体量过大而放在片外，带来带宽和延迟开销。近年来 Triage &#x2F; Triangel 等方案尝试把 metadata 全部放在片上（复用 LLC 的一部分 way 存 metadata）。</p>
+<p>但把 metadata 放到片上后，存储容量变得非常稀缺，出现了一个尚未被充分解决的问题：<strong>metadata pollution</strong> —— 大量低重用的元数据挤占了真正有用的条目。</p>
+<ul>
+<li><strong>Triage</strong> 把所有 miss 无差别地记录到 metadata cache，污染严重，prefetch coverage 低。</li>
+<li><strong>Triangel</strong> 引入 Set Sampler + Reuse Buffer 做”预采样”来判定一条地址序列的重复性是否达到阈值，只有通过者才插入 metadata。代价是：① 采样期间错失 prefetch 机会；② 多级采样结构本身复杂（17.6 KiB）；③ 阈值过严，程序阶段切换时适应慢。</li>
+</ul>
+<p>图 1 的测量显示：STMS&#x2F;Domino&#x2F;Triage 的 metadata hit rate 较低（元数据利用率差），Triangel 虽然 hit rate 高但 prefetch coverage 并不同步提升（采样损失的 opportunity 被计入）。</p>
+<p>两个 open question：</p>
+<ol>
+<li>有没有简单快速的方法判断一条 metadata 是”useful metadata”（将被再次访问后触发 prefetch）？</li>
+<li>有没有有效方法评估这些 metadata 发出的 prefetch 是否真的有用？</li>
+</ol>
+<h2 id="相关工作"><a href="#相关工作" class="headerlink" title="相关工作"></a>相关工作</h2><ul>
+<li>STMS: Wenisch et al., “Making Address-Correlated Prefetching Practical”, IEEE Micro 2010</li>
+<li>Domino: Bakhshalipour et al., “Domino Temporal Data Prefetcher”, HPCA 2018. <a target="_blank" rel="noopener" href="https://doi.org/10.1109/HPCA.2018.00021">https://doi.org/10.1109/HPCA.2018.00021</a></li>
+<li>ISB: Jain &amp; Lin, “Linearizing Irregular Memory Accesses for Improved Correlated Prefetching”, MICRO 2013</li>
+<li>MISB: Wu et al., “Efficient Metadata Management for Irregular Data Prefetching”, ISCA 2019</li>
+<li>Triage: Wu et al., “Temporal Prefetching Without the Off-Chip Metadata”, MICRO 2019</li>
+<li>Triangel: Ainsworth &amp; Mukhanov, “Triangel: A High-Performance, Accurate, Timely On-Chip Temporal Prefetcher”, ISCA 2024. <a target="_blank" rel="noopener" href="https://doi.org/10.1109/ISCA59077.2024.00090">https://doi.org/10.1109/ISCA59077.2024.00090</a></li>
+<li>Berti: Navarro-Torres et al., “Berti: An Accurate Local-Delta Data Prefetcher”, MICRO 2022</li>
+<li>Pythia: Bera et al., “Pythia: A Customizable Hardware Prefetching Framework Using Online RL”, MICRO 2021</li>
+</ul>
+<hr>
+<h1 id="Insight"><a href="#Insight" class="headerlink" title="Insight"></a>Insight</h1><p>核心洞察来自两个实证观察（图 2，623.xalancbmk_s）：</p>
+<ol>
+<li><strong>Miss 分布高度集中</strong>：少数指令（top 10 IP）贡献了绝大多数 cache miss，”Others”（3400 多条指令）仅贡献很小一部分。</li>
+<li><strong>这些 miss 的地址绝大多数会被再次访问</strong>（&gt;90% repeat miss）—— 也就是说，”由关键指令产生的 miss 地址”几乎天然就是 useful metadata。</li>
+</ol>
+<p>这就等价于把问题从”地址序列级的重复性检测”（Triangel 做的事）简化为”指令级的 miss 贡献率检测”。用一句话概括：</p>
+<blockquote>
+<p><strong>通过观察访存指令的高频出现与 miss 数，可以以远更低的代价直接识别高价值的 metadata 来源。</strong></p>
+</blockquote>
+<p>再加一个观察 —— 先识别出关键指令后，并非所有关键指令的 metadata 都能产生 useful prefetch（有的指令的历史 miss 模式本身就不具备强 temporal 可预测性），所以还要再做一次**”事后评估”**：看每条关键指令发出的 prefetch 真正的命中率。</p>
+<p>这两步合起来对应于 Kairos 的两阶段筛选：先粗筛（miss 贡献），再精筛（coverage 反馈）。</p>
+<hr>
+<h1 id="核心设计"><a href="#核心设计" class="headerlink" title="核心设计"></a>核心设计</h1><p>Kairos 架构（图 4）三个主要模块：<strong>Detecting Unit</strong>（粗筛关键指令）、<strong>Training Unit</strong>（为关键指令学习 last-miss-address→next-address 的 temporal metadata，并按 coverage 分类）、<strong>Partition Unit</strong>（用 PID 控制器动态调整 LLC 中 metadata 区的 way 数）。Metadata 插入 LLC 的 metadata way，查询在 L2C miss 时触发 prefetch。</p>
+<p>三阶段工作流：</p>
+<ol>
+<li>Key IP Detection：识别 miss 贡献 &gt;12.5% 的关键 IP。</li>
+<li>Prefetch Evaluation：跟踪每条关键 IP 的 useful prefetch coverage，分类为 positive &#x2F; negative &#x2F; neutral。</li>
+<li>Dynamic Partition：按负载阶段变化自适应调整 metadata 存储容量。</li>
+</ol>
+<hr>
+<h2 id="1-Detecting-Method（Critical-Instruction-Detection，§3-2）"><a href="#1-Detecting-Method（Critical-Instruction-Detection，§3-2）" class="headerlink" title="1. Detecting Method（Critical Instruction Detection，§3.2）"></a>1. Detecting Method（Critical Instruction Detection，§3.2）</h2><p>Detecting Unit 结构（图 5）：32 entries，每 entry 10-bit IP-tag + 1-bit key flag + 9-bit 单 IP miss 计数 + 31-bit PLRU 位，外加一个全局 9-bit total miss counter。总计 85 B。</p>
+<p>工作方式：</p>
+<ul>
+<li>一次 L2C miss 到来：用 hash 映射到 Detecting Unit 的某个 entry。若 IP 还不是 key IP，则该 entry 的 miss counter 和全局 counter 都 +1。</li>
+<li>当某条 IP 的 miss count &#x2F; total_miss &gt; <strong>12.5%</strong> 时（文中称作 deliberately modest threshold），标记它为 key IP，并立刻把它送进 Training Unit。</li>
+<li>一旦成为 key IP，它后续的 miss 不再累加 total counter，避免人为放大自身重要性（bias mitigation 机制 1）。</li>
+<li>PLRU 替换策略让频繁 miss 的指令更容易被保留，即便还没到达阈值（bias mitigation 机制 2）。</li>
+<li>当 total miss counter 饱和（9-bit，最大 512），所有 entry 重置，开启新一轮检测 —— 这也是 Kairos 感知程序相位切换的机制。</li>
+</ul>
+<p>与 Triangel 的本质差别（图 3）：Triangel 是”先对具体指令的地址序列采样、验证重复率 → 合格才存 metadata”；Kairos 是”先用指令间的 miss 贡献对比快速挑出 key IP → 边产生 metadata 边验证 prefetch 有效性”。</p>
+<h2 id="2-Training-Method（Coverage-Based-Classification，§3-3）"><a href="#2-Training-Method（Coverage-Based-Classification，§3-3）" class="headerlink" title="2. Training Method（Coverage-Based Classification，§3.3）"></a>2. Training Method（Coverage-Based Classification，§3.3）</h2><p>Training Unit：16 entries，每 entry 10-bit IP-tag + 32-bit last address + 8-bit useful prefetch counter + 8-bit miss counter + 2-bit key tag + 15-bit PLRU，共 122 B。</p>
+<p>对每条 critical IP，记录 last miss address。当它再次访存时：</p>
+<ul>
+<li>若 cache miss 或 “hit &amp; pref”（命中且被预取标签标记），说明可能是 temporal 模式中的一跳。</li>
+<li>用 last address 的高位 XOR 本次 line address 的低位构造 set index，低位作 tag，插入 partition cache（LLC 的 metadata 区）。</li>
+</ul>
+<p><strong>Coverage-based 分类</strong>（图 6）：当 miss counter 饱和时，按 useful_pref &#x2F; miss 的 coverage rate 分类：</p>
+<ul>
+<li><strong>Positive</strong>（coverage ≥ 87.5%）：key tag &#x3D; 1，其生成的 metadata 插入时 replacement bit <strong>rpl &#x3D; 1</strong>（LFU 下更不易被驱逐）。</li>
+<li><strong>Negative</strong>（coverage ≤ 12.5%）：key tag &#x3D; -1，<strong>直接暂停为该指令生成 metadata</strong>（避免污染）。</li>
+<li><strong>Neutral</strong>（其余）：key tag &#x3D; 0，正常 rpl &#x3D; 0 插入。</li>
+</ul>
+<p>这种三档策略既鼓励验证有效的指令保留得更久，又彻底隔离已确认无效的指令 —— 即图 3 所示 Kairos 的第二步”同时发起 prefetch 并验证其有效性”。</p>
+<h2 id="3-Partition-Method（PID-based-Dynamic-Partitioning，§3-4）"><a href="#3-Partition-Method（PID-based-Dynamic-Partitioning，§3-4）" class="headerlink" title="3. Partition Method（PID-based Dynamic Partitioning，§3.4）"></a>3. Partition Method（PID-based Dynamic Partitioning，§3.4）</h2><p>Partition Unit（图 7）只有 44 B，用一个 PID 控制器决定 LLC 中划给 metadata 的 way 数。</p>
+<p><strong>Stage 1 — Access Tracking</strong>：三个 18-bit 计数器 access_counter &#x2F; miss_counter &#x2F; useful_pref_counter，access_counter 满（2^18 &#x3D; 262 144 访问）时进入下一阶段。</p>
+<p><strong>Stage 2 — Metric Calculation</strong>：</p>
+<ul>
+<li>miss_rate &#x3D; miss_count &#x2F; access_count</li>
+<li>utility &#x3D; useful_pref_count &#x2F; access_count</li>
+<li>Δmiss_rate &#x3D; 本窗口 miss_rate − 上一窗口 miss_rate</li>
+<li>ΔΔmiss_rate &#x3D; Δmiss_rate − 上一窗口 Δmiss_rate</li>
+</ul>
+<p>PID 输出：</p>
+<p>$$\delta_k &#x3D; \alpha \cdot \text{utility} + \beta \cdot \Delta\text{miss_rate} + \gamma \cdot \Delta\Delta\text{miss_rate}$$</p>
+<p>参数 α&#x3D;1.0, β&#x3D;-0.3, γ&#x3D;0.1（作者强调 system-agnostic，基于控制理论推导：P 保证比例响应、I 抑制过度增长、D 抗噪）。</p>
+<p><strong>Stage 3 — Decision</strong>：</p>
+<ul>
+<li>δ_k &gt; θ_plus (0.25) 或 useful 比例超过当前 way 占比 → <strong>增加</strong> metadata way。</li>
+<li>δ_k &lt; θ_minus (-0.5) 且当前 miss_rate 超过上窗口 1.2 倍 → <strong>减少</strong> metadata way。</li>
+<li>若性能变化 &lt;5% 连续两窗口 → <strong>保持</strong>（防止震荡）。</li>
+</ul>
+<p><strong>Stage 4 — Resize</strong>：每次调整粒度 1 个 way。</p>
+<p>这个方案相比 Triage 的 Bloom filter 或 Triangel 的 set-dueller 更简单，纯计数器和轻量算术就能完成。</p>
+<h2 id="4-Prefetch-Method（§3-5）"><a href="#4-Prefetch-Method（§3-5）" class="headerlink" title="4. Prefetch Method（§3.5）"></a>4. Prefetch Method（§3.5）</h2><p>在 L2C miss 到来时用当前 miss 地址作为 index 去 partition cache 中做 metadata 查找，并沿着 metadata 关联链<strong>一次触发最多 4 个 prefetch</strong>（提高 timeliness 同时控制带宽）。</p>
+<ul>
+<li>Positive 指令正常发请求；</li>
+<li>Negative 指令<strong>不发请求</strong>；</li>
+<li>Neutral 指令保守发 1 个请求；</li>
+<li>成功触发的 prefetch 会把对应 metadata entry 的 rpl 提升为 1，延长其生命周期。</li>
+</ul>
+<h2 id="5-Hardware-Overhead（§3-6）"><a href="#5-Hardware-Overhead（§3-6）" class="headerlink" title="5. Hardware Overhead（§3.6）"></a>5. Hardware Overhead（§3.6）</h2><table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Entries</th>
+<th>Size (B)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Detecting Unit</td>
+<td>32</td>
+<td>85</td>
+</tr>
+<tr>
+<td>Training Unit</td>
+<td>16</td>
+<td>122</td>
+</tr>
+<tr>
+<td>Partitioning Unit</td>
+<td>1</td>
+<td>44</td>
+</tr>
+<tr>
+<td><strong>Total Fixed</strong></td>
+<td>—</td>
+<td><strong>251</strong></td>
+</tr>
+</tbody></table>
+<p>与 Triage（24.14 KiB）、Triangel（17.63 KiB）相比，Kairos 固定硬件开销 251 B ≈ Triangel 的 1.4% —— 两个数量级的降低。Metadata 本身存在 LLC 中，复用缓存存储。</p>
+<hr>
+<h1 id="开源代码解读"><a href="#开源代码解读" class="headerlink" title="开源代码解读"></a>开源代码解读</h1><p>开源地址：<a target="_blank" rel="noopener" href="https://github.com/comp-arch-research/Kairos">https://github.com/comp-arch-research/Kairos</a>（论文第 2 页脚注给出）</p>
+<p>代码位于 <code>prefetcher/croage/</code>（模块被命名为 <strong>croage</strong>，实现在 <code>croage.h</code>，作为 L2C 的预取器插件集成到 ChampSim）。下文按论文章节对齐梳理代码细节，并指出几处与论文描述不完全一致的地方。</p>
+<h2 id="1-顶层数据流（croage-cc）"><a href="#1-顶层数据流（croage-cc）" class="headerlink" title="1. 顶层数据流（croage.cc）"></a>1. 顶层数据流（<code>croage.cc</code>）</h2><p><code>prefetcher_cache_operate()</code> 是每次 L2C 访问的入口：</p>
+<ol>
+<li>仅对 <code>LOAD</code> &#x2F; <code>RFO</code> 访问生效；将物理地址右移 <code>LOG2_BLOCK_SIZE</code> 得到 line_addr。</li>
+<li>维护全局 <code>access_count / miss_count / prefetch_hit_count</code>，每 <code>TRACKING_WINDOW = 2^18 = 262144</code> 次访问触发一次 <code>evaluate_window()</code>（对应论文 Stage 1 的 18-bit access counter）。</li>
+<li>依次执行 <code>predict() → train() → 发起 prefetch_line</code>，这三步顺序很重要：先用当前 line 去查 metadata 链，然后再更新训练单元。</li>
+<li><code>predict()</code> 返回的候选经 <code>removeDuplicates</code> 去重后批量发出（最多 <code>max_degree = 4</code> 条，与论文一致）。</li>
+</ol>
+<h2 id="2-关键-IP-检测：KeyDetect-类（对应-Detecting-Unit）"><a href="#2-关键-IP-检测：KeyDetect-类（对应-Detecting-Unit）" class="headerlink" title="2. 关键 IP 检测：KeyDetect 类（对应 Detecting Unit）"></a>2. 关键 IP 检测：<code>KeyDetect</code> 类（对应 Detecting Unit）</h2><ul>
+<li>结构：<code>FIFOCache&lt;KeyDetectEntry&gt;</code>，容量 <code>KD_SIZE = 32</code>（论文表 1 Detecting Unit 32 entries 对应）。<ul>
+<li><code>KeyDetectEntry</code> 字段：<code>pc / issue_count / miss_count</code>（而不是像论文图 5 中的 PLRU + key flag + miss counter）。</li>
+</ul>
+</li>
+<li><code>update(pc, cache_hit)</code> 逻辑（<code>croage.h:733-758</code>）：<ul>
+<li>若 pc 不在表里，以 <code>miss_count = !cache_hit</code> 插入（FIFO 替换，非论文所写的 PLRU）。</li>
+<li>若命中：<code>issue_count++</code>，若 miss 则 <code>miss_count++ &amp; total_miss++</code>。</li>
+<li><strong>判 key IP 的阈值（两者取或）</strong>：<ul>
+<li><code>miss_count * 2 &gt; issue_count</code>（该 IP 自身 miss rate &gt; 50%），<strong>或</strong></li>
+<li><code>miss_count * 8 &gt; total_miss</code>（该 IP 占总 miss 的 <strong>&gt; 12.5%</strong>，对应论文的 12.5% 阈值）。</li>
+</ul>
+</li>
+<li>当 <code>total_miss &gt; 511</code> 时（对应 9-bit total miss counter 饱和），把还满足 <code>miss_count*8 &gt; total_miss</code> 的 pc 归入 <code>key_pc</code> 集合，然后清零所有 entry 的计数并 <code>total_miss = 0</code>。</li>
+</ul>
+</li>
+<li><strong>与论文的差异</strong>：<ul>
+<li>代码额外包含”单 IP miss rate &gt; 50%”这一条件，论文中未明确提及。</li>
+<li>代码未显式实现论文提到的”成为 key IP 后不再累加 total_miss”以及 PLRU 替换 —— 这是 bias mitigation，两处都只在论文文本里存在，源码里实际上就是 FIFO + 每窗口全量 reset。</li>
+</ul>
+</li>
+</ul>
+<h2 id="3-训练与-Coverage-分类：TrainUnit-TrainUnitEntry（对应-Training-Unit）"><a href="#3-训练与-Coverage-分类：TrainUnit-TrainUnitEntry（对应-Training-Unit）" class="headerlink" title="3. 训练与 Coverage 分类：TrainUnit &#x2F; TrainUnitEntry（对应 Training Unit）"></a>3. 训练与 Coverage 分类：<code>TrainUnit</code> &#x2F; <code>TrainUnitEntry</code>（对应 Training Unit）</h2><ul>
+<li>结构：<code>LRUCache&lt;TrainUnitEntry&gt;</code>，容量 <code>TU_SIZE = 16</code>（对应论文表 1 16 entries）。</li>
+<li><code>TrainUnitEntry</code> 字段：<code>pc, last_addr, cur_addr, total_evict(16b), useful_evict(16b), useful_tu(bool), BOP</code>。<ul>
+<li>对应论文图 6 的 “last addr &#x2F; useful pref counter &#x2F; miss counter &#x2F; key tag”，其中 <code>useful_tu</code> 就是 key tag。</li>
+</ul>
+</li>
+<li>训练逻辑（<code>train()</code> 于 <code>croage.h:1224-1269</code>）：<ol>
+<li>只有 <code>DetectUnit.update(pc, cache_hit)</code> 返回 true（即 pc 是 key IP）时才做后续训练。</li>
+<li>若 TrainUnit 里没有该 pc，新建 entry；否则当本次是 miss 或 “useful prefetch hit” 时，把 <code>cur_addr → last_addr</code>，本次地址写入 <code>cur_addr</code>。</li>
+<li>**每积累 128 次 evict（<code>total_evict == 128</code>）**对该 IP 做 coverage 评估：<ul>
+<li>若 <code>useful_evict × 16 &gt; total_evict × 15</code>（即 useful ratio &gt; <strong>93.75%</strong> ≈ 15&#x2F;16），设 <code>useful_tu = true</code>；否则 <code>useful_tu = false</code>。</li>
+<li><strong>与论文差异</strong>：论文用 87.5% 和 12.5% 两档门槛把指令分成 <strong>positive &#x2F; neutral &#x2F; negative</strong> 三类；代码只有 <strong>两档（boolean）</strong>，没有 negative 分支，也不存在”直接暂停 metadata 生成”。</li>
+</ul>
+</li>
+<li>用 <code>last_addr → cur_addr</code> 调用 <code>tem_up()</code> 更新 metadata cache（无论是否跨页）。</li>
+<li>训练单元内部也给每 IP 维护一个 <code>BOP</code>（best-offset predictor）副本 —— 但在 <code>predict()</code> 里调用 BOP 的那几行<strong>被注释掉</strong>了，当前版本的 Kairos <strong>实际上只用 temporal chain 预测</strong>，BOP 分支是历史残留&#x2F;保留接口。</li>
+</ol>
+</li>
+</ul>
+<h2 id="4-Metadata-存储：CroageRepl-MetaData-向量"><a href="#4-Metadata-存储：CroageRepl-MetaData-向量" class="headerlink" title="4. Metadata 存储：CroageRepl&lt;uint64_t&gt; + MetaData 向量"></a>4. Metadata 存储：<code>CroageRepl&lt;uint64_t&gt;</code> + <code>MetaData</code> 向量</h2><ul>
+<li>拓扑：<code>MetaData</code> 是 <code>HT_SET = 4096</code> 个 set 的 vector，每个 set 是 <code>CroageRepl</code> 容量 <code>HT_WAY = 48</code>（初始值；partition 动态调整）。</li>
+<li>Set index：<code>set_num = (last_addr ^ (last_addr &gt;&gt; 13)) &amp; (HT_SET - 1)</code> —— 论文说”高位 XOR 低位”，代码里具体是 <code>addr ^ (addr &gt;&gt; 13)</code> 哈希后取低 12 位。</li>
+<li>替换策略：<code>CroageRepl::popVictim()</code>（<code>croage.h:654-668</code>）实现了一个<strong>时钟式 LFU</strong>：从尾部往前扫，若 <code>rpl &lt; max_rpl(=3)</code> 则 <code>rpl += 1</code> 并把节点挪到头部、递归继续，直到找到 <code>rpl == max_rpl</code> 的淘汰者。<ul>
+<li><code>set()</code> 插入时，若 <code>useful_tu == true</code>（positive 指令的产出）则把新 entry 的 rpl 初始化为 <code>max_rpl - 1 = 2</code>，而非常规的 <code>max_rpl = 3</code> —— 这就是论文说的”positive metadata 更不易被驱逐”（rpl&#x3D;1 的策略在代码里用”降低初始 rpl”的方式体现）。</li>
+<li><code>get()</code> 命中时 <code>rpl -= 1</code>（下限 0），命中越多越不易被逐。</li>
+</ul>
+</li>
+<li>查询：<code>tem_pre(last_addr)</code>（<code>croage.h:1181-1191</code>）在 set 内按 key（last_addr）查 CroageRepl，命中则返回预测的 <code>cur_addr</code>，并把 <code>in_metadata[last_addr] = true</code>（给统计 <code>useful_entry_number</code> 用）。</li>
+<li>预测（<code>predict()</code> 于 <code>croage.h:1271-1300</code>）：从当前 line_addr 开始，<strong>串行沿 metadata 链最多走 4 跳</strong>（recurrent 展开），产生最多 4 个候选 —— 这符合论文”issues up to 4 prefetch requests via metadata correlation chains”。</li>
+</ul>
+<h2 id="5-动态分区：evaluate-window-resize-metadata"><a href="#5-动态分区：evaluate-window-resize-metadata" class="headerlink" title="5. 动态分区：evaluate_window() + resize_metadata()"></a>5. 动态分区：<code>evaluate_window()</code> + <code>resize_metadata()</code></h2><p>实际的 PID 控制器在 <code>croage.h:1041-1133</code>，计算：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">miss_rate    = miss_count / TRACKING_WINDOW</span><br><span class="line">utility      = prefetch_hit_count / miss_count</span><br><span class="line">delta_miss   = (miss_count − previous_miss_count) / access_count</span><br><span class="line">delta_k      = ALPHA·utility + BETA·delta_miss + GAMMA·(delta_miss − previous_delta_miss)</span><br></pre></td></tr></table></figure>
+
+<p><strong>决策（代码里的实际参数，<code>croage.h:840-861</code>）</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>代码值</th>
+<th>论文值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ALPHA</td>
+<td><strong>0.6</strong></td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>BETA</td>
+<td>−0.3</td>
+<td>−0.3</td>
+</tr>
+<tr>
+<td>GAMMA</td>
+<td>0.1</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>THETA_PLUS</td>
+<td><strong>0.5</strong></td>
+<td>0.25</td>
+</tr>
+<tr>
+<td>THETA_MINUS</td>
+<td><strong>−0.25</strong></td>
+<td>−0.5</td>
+</tr>
+<tr>
+<td>TAU</td>
+<td>1.2</td>
+<td>1.2</td>
+</tr>
+<tr>
+<td>MAX ways</td>
+<td>96</td>
+<td>—</td>
+</tr>
+<tr>
+<td>MIN ways</td>
+<td>12</td>
+<td>—</td>
+</tr>
+<tr>
+<td>调整步长</td>
+<td><strong>12 ways&#x2F;步</strong></td>
+<td>论文写”1 way”</td>
+</tr>
+</tbody></table>
+<p><strong>重要：代码与论文在 α、θ_plus、θ_minus 以及 resize 步长上存在明显出入</strong>。论文声称每次调 1 个 way，代码里 <code>resize_metadata()</code> 则是 <code>new_size = current ± 12</code>（一次一整个”块”），并通过 <code>llc_cache-&gt;set_available_ways(NUM_WAY − occupied_ways)</code>，其中 <code>occupied_ways = current_metadata_size / 12</code> 把 LLC way 划给 metadata。这说明实际的 LLC 共享粒度是以每 12 个 metadata-way 换 1 个 LLC way 的方式实现，而不是论文描述的 1:1。</p>
+<p>另外，代码里还加了一个论文没提到的 <strong>EMA 平滑</strong>（<code>smoothed_miss_rate = EMA_ALPHA·miss_rate + (1-EMA_ALPHA)·smoothed</code>, <code>EMA_ALPHA = 0.7</code>），但当前版本算出来后没有真正参与决策（只维护了状态，没进入 <code>delta_k</code>）。</p>
+<p>稳定性约束：若连续 <code>MAX_NO_IMPROVEMENT_WINDOWS = 2</code> 个窗口 miss_rate 改善 &lt; 5%，强制 resize_decision &#x3D; 0（与论文”连续两个窗口变化 &lt;5% → 保持”一致）。</p>
+<h2 id="6-统计与打印"><a href="#6-统计与打印" class="headerlink" title="6. 统计与打印"></a>6. 统计与打印</h2><p><code>prefetcher_final_stats()</code> 输出：metadata_hit 次数、当前 metadata way 数、increase&#x2F;decrease&#x2F;maintain 决策分布（图 17 所示），以及遍历 <code>in_metadata</code> 统计 useful &#x2F; useless entry 计数（对应图 11 的 Useful Entry Ratio）。</p>
+<h2 id="7-代码与论文的关键差异汇总"><a href="#7-代码与论文的关键差异汇总" class="headerlink" title="7. 代码与论文的关键差异汇总"></a>7. 代码与论文的关键差异汇总</h2><ol>
+<li><strong>Coverage 分类只有 2 档</strong>（≥93.75% 为 positive，其余为 neutral），论文描述的 <strong>negative 类（直接暂停 metadata 生成）在代码中不存在</strong>。</li>
+<li><strong>Coverage 阈值是 15&#x2F;16 (93.75%)</strong>，论文写 87.5% 和 12.5%。</li>
+<li><strong>PID 参数</strong>：α&#x3D;0.6 vs 论文 1.0；θ_plus&#x3D;0.5 vs 0.25；θ_minus&#x3D;−0.25 vs −0.5。</li>
+<li><strong>分区步长</strong>：代码是 12-way 一步（通过 <code>occupied/12</code> 折成 LLC way），论文写 1 way 一步。</li>
+<li><strong>BOP（best-offset）支路</strong>：代码里保留了 IP 级 BOP 和全局 BOP 的结构与训练代码，但 <code>predict()</code> 中的 BOP 预测已注释掉 —— 当前版本是纯 temporal。</li>
+<li><strong>Detecting Unit</strong>：代码用 FIFO + 每窗口全量 reset，论文写 PLRU + bias-free total miss counter。这两项”bias mitigation”机制在开源版本中未完整实现。</li>
+<li><strong>额外阈值</strong>：代码里 <code>miss_count*2 &gt; issue_count</code>（单 IP miss rate &gt; 50%）也可直接判定 key IP，论文没提。</li>
+</ol>
+<p>这些差异既可能是”论文投稿时 + 最终版之间的迭代差异”，也可能是作者在论文里做了概念化简化而保留了工程上更复杂的实现。使用本开源代码进行对比实验时，应以源码中的实际行为为准。</p>
+<hr>
+<h1 id="实验-Setup"><a href="#实验-Setup" class="headerlink" title="实验 Setup"></a>实验 Setup</h1><p>实验平台：<strong>ChampSim</strong>（commit 2ff2501，截至 2025-05-10），trace-driven OoO 模拟器，近似 ARM Cortex X2。</p>
+<p>系统设置（表 2）：</p>
+<ul>
+<li>Core：3 GHz，8-issue &#x2F; 8-retire，352-entry ROB，45.2 KiB TAGE</li>
+<li>L1D：64 KiB, 4-way, 4 cycles，带 <strong>IP-stride</strong> 基线预取器</li>
+<li>L2C：512 KiB, 16-way, 11 cycles（Kairos 工作在 L2C）</li>
+<li>LLC：2 MiB&#x2F;core, 16-way, 20 cycles（metadata 存在这里）</li>
+<li>DRAM：3200 MTPS，4 GiB 单通道单核 &#x2F; 8 GiB 双通道多核</li>
+</ul>
+<p>Workload：</p>
+<ul>
+<li>SPEC CPU2006 + SPEC CPU2017 中 LLC MPKI &gt; 3 的内存密集应用；irregular 子集与 Triage 保持一致</li>
+<li>CloudSuite（cassandra, classification, cloud9, nutch, streaming）</li>
+<li>GAP（图计算）与 SPEC CPU Regular 作为补充</li>
+<li>多核：从单核池里随机采样，组成 20 个 4 核 heterogeneous mix，以及多线程 trace</li>
+</ul>
+<p>每次仿真 warmup 50M SimPoint + 统计 200M SimPoint。几何平均汇总。</p>
+<p>Evaluated prefetchers：SPP, Berti, Triage, Triangel, Kairos。</p>
+<p>Energy：CACTI-P（cache）+ Micron DRAM Power Calculator（DRAM），22 nm。</p>
+<hr>
+<h1 id="实验结果"><a href="#实验结果" class="headerlink" title="实验结果"></a>实验结果</h1><h2 id="实验-1：单核整体性能（图-8）"><a href="#实验-1：单核整体性能（图-8）" class="headerlink" title="实验 1：单核整体性能（图 8）"></a>实验 1：单核整体性能（图 8）</h2><p>设计：SPEC CPU Irregular + CloudSuite，对比 5 种预取器。<br>结果（geomean speedup vs. 纯 IP-stride 基线）：</p>
+<ul>
+<li>Triangel：1.15×</li>
+<li>Kairos：<strong>1.25×</strong>（SPEC Irregular）</li>
+<li>CloudSuite 上 Kairos geomean 1.073×，仍最高<br>结论：Kairos 在 irregular 场景平均比 Triangel <strong>+10.1%</strong>，尤其在 450.soplex, 482.sphinx3, 623.xalancbmk 等具有强 temporal locality 的负载超过 1.5×；在 Triangel 阈值过严导致失效的 471.omnetpp&#x2F;620.omnetpp 上仍保持较高性能。</li>
+</ul>
+<h2 id="实验-2：Coverage-与-Accuracy（图-9-10）"><a href="#实验-2：Coverage-与-Accuracy（图-9-10）" class="headerlink" title="实验 2：Coverage 与 Accuracy（图 9, 10）"></a>实验 2：Coverage 与 Accuracy（图 9, 10）</h2><p>结果：</p>
+<ul>
+<li>Kairos 平均 prefetch coverage <strong>48.8%</strong>，比 Triangel 的 ~41.5% 高 <strong>17.6%</strong>。</li>
+<li>Accuracy：Triangel 最高 79.6%，Kairos 68.8%（下降 10.8%），但 coverage 收益足以覆盖 accuracy 损失。<br>结论：Kairos 有意识地用少量精度换更多 coverage，这是靠”Detection Unit 粗筛 + Coverage 精筛”而非”严格地址级采样”实现的。</li>
+</ul>
+<h2 id="实验-3：Metadata-Utilization（图-11-12）"><a href="#实验-3：Metadata-Utilization（图-11-12）" class="headerlink" title="实验 3：Metadata Utilization（图 11, 12）"></a>实验 3：Metadata Utilization（图 11, 12）</h2><ul>
+<li>Useful Entry Ratio（图 11）：Triangel 75.8% 最高，Kairos 50.9%（约 Triangel 的 2&#x2F;3）。</li>
+<li>Metadata Hit Rate（图 12）：Kairos 反而<strong>高于</strong> Triangel —— 因为 LFU + rpl 策略使 positive 指令的 metadata 被反复命中，转换率更高。</li>
+</ul>
+<h2 id="实验-4：Traffic-Energy（图-13-14）"><a href="#实验-4：Traffic-Energy（图-13-14）" class="headerlink" title="实验 4：Traffic &amp; Energy（图 13, 14）"></a>实验 4：Traffic &amp; Energy（图 13, 14）</h2><ul>
+<li>LLC traffic：Triangel 最低（强过滤），Kairos &gt; Triangel 但 &lt; Triage。</li>
+<li>动态能耗相对 baseline：SPP 32.0% &gt; Kairos 30.7% &gt; Berti 29.8% &gt; Triangel 24.5% &gt; Triage 48.1%。</li>
+<li>静态漏电：Kairos 最低（因完成工作所需时间最短）。<br>结论：Kairos 带宽&#x2F;能量开销略高于 Triangel，但远低于 Triage；综合性能-能量效率最优。</li>
+</ul>
+<h2 id="实验-5：多核（图-15）"><a href="#实验-5：多核（图-15）" class="headerlink" title="实验 5：多核（图 15）"></a>实验 5：多核（图 15）</h2><p>4-core 20 mixes，Kairos 相对 baseline geomean <strong>1.251× &#x3D; +25.1%</strong>，Triangel 18.7%，Triage 10.2%。</p>
+<h2 id="实验-6：SPEC-Regular-GAP（图-16）"><a href="#实验-6：SPEC-Regular-GAP（图-16）" class="headerlink" title="实验 6：SPEC Regular + GAP（图 16）"></a>实验 6：SPEC Regular + GAP（图 16）</h2><p>在规则负载上 Berti（spatial）占优，Kairos 不如 Berti，但<strong>Kairos+Berti 组合</strong>在 GAP 上 +3.2%，并在 sssp 上表现出明显正交性：Kairos 6.8M useful prefetch @14% accuracy + Berti 4M @57.2% → 组合 10.7M @19.3%，超越线性叠加。</p>
+<h2 id="实验-7：PID-分区决策（图-17）"><a href="#实验-7：PID-分区决策（图-17）" class="headerlink" title="实验 7：PID 分区决策（图 17）"></a>实验 7：PID 分区决策（图 17）</h2><p>大多数 workload 下 PID 控制器选择 “Maintain”，仅在 miss rate 显著变化或相位切换时才调整，验证了 cautious partitioning 的设计目标。</p>
+<h2 id="实验-8：敏感性（图-18）"><a href="#实验-8：敏感性（图-18）" class="headerlink" title="实验 8：敏感性（图 18）"></a>实验 8：敏感性（图 18）</h2><ul>
+<li>Detecting Unit &#x2F; Training Unit 缩小到 0.25× → 性能下降 ~7%；缩小到 0.5× → 仅下降 ~1.5%</li>
+<li>放大到 2× &#x2F; 4× → 性能提升 &lt;1%<br>说明现有 251 B 配置接近”甜点”。</li>
+</ul>
+<h2 id="实验-9：设计选择（图-19）"><a href="#实验-9：设计选择（图-19）" class="headerlink" title="实验 9：设计选择（图 19）"></a>实验 9：设计选择（图 19）</h2><ul>
+<li><strong>Kairos_Global</strong>（在 Training Unit 里加入 IP-independent 全局关联 miss 表）：性能反而下降 —— 证明”以 key instruction 为焦点”才是性能源头。</li>
+<li><strong>Kairos+Berti</strong> 合用：irregular 上 Berti 会稀释 Kairos 优势。</li>
+<li><strong>Kairos_Infinite</strong>（无限 metadata 容量）：整体优，但并非对所有 workload 都显著 —— 说明瓶颈是识别，不是容量。</li>
+</ul>
+<hr>
+<h1 id="Limits"><a href="#Limits" class="headerlink" title="Limits"></a>Limits</h1><ol>
+<li><strong>阈值是启发式的</strong>：12.5% miss 贡献、87.5%&#x2F;12.5% coverage 分类、PID 参数 α&#x3D;1.0&#x2F;β&#x3D;-0.3&#x2F;γ&#x3D;0.1 都靠经验；虽然作者解释为”system-agnostic”，但不同平台是否仍最优未充分验证。</li>
+<li><strong>Accuracy 下降 10.8%</strong>：虽整体被 coverage 收益覆盖，但在带宽受限系统中可能放大负面影响；论文未深入分析 bandwidth-constrained 场景（例如低主存 BW）。</li>
+<li><strong>仅在 ChampSim 上评估</strong>：没有 RTL&#x2F;FPGA 验证，251 B 的面积&#x2F;时序优势缺乏硬件层面证据。</li>
+<li><strong>无法处理 computation-driven 访存</strong>：在 GAP 图负载上 Kairos 不敌 Berti，说明 pure temporal correlation 对那些需要针对性优化的访存模式（如 SSSP 里依赖计算结果的访问）天生弱势。</li>
+<li><strong>Key IP 数量固定为 16&#x2F;32 entries</strong>：当 workload 的关键指令数超过容量时，虽然 PLRU 可以轮转，但相位切换开销（reset 后要重新累积到阈值）在访存分布极扁平的应用上可能造成暂时性退化。</li>
+<li><strong>未覆盖安全&#x2F;侧信道维度</strong>：以指令为粒度记录 miss 行为，可能放大 IP-level 侧信道泄露，论文没讨论。</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2026/04/17/cpu/cache/prefetch/data-pf/temporal/Kairos/">https://xixi-shredp.github.io/2026/04/17/cpu/cache/prefetch/data-pf/temporal/Kairos/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/MICRO/">MICRO</a><a class="post-meta__tags" href="/tags/2025/">2025</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/04/17/cpu/cache/prefetch/data-pf/temporal/Streamline/" title="Streamline (2026 HPCA): Streamlined On-Chip Temporal Prefetching"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Streamline (2026 HPCA): Streamlined On-Chip Temporal Prefetching</div></div><div class="info-2"><div class="info-item-1">2026 HPCA Streamline 论文解读：用 stream-based 元数据表示替代 pairwise 表示，提升片上时序预取器的存储效率、预取覆盖率和带宽效率</div></div></div></a><a class="pagination-related" href="/2026/04/17/cpu/cache/prefetch/data-pf/spatial/Bingo/" title="Bingo (2019 HPCA): Bingo Spatial Data Prefetcher"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Bingo (2019 HPCA): Bingo Spatial Data Prefetcher</div></div><div class="info-2"><div class="info-item-1">2019 HPCA Bingo 论文解读：用一张统一的 history table 通过长事件/短事件双重查找来兼顾 spatial prefetch 的 accuracy 和 coverage</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/04/16/cpu/cache/prefetch/multi-pf/Alecto/" title="Alecto (2025 HPCA): Integrating Prefetcher Selection with Dynamic Request Allocation Improves Prefetching Efficiency"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-04-16</div><div class="info-item-2">Alecto (2025 HPCA): Integrating Prefetcher Selection with Dynamic Request Allocation Improves Prefetching Efficiency</div></div><div class="info-2"><div class="info-item-1">2025 HPCA Alecto 论文解读：通过动态 demand request 分配实现细粒度预取器选择，同时优化 accuracy、coverage 和 timeliness</div></div></div></a><a class="pagination-related" href="/2026/04/16/cpu/cache/prefetch/multi-pf/Bandit/" title="Micro-Armed Bandit (2023 MICRO): Lightweight &amp; Reusable Reinforcement Learning for Microarchitecture Decision-Making"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-04-16</div><div class="info-item-2">Micro-Armed Bandit (2023 MICRO): Lightweight &amp; Reusable Reinforcement Learning for Microarchitecture Decision-Making</div></div><div class="info-2"><div class="info-item-1">2023 MICRO Micro-Armed Bandit 论文解读：利用动作空间的时间同质性，用 Multi-Armed Bandit 实现轻量级可复用的微架构决策 RL agent</div></div></div></a><a class="pagination-related" href="/2026/03/19/cpu/bpu/2024-MICRO-LLBP/" title="2024 MICRO: The Last-Level Branch Predictor"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-19</div><div class="info-item-2">2024 MICRO: The Last-Level Branch Predictor</div></div><div class="info-2"><div class="info-item-1">2024 MICRO 论文阅读：The Last-Level Branch Predictor</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">102</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">21</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">49</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%83%8C%E6%99%AF%E5%92%8C%E5%8A%A8%E6%9C%BA"><span class="toc-number">1.</span> <span class="toc-text">背景和动机</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%B8%E5%85%B3%E5%B7%A5%E4%BD%9C"><span class="toc-number">1.1.</span> <span class="toc-text">相关工作</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Insight"><span class="toc-number">2.</span> <span class="toc-text">Insight</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1"><span class="toc-number">3.</span> <span class="toc-text">核心设计</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-Detecting-Method%EF%BC%88Critical-Instruction-Detection%EF%BC%8C%C2%A73-2%EF%BC%89"><span class="toc-number">3.1.</span> <span class="toc-text">1. Detecting Method（Critical Instruction Detection，§3.2）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Training-Method%EF%BC%88Coverage-Based-Classification%EF%BC%8C%C2%A73-3%EF%BC%89"><span class="toc-number">3.2.</span> <span class="toc-text">2. Training Method（Coverage-Based Classification，§3.3）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-Partition-Method%EF%BC%88PID-based-Dynamic-Partitioning%EF%BC%8C%C2%A73-4%EF%BC%89"><span class="toc-number">3.3.</span> <span class="toc-text">3. Partition Method（PID-based Dynamic Partitioning，§3.4）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-Prefetch-Method%EF%BC%88%C2%A73-5%EF%BC%89"><span class="toc-number">3.4.</span> <span class="toc-text">4. Prefetch Method（§3.5）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-Hardware-Overhead%EF%BC%88%C2%A73-6%EF%BC%89"><span class="toc-number">3.5.</span> <span class="toc-text">5. Hardware Overhead（§3.6）</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%BC%80%E6%BA%90%E4%BB%A3%E7%A0%81%E8%A7%A3%E8%AF%BB"><span class="toc-number">4.</span> <span class="toc-text">开源代码解读</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E9%A1%B6%E5%B1%82%E6%95%B0%E6%8D%AE%E6%B5%81%EF%BC%88croage-cc%EF%BC%89"><span class="toc-number">4.1.</span> <span class="toc-text">1. 顶层数据流（croage.cc）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%85%B3%E9%94%AE-IP-%E6%A3%80%E6%B5%8B%EF%BC%9AKeyDetect-%E7%B1%BB%EF%BC%88%E5%AF%B9%E5%BA%94-Detecting-Unit%EF%BC%89"><span class="toc-number">4.2.</span> <span class="toc-text">2. 关键 IP 检测：KeyDetect 类（对应 Detecting Unit）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E8%AE%AD%E7%BB%83%E4%B8%8E-Coverage-%E5%88%86%E7%B1%BB%EF%BC%9ATrainUnit-TrainUnitEntry%EF%BC%88%E5%AF%B9%E5%BA%94-Training-Unit%EF%BC%89"><span class="toc-number">4.3.</span> <span class="toc-text">3. 训练与 Coverage 分类：TrainUnit &#x2F; TrainUnitEntry（对应 Training Unit）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-Metadata-%E5%AD%98%E5%82%A8%EF%BC%9ACroageRepl-MetaData-%E5%90%91%E9%87%8F"><span class="toc-number">4.4.</span> <span class="toc-text">4. Metadata 存储：CroageRepl&lt;uint64_t&gt; + MetaData 向量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%EF%BC%9Aevaluate-window-resize-metadata"><span class="toc-number">4.5.</span> <span class="toc-text">5. 动态分区：evaluate_window() + resize_metadata()</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E7%BB%9F%E8%AE%A1%E4%B8%8E%E6%89%93%E5%8D%B0"><span class="toc-number">4.6.</span> <span class="toc-text">6. 统计与打印</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E4%BB%A3%E7%A0%81%E4%B8%8E%E8%AE%BA%E6%96%87%E7%9A%84%E5%85%B3%E9%94%AE%E5%B7%AE%E5%BC%82%E6%B1%87%E6%80%BB"><span class="toc-number">4.7.</span> <span class="toc-text">7. 代码与论文的关键差异汇总</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-Setup"><span class="toc-number">5.</span> <span class="toc-text">实验 Setup</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E7%BB%93%E6%9E%9C"><span class="toc-number">6.</span> <span class="toc-text">实验结果</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-1%EF%BC%9A%E5%8D%95%E6%A0%B8%E6%95%B4%E4%BD%93%E6%80%A7%E8%83%BD%EF%BC%88%E5%9B%BE-8%EF%BC%89"><span class="toc-number">6.1.</span> <span class="toc-text">实验 1：单核整体性能（图 8）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-2%EF%BC%9ACoverage-%E4%B8%8E-Accuracy%EF%BC%88%E5%9B%BE-9-10%EF%BC%89"><span class="toc-number">6.2.</span> <span class="toc-text">实验 2：Coverage 与 Accuracy（图 9, 10）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-3%EF%BC%9AMetadata-Utilization%EF%BC%88%E5%9B%BE-11-12%EF%BC%89"><span class="toc-number">6.3.</span> <span class="toc-text">实验 3：Metadata Utilization（图 11, 12）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-4%EF%BC%9ATraffic-Energy%EF%BC%88%E5%9B%BE-13-14%EF%BC%89"><span class="toc-number">6.4.</span> <span class="toc-text">实验 4：Traffic &amp; Energy（图 13, 14）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-5%EF%BC%9A%E5%A4%9A%E6%A0%B8%EF%BC%88%E5%9B%BE-15%EF%BC%89"><span class="toc-number">6.5.</span> <span class="toc-text">实验 5：多核（图 15）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-6%EF%BC%9ASPEC-Regular-GAP%EF%BC%88%E5%9B%BE-16%EF%BC%89"><span class="toc-number">6.6.</span> <span class="toc-text">实验 6：SPEC Regular + GAP（图 16）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-7%EF%BC%9APID-%E5%88%86%E5%8C%BA%E5%86%B3%E7%AD%96%EF%BC%88%E5%9B%BE-17%EF%BC%89"><span class="toc-number">6.7.</span> <span class="toc-text">实验 7：PID 分区决策（图 17）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-8%EF%BC%9A%E6%95%8F%E6%84%9F%E6%80%A7%EF%BC%88%E5%9B%BE-18%EF%BC%89"><span class="toc-number">6.8.</span> <span class="toc-text">实验 8：敏感性（图 18）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-9%EF%BC%9A%E8%AE%BE%E8%AE%A1%E9%80%89%E6%8B%A9%EF%BC%88%E5%9B%BE-19%EF%BC%89"><span class="toc-number">6.9.</span> <span class="toc-text">实验 9：设计选择（图 19）</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Limits"><span class="toc-number">7.</span> <span class="toc-text">Limits</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RegionPatternMatching/" title="Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher">Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher</a><time datetime="2026-04-26T16:00:00.000Z" title="Created 2026-04-27 00:00:00">2026-04-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RIP-TaggedRegion/" title="RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher">RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher</a><time datetime="2026-04-26T16:00:00.000Z" title="Created 2026-04-27 00:00:00">2026-04-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/cache-arch-aware/" title="Cache Architechture-Aware Cache Replacement">Cache Architechture-Aware Cache Replacement</a><time datetime="2026-04-23T09:36:07.000Z" title="Created 2026-04-23 17:36:07">2026-04-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/prefetcher-aware/" title="Prefetch-Aware Cache Replacement">Prefetch-Aware Cache Replacement</a><time datetime="2026-04-23T09:28:22.000Z" title="Created 2026-04-23 17:28:22">2026-04-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/multicore-aware/" title="Multi-Core-Aware Cache Replacement">Multi-Core-Aware Cache Replacement</a><time datetime="2026-04-23T06:37:22.000Z" title="Created 2026-04-23 14:37:22">2026-04-23</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

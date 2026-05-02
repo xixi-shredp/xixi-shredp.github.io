@@ -1,0 +1,854 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>ReSemble (2022 SC): Reinforced Ensemble Framework for Data Prefetching | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="2022 SC ReSemble 论文解读：基于强化学习的集成预取框架，用 MLP 作为 Q-network 动态选择最佳预取器建议">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ReSemble (2022 SC): Reinforced Ensemble Framework for Data Prefetching">
+<meta property="og:url" content="https://xixi-shredp.github.io/2026/04/16/cpu/cache/prefetch/multi-pf/ReSemble/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="2022 SC ReSemble 论文解读：基于强化学习的集成预取框架，用 MLP 作为 Q-network 动态选择最佳预取器建议">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2026-04-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-04-21T10:27:40.508Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="2022">
+<meta property="article:tag" content="SC">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "ReSemble (2022 SC): Reinforced Ensemble Framework for Data Prefetching",
+  "url": "https://xixi-shredp.github.io/2026/04/16/cpu/cache/prefetch/multi-pf/ReSemble/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2026-04-15T16:00:00.000Z",
+  "dateModified": "2026-04-21T10:27:40.508Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2026/04/16/cpu/cache/prefetch/multi-pf/ReSemble/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'ReSemble (2022 SC): Reinforced Ensemble Framework for Data Prefetching',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background: linear-gradient(180deg, black, black, #23064D);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">102</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">21</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">49</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">ReSemble (2022 SC): Reinforced Ensemble Framework for Data Prefetching</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">ReSemble (2022 SC): Reinforced Ensemble Framework for Data Prefetching</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-04-15T16:00:00.000Z" title="Created 2026-04-16 00:00:00">2026-04-16</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-04-21T10:27:40.508Z" title="Updated 2026-04-21 18:27:40">2026-04-21</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/">cpu</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/">cache</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/prefetch/">prefetch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/prefetch/multi-pf/">multi-pf</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>这篇论文提出的是 <strong>ReSemble（Reinforced Ensemble Framework for Data Prefetching）</strong>：</p>
+<p>TLDR：</p>
+<ol>
+<li>已有的多预取器管理策略（分类法、SBP）存在离线训练不适应在线变化、response lag 等问题</li>
+<li>提出用 Q-learning 训练一个感知机（MLP），从多个预取器的建议中动态选择最佳预取地址，通过 hash and norm 解决地址空间爆炸, lazy sampling 解决反馈延迟问题</li>
+<li>采用的是 $\epsilon$-greedy 算法（随机探索）</li>
+</ol>
+<h1 id="背景和动机"><a href="#背景和动机" class="headerlink" title="背景和动机"></a>背景和动机</h1><p><strong>背景：</strong> 内存延迟是性能瓶颈，硬件预取通过提前加载数据来隐藏延迟。现有预取器（spatial &#x2F; temporal &#x2F; spatio-temporal）各自擅长不同的访存模式：</p>
+<ul>
+<li><strong>Spatial prefetcher</strong>（BO, SPP, VLDP）：利用空间局部性，预测固定 region 内的访问，但无法追踪长距离跨页依赖</li>
+<li><strong>Temporal prefetcher</strong>（ISB, STMS, Domino）：利用时间局部性，记录并回放历史访问序列，但依赖重复出现的模式，无法处理 compulsory miss</li>
+<li><strong>Spatio-temporal prefetcher</strong>（STeMS）：结合两者，但 coverage 低、启动延迟高</li>
+</ul>
+<p><strong>动机：</strong> 不同应用甚至同一应用的不同阶段，适合不同的预取器。论文通过自相关分析展示了 4 个 benchmark 的不同访存特征：</p>
+<ul>
+<li>433.milc、621.wrf 有强空间自相关 → 适合 BO 等空间预取器</li>
+<li>471.omnetpp、623.xalancbmk 按 PC 分组后才显示出自相关 → 适合 ISB 等 temporal 预取器</li>
+</ul>
+<p><strong>已有多预取器管理方法的问题：</strong></p>
+<ol>
+<li><strong>分类法</strong>：离线训练，训练&#x2F;测试 trace 不一致时 accuracy 下降；对动态 cache 行为适应性差<ul>
+<li>Ensemble prefetching through classification using support vector machine (2016 Intelligent Systems Technologies and Applications)</li>
+<li>Maximizing hardware prefetch effectiveness with machine learning (2015 ICHPC, ISCSS, ICESS)</li>
+<li>DOL&#x2F;TPC: Division of labor: A more effective approach to prefetching (2018 ISCA)</li>
+</ul>
+</li>
+<li><strong>性能评估法</strong>：在线评估，但有 response lag——次优预取器要工作一段时间才会被替换(比较平均表现)，导致性能损失(尤其是短 phase)<ul>
+<li>SBP: Sandbox prefetching: Safe run-time evaluation of aggressive prefetchers (2014 ISCA)</li>
+<li>Ensemble adaptive tile prefetching using fuzzy logic (2016 IJGIS)</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h1 id="Insight"><a href="#Insight" class="headerlink" title="Insight"></a>Insight</h1><p>将多预取器管理建模为强化学习问题：</p>
+<ul>
+<li><strong>Environment</strong>：硬件架构 + 多个预取器 + cache 层次</li>
+<li><strong>Agent</strong>：集成控制器</li>
+<li><strong>State</strong>：各预取器当前的预测地址（经预处理）</li>
+<li><strong>Action</strong>：选择哪个预取器的建议（或不预取 NP）</li>
+<li><strong>Reward</strong>：预取命中 +1，过期未命中 -1，NP 则 0</li>
+</ul>
+<p>RL 的优势：无需离线训练、可以从 cache 反馈中在线学习、基于当前状态而非历史性能做决策（避免 response lag）</p>
+<hr>
+<h1 id="核心设计"><a href="#核心设计" class="headerlink" title="核心设计"></a>核心设计</h1><p>ReSemble 的核心是用一个轻量级 MLP 作为 Q-network 来做集成预取控制，解决三个关键挑战：</p>
+<ol>
+<li><strong>Hash and Norm 预处理</strong>：解决地址空间爆炸（class explosion）问题</li>
+<li><strong>MLP Q-network</strong>：紧凑的模型做在线推理和学习</li>
+<li><strong>Lazy Sampling</strong>：解决 cache 反馈延迟问题</li>
+</ol>
+<p>整体流程：</p>
+<ol>
+<li>多个 prefetcher 各自给出预测地址</li>
+<li>这些预测地址先经过预处理，组成状态向量</li>
+<li>MLP 控制器根据状态向量输出每个 action 的 Q 值</li>
+<li>选择一个 action：选某个 prefetcher 的预测，或选择 NP（no prefetch）</li>
+<li>之后根据未来这条 prefetch 是否命中，回填 reward</li>
+<li>用这些带 reward 的 transition 在线训练控制器</li>
+</ol>
+<hr>
+<h2 id="1-预处理：Hash-and-Norm"><a href="#1-预处理：Hash-and-Norm" class="headerlink" title="1. 预处理：Hash and Norm"></a>1. 预处理：Hash and Norm</h2><p>预取器的预测分为两类，分别处理：</p>
+<p><strong>Spatial predictions</strong> $p_n^S(t)$：计算与当前地址的 delta 并归一化<br>$$s_n^S(t) &#x3D; \frac{p_n^S(t) - Addr(t)}{2^{PAGE_BITS}}$$</p>
+<p><strong>Temporal predictions</strong> $p_n^T(t)$：用 hash 函数折叠压缩绝对地址并归一化<br>$$s_n^T(t) &#x3D; \frac{hash(p_n^T(t))}{2^{HASH_BITS}}$$</p>
+<p>其中，$p_n^S(t)$ 和 $p_n^T(t)$ 表示预取器给出的预取地址，<code>Addr(t)</code> 是 demand address</p>
+<p>这样将百万级地址空间压缩到紧凑的 state vector:<br>$$s_t &#x3D; f_{prep}(O_t) &#x3D; [s_1^S(t),s_2^S(t),…,s_X^T(t),s_1^T(t),s_2^T(t),…,s_Y^T(t)]$$</p>
+<p>避免 tokenization 所需的额外存储开销。</p>
+<h2 id="2-MLP-Q-Network"><a href="#2-MLP-Q-Network" class="headerlink" title="2. MLP Q-Network"></a>2. MLP Q-Network</h2><p>使用只有一个隐藏层的 MLP 近似 Q 函数：<br>$$Q(s_t, a_t) &#x3D; MLP(s_t, a_t; \theta)$$</p>
+<ul>
+<li>输入：<ul>
+<li>state vector $s_t$（维度 $S &#x3D; N$，预取器数量）</li>
+<li>action $a_t \in \Alpha  &#x3D; {1,2,…,n,…,N,NP}$:<br>$$<br>a_t &#x3D; \begin{cases}<br>\text{Random selection from A  if } P &lt; \epsilon \<br>argmax_{a \in A}\ MLP(s_t, a_t; \theta) \text{ otherwise}<br>\end{cases}<br>$$<ul>
+<li>P is a probability</li>
+<li>$\epsilon &#x3D; \epsilon_{start} + (\epsilon_{start} - \epsilon_{end}e^{-\frac{step}{decay}})$</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>输出：每个 action 的 Q-value（维度 $A &#x3D; N + 1$，包含 NP）</li>
+<li>使用 decaying $\epsilon$-greedy 策略平衡探索与利用</li>
+</ul>
+<p><strong>双网络设计</strong>：</p>
+<ol>
+<li>policy net $MLP_p$（频繁更新，每 $I_p$ 步更新一次）</li>
+<li>target net $MLP_t$（较少更新，每 $I_t$ 步）</li>
+</ol>
+<p>$I_t &gt; T_p$<br>通过 role switch 机制避免模型更新带来的推理停顿:</p>
+<ul>
+<li>每经过 $I_p$ 步，更新 $MLP_p$:<ul>
+<li>下一步的 reward: $y_j \leftarrow r_j + \gamma\ max_{a’} MLP_t(s_{j+1},a’;\theta’)$</li>
+<li>权重：$\theta \leftarrow \theta + \alpha (y_j - MLP_p(\cdot;\theta))\nabla_\theta MLP_p(\cdot;\theta)$</li>
+</ul>
+</li>
+<li>每经过 $I_t$ 步，更新 $MLP_t$:<ul>
+<li>$Swap(MLP_t, MLP_p)$</li>
+<li>$\theta’ \leftarrow \theta$</li>
+</ul>
+</li>
+</ul>
+<p>损失函数定义: $L(\theta) &#x3D; \Epsilon_{s,a\sim \rho(s,a)} [(y_i - MLP_p(s,a;\theta))^2]$</p>
+<ul>
+<li>$\rho(s,a)$ 为 sequence s 和 action a 下的概率分布</li>
+</ul>
+<h2 id="3-Lazy-Sampling"><a href="#3-Lazy-Sampling" class="headerlink" title="3. Lazy Sampling"></a>3. Lazy Sampling</h2><p>cache 反馈有延迟——预取发出后需要等待一段时间才能知道是否命中。</p>
+<p>ReSemble 的解决方案：</p>
+<ul>
+<li>每个时间步立即存储 $(s_t, a_t, p_t)$ 到 replay memory，reward 留空</li>
+<li>后续访存命中历史预取时，回填 reward（$r_i &#x3D; 1$）</li>
+<li>超出 window $W$ 仍未命中的标记为 $r_i &#x3D; -1$</li>
+<li>选择的 action 为 NP 时，$r_i &#x3D; 0$</li>
+<li>只从已有有效 reward 的 transition 中采样训练</li>
+</ul>
+<h2 id="4-一种使用-Q-value-table-的变体"><a href="#4-一种使用-Q-value-table-的变体" class="headerlink" title="4. 一种使用 Q-value table 的变体"></a>4. 一种使用 Q-value table 的变体</h2><p>除了使用 MLP 直接计算 action 之外，还可以使用 Q-value table 查表得到 action:</p>
+<p>Q-value 更新：$Q(s,a) \leftarrow Q(s,a) + \alpha[r + \gamma\ max Q’(s’,\cdot) - Q(s,a)]$</p>
+<ul>
+<li>r: reward for action a </li>
+<li>s’: next state</li>
+</ul>
+<p>为硬件友好实现，提供 Q-table 变体：</p>
+<p>$$<br>S_n^S(t) &#x3D; hash(p_n^S(t) - Addr(t))<br>$$<br>$$<br>S_n^T(t) &#x3D; hash(p_n^T(t)<br>$$</p>
+<ul>
+<li>用 hash 函数压缩地址空间</li>
+<li>用 tokenization 进一步压缩——只为出现过的 unique state 分配 token</li>
+<li>8-bit hash 下 token 化后仅需 592K entries（vs 直接 21.5G）</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Size Expression</th>
+<th>Configuration</th>
+<th>param&#x2F;Entries</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MLP</td>
+<td>SH + HA + H + A</td>
+<td>H &#x3D; 100</td>
+<td>1.05K</td>
+</tr>
+<tr>
+<td>Table (direct)</td>
+<td>$2^{BS}A$</td>
+<td>B &#x3D; 4</td>
+<td>328K</td>
+</tr>
+<tr>
+<td>Table (direct)</td>
+<td>$2^{BS}A$</td>
+<td>B &#x3D; 8</td>
+<td>21.5G</td>
+</tr>
+<tr>
+<td>Table (token)</td>
+<td>$2A$(#unique states)</td>
+<td>B &#x3D; 4</td>
+<td>37.3K</td>
+</tr>
+<tr>
+<td>Table (token)</td>
+<td>$2A$(#unique states)</td>
+<td>B &#x3D; 8</td>
+<td>592K</td>
+</tr>
+</tbody></table>
+<p>(H: hidden layer dimension of MLP, B: hash bits)</p>
+<p>即使优化后，Q-value Table 面积依然很大（相比于 MLP），因此该方案不可行，最终还是采用了 MLP</p>
+<hr>
+<h1 id="实验-Setup"><a href="#实验-Setup" class="headerlink" title="实验 Setup"></a>实验 Setup</h1><p>实验平台：ChampSim 模拟器</p>
+<p>workload 选择：SPEC CPU 2006、SPEC CPU 2017、GAP benchmark suite。每个应用模拟 100M 指令（20M warmup + 80M 测量）</p>
+<p>系统设置：</p>
+<ul>
+<li>CPU: 4 GHz, 4 cores, 4-wide OoO, 256-entry ROB</li>
+<li>L1I&#x2F;D: 64KB, L2: 1MB, LLC: 8MB 16-way, LRU</li>
+<li>MLP: hidden dim&#x3D;100, 1.05K parameters; Replay memory: 2K entries</li>
+<li>Baseline: 各单一预取器 + SBP(E)（SBP 的扩展版本）</li>
+</ul>
+<p>4 个输入预取器：<strong>BO (spatial), SPP (spatial), ISB (temporal), Domino (temporal)</strong></p>
+<table>
+<thead>
+<tr>
+<th>Prefetchers</th>
+<th>Configuration</th>
+<th>Budget</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BO</td>
+<td>1K entry RR table, 1Kb prefetch bits</td>
+<td>4KB</td>
+</tr>
+<tr>
+<td>SPP</td>
+<td>256 entry ST, 512 entry PT, 1024 entry PF, 8 entry GHR</td>
+<td>5.3KB</td>
+</tr>
+<tr>
+<td>ISB</td>
+<td>2K entries for SP-AMC and PS-AMC</td>
+<td>8KB</td>
+</tr>
+<tr>
+<td>Domino</td>
+<td>2KB prefetch buffer, 256B PointBuf, 128B LogMiss, 64B FetchBuf</td>
+<td>2.4KB</td>
+</tr>
+</tbody></table>
+<p>ReSemble Setup: (面向 L2 Cache)</p>
+<table>
+<thead>
+<tr>
+<th align="left">Configuration(env)</th>
+<th align="center">Info</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Address bits</td>
+<td align="center">64</td>
+</tr>
+<tr>
+<td align="left">Block offset</td>
+<td align="center">6</td>
+</tr>
+<tr>
+<td align="left">Page offset</td>
+<td align="center">12</td>
+</tr>
+<tr>
+<td align="left">State dimension</td>
+<td align="center">4</td>
+</tr>
+<tr>
+<td align="left">Action dimension</td>
+<td align="center">5</td>
+</tr>
+<tr>
+<td align="left">Hash bit (for MLP)</td>
+<td align="center">16</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th align="left">Configuration(agent)</th>
+<th align="center">Info</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Replay memory R</td>
+<td align="center">2000</td>
+</tr>
+<tr>
+<td align="left">Prefetch window size W</td>
+<td align="center">256</td>
+</tr>
+<tr>
+<td align="left">Batch size for training</td>
+<td align="center">256</td>
+</tr>
+<tr>
+<td align="left">$\epsilon_{start}$</td>
+<td align="center">0.95</td>
+</tr>
+<tr>
+<td align="left">$\epsilon_{end}$</td>
+<td align="center">0.005</td>
+</tr>
+<tr>
+<td align="left">$decay$</td>
+<td align="center">80</td>
+</tr>
+<tr>
+<td align="left">$I_p$</td>
+<td align="center">1</td>
+</tr>
+<tr>
+<td align="left">$I_t$</td>
+<td align="center">20</td>
+</tr>
+</tbody></table>
+<hr>
+<h1 id="实验结果"><a href="#实验结果" class="headerlink" title="实验结果"></a>实验结果</h1><h2 id="实验-1-Model-Learning-Performance"><a href="#实验-1-Model-Learning-Performance" class="headerlink" title="实验 1: Model Learning Performance"></a>实验 1: Model Learning Performance</h2><p>设计：比较 MLP 和 tabular variants 在 1K access window 内的平均 reward，探究 PC 信息和 hash bit 数的影响</p>
+<p>结果：</p>
+<ul>
+<li>MLP（无 PC）在所有 benchmark 上获得最高平均 reward</li>
+<li>8-bit hash tabular 优于 4-bit（更小 hash 损失信息）</li>
+<li>PC 信息对 SPEC06 的 MLP 模型反而有害，对 tabular 模型有帮助</li>
+<li>MLP 模型切换预取器更频繁、适应更快（Fig. 7）</li>
+</ul>
+<p>结论：MLP 模型因更好的泛化能力和更快的响应速度，整体优于 tabular 模型</p>
+<h2 id="实验-2-Ensemble-Prefetch-Performance"><a href="#实验-2-Ensemble-Prefetch-Performance" class="headerlink" title="实验 2: Ensemble Prefetch Performance"></a>实验 2: Ensemble Prefetch Performance</h2><p>设计：在全部 benchmark 上比较 ReSemble（MLP）、ReSemble-T（8-bit tabular）与 4 个单一预取器及 SBP(E)</p>
+<p>结果：(平均)</p>
+<ul>
+<li><strong>Accuracy</strong>: ReSemble 85.27%, ReSemble-T 83.94%, SBP(E) 82.05%, 最佳单一（BO）60.51%</li>
+<li><strong>Coverage</strong>: ReSemble 44.22%, ReSemble-T 42.16%, SBP(E) 37.67%, 最佳单一（SPP）31.14%</li>
+<li><strong>IPC 提升</strong>: ReSemble 31.02%, ReSemble-T 29.26%, SBP(E) 25.33%, 最佳单一（SPP）22.67%</li>
+</ul>
+<p>结论：ReSemble 在三个指标上全面优于所有 baseline。IPC 提升超最佳单一预取器 8.35%，超 SBP(E) 5.69%</p>
+<h2 id="实验-3-Latency-Sensitivity-Analysis"><a href="#实验-3-Latency-Sensitivity-Analysis" class="headerlink" title="实验 3: Latency Sensitivity Analysis"></a>实验 3: Latency Sensitivity Analysis</h2><p>设计：引入 0-40 cycle 的推理延迟，评估 high TP（1 inference&#x2F;cycle）和 low TP（1&#x2F;T inference&#x2F;cycle）</p>
+<p>结果：</p>
+<ul>
+<li>High TP 下 20 cycle 延迟：83.66% accuracy, 29.19% IPC 提升（仍优于 SBP 4.2%）</li>
+<li>High TP 下 40 cycle：78.64% accuracy, 26.02% IPC（略优于 SBP）</li>
+<li>Low TP 下延迟 &gt;20 cycle 时性能低于 SBP</li>
+</ul>
+<p>结论：高吞吐实现下，ReSemble 在 40 cycle 内仍可优于 SBP</p>
+<p>ReSemble Inference Latency</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Description</th>
+<th>Cycle</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Prepossessing</td>
+<td>- $T_h &#x3D; \lceil \log_2 \lceil \frac{\text{Addr bit}}{\text{Hash bit}} \rceil \rceil$  <br> - $T_n$: constant multiplication</td>
+<td>2 <br> 1</td>
+</tr>
+<tr>
+<td>MLP</td>
+<td>- $T_{mm_h} &#x3D; \lceil 1 + \log_2 S \rceil$ <br> - $T_{mm_o} &#x3D; \lceil 1 + \log_2 H \rceil$ <br> - $T_{av} \times 2$: look up table</td>
+<td>5 <br> 9 <br> 2</td>
+</tr>
+<tr>
+<td>Action</td>
+<td>- $T_{qv} &#x3D; \lceil \log_2 A \rceil$</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Total</td>
+<td></td>
+<td>22</td>
+</tr>
+</tbody></table>
+<h2 id="实验-4-集成-NN-based-Prefetcher-Voyager"><a href="#实验-4-集成-NN-based-Prefetcher-Voyager" class="headerlink" title="实验 4: 集成 NN-based Prefetcher (Voyager)"></a>实验 4: 集成 NN-based Prefetcher (Voyager)</h2><p>设计：用 Voyager（LSTM-based）替换 Domino 作为输入预取器之一</p>
+<p>结果：ReSemble + Voyager 达到 36.22% IPC 提升，比单独 Voyager 高 4.71%，比无 Voyager 版本高 5.10%</p>
+<p>结论：ReSemble 框架兼容 NN-based 预取器，且能进一步提升其性能</p>
+<hr>
+<h1 id="硬件开销"><a href="#硬件开销" class="headerlink" title="硬件开销"></a>硬件开销</h1><table>
+<thead>
+<tr>
+<th>Structure</th>
+<th>Description</th>
+<th>Size</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MLP</td>
+<td>- # MLP &#x3D; 2<br> - # parameters &#x3D; 1.05K<br> - 16-bit fixed point<br> - Stored on chip</td>
+<td>4.2KB</td>
+</tr>
+<tr>
+<td>Replay Memory</td>
+<td>- # entries of transitions &#x3D; 2K<br> - Each entry: $(s_t, a_t, r_t, s_{t+1})$<br> - $2 \times s_t (4 \times 16b) + a_t (3b) + r_t (1b)$<br> - Prefetch window: $256 \times p_t (58b)$<br> - Stored off chip in main memory</td>
+<td>34.8KB</td>
+</tr>
+</tbody></table>
+<ul>
+<li>MLP 模型存储：4.2KB（on-chip），1.05K 参数</li>
+<li>Replay Memory：34.8KB（off-chip main memory）</li>
+</ul>
+<hr>
+<h1 id="Limits"><a href="#Limits" class="headerlink" title="Limits"></a>Limits</h1><ol>
+<li><strong>地址信息损失</strong>：hash and norm 不可避免地丢失信息，特别是 temporal prediction 的哈希折叠可能导致不同地址被混淆</li>
+<li><strong>单一选择模型</strong>：每个时间步只从 N 个预取器中选一个建议，不能同时发出多个预取请求（现实中多数系统支持多发射预取）</li>
+<li><strong>reward 设计过于简单</strong>：+1&#x2F;-1 的 binary reward 没有考虑预取的时效性（太早&#x2F;太晚的预取价值不同）和 cache pollution 的代价差异</li>
+<li><strong>MLP 推理延迟</strong>：22 cycle 的推理延迟在时间关键路径上，high latency 时性能优势减弱</li>
+<li><strong>Replay memory 在主存</strong>：34.8KB 虽然不大，但每次训练需要访问主存读取 transition，可能产生额外带宽压力</li>
+<li>MLP 面积评估没有考虑乘法器的面积</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2026/04/16/cpu/cache/prefetch/multi-pf/ReSemble/">https://xixi-shredp.github.io/2026/04/16/cpu/cache/prefetch/multi-pf/ReSemble/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/2022/">2022</a><a class="post-meta__tags" href="/tags/SC/">SC</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/04/16/cpu/cache/prefetch/multi-pf/TPC/" title="TPC (2018 ISCA): Division of Labor: A More Effective Approach to Prefetching"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">TPC (2018 ISCA): Division of Labor: A More Effective Approach to Prefetching</div></div><div class="info-2"><div class="info-item-1">2018 ISCA TPC 论文解读：通过组合多个专注于简单模式的子预取器（分工协作），取代单一复杂预取器，以更高精度和更低带宽开销获得更好性能</div></div></div></a><a class="pagination-related" href="/2026/04/16/cpu/cache/prefetch/multi-pf/Bandit/" title="Micro-Armed Bandit (2023 MICRO): Lightweight &amp; Reusable Reinforcement Learning for Microarchitecture Decision-Making"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Micro-Armed Bandit (2023 MICRO): Lightweight & Reusable Reinforcement Learning for Microarchitecture Decision-Making</div></div><div class="info-2"><div class="info-item-1">2023 MICRO Micro-Armed Bandit 论文解读：利用动作空间的时间同质性，用 Multi-Armed Bandit 实现轻量级可复用的微架构决策 RL agent</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">102</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">21</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">49</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%83%8C%E6%99%AF%E5%92%8C%E5%8A%A8%E6%9C%BA"><span class="toc-number">1.</span> <span class="toc-text">背景和动机</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Insight"><span class="toc-number">2.</span> <span class="toc-text">Insight</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1"><span class="toc-number">3.</span> <span class="toc-text">核心设计</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E9%A2%84%E5%A4%84%E7%90%86%EF%BC%9AHash-and-Norm"><span class="toc-number">3.1.</span> <span class="toc-text">1. 预处理：Hash and Norm</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-MLP-Q-Network"><span class="toc-number">3.2.</span> <span class="toc-text">2. MLP Q-Network</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-Lazy-Sampling"><span class="toc-number">3.3.</span> <span class="toc-text">3. Lazy Sampling</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E4%B8%80%E7%A7%8D%E4%BD%BF%E7%94%A8-Q-value-table-%E7%9A%84%E5%8F%98%E4%BD%93"><span class="toc-number">3.4.</span> <span class="toc-text">4. 一种使用 Q-value table 的变体</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-Setup"><span class="toc-number">4.</span> <span class="toc-text">实验 Setup</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E7%BB%93%E6%9E%9C"><span class="toc-number">5.</span> <span class="toc-text">实验结果</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-1-Model-Learning-Performance"><span class="toc-number">5.1.</span> <span class="toc-text">实验 1: Model Learning Performance</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-2-Ensemble-Prefetch-Performance"><span class="toc-number">5.2.</span> <span class="toc-text">实验 2: Ensemble Prefetch Performance</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-3-Latency-Sensitivity-Analysis"><span class="toc-number">5.3.</span> <span class="toc-text">实验 3: Latency Sensitivity Analysis</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-4-%E9%9B%86%E6%88%90-NN-based-Prefetcher-Voyager"><span class="toc-number">5.4.</span> <span class="toc-text">实验 4: 集成 NN-based Prefetcher (Voyager)</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%A1%AC%E4%BB%B6%E5%BC%80%E9%94%80"><span class="toc-number">6.</span> <span class="toc-text">硬件开销</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Limits"><span class="toc-number">7.</span> <span class="toc-text">Limits</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RegionPatternMatching/" title="Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher">Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher</a><time datetime="2026-04-26T16:00:00.000Z" title="Created 2026-04-27 00:00:00">2026-04-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RIP-TaggedRegion/" title="RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher">RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher</a><time datetime="2026-04-26T16:00:00.000Z" title="Created 2026-04-27 00:00:00">2026-04-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/cache-arch-aware/" title="Cache Architechture-Aware Cache Replacement">Cache Architechture-Aware Cache Replacement</a><time datetime="2026-04-23T09:36:07.000Z" title="Created 2026-04-23 17:36:07">2026-04-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/prefetcher-aware/" title="Prefetch-Aware Cache Replacement">Prefetch-Aware Cache Replacement</a><time datetime="2026-04-23T09:28:22.000Z" title="Created 2026-04-23 17:28:22">2026-04-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/multicore-aware/" title="Multi-Core-Aware Cache Replacement">Multi-Core-Aware Cache Replacement</a><time datetime="2026-04-23T06:37:22.000Z" title="Created 2026-04-23 14:37:22">2026-04-23</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

@@ -1,0 +1,676 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="AMD 专利(US12204459B2) [2022] 解读：RIP-Tagged Region Prefetcher - 用 RIP 和 cache-line offset 标记 region footprint，训练非顺序区域访问并在后续同 RIP miss 时触发预取。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher">
+<meta property="og:url" content="https://xixi-shredp.github.io/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RIP-TaggedRegion/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="AMD 专利(US12204459B2) [2022] 解读：RIP-Tagged Region Prefetcher - 用 RIP 和 cache-line offset 标记 region footprint，训练非顺序区域访问并在后续同 RIP miss 时触发预取。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2026-04-26T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-04-29T07:55:28.561Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="AMD">
+<meta property="article:tag" content="patent">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher",
+  "url": "https://xixi-shredp.github.io/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RIP-TaggedRegion/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2026-04-26T16:00:00.000Z",
+  "dateModified": "2026-04-29T07:55:28.561Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RIP-TaggedRegion/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background: linear-gradient(180deg, black, black, #23064D);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">102</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">21</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">49</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-04-26T16:00:00.000Z" title="Created 2026-04-27 00:00:00">2026-04-27</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-04-29T07:55:28.561Z" title="Updated 2026-04-29 15:55:28">2026-04-29</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/">cpu</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/">cache</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/prefetch/">prefetch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/prefetch/data-pf/">data-pf</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/prefetch/data-pf/spatial/">spatial</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><table>
+<thead>
+<tr>
+<th>Title</th>
+<th>Patent Number</th>
+<th>Inc.</th>
+<th>Year</th>
+<th>url</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Data cache region prefetcher</td>
+<td>US12204459B2</td>
+<td>Advanced Micro Devices Inc.</td>
+<td>Filed 2022, Granted 2025</td>
+<td><a target="_blank" rel="noopener" href="https://patents.google.com/patent/US12204459B2/en">https://patents.google.com/patent/US12204459B2/en</a></td>
+</tr>
+</tbody></table>
+<p>TLDR：</p>
+<ol>
+<li>这是一种 PC&#x2F;RIP 标记的 region&#x2F;spatial footprint 预取器：一次 data cache miss 创建 region，后续同一区域内的访问被记录成 line access bits。</li>
+<li>专利把顺序访问交给 stream prefetcher，把非顺序、region-local、可重复的 pseudo-random footprint 写入 region history table。</li>
+<li>核心状态分两级：line entry table 是短期训练结构，region history table 是长期&#x2F;置信度 backing structure。</li>
+<li>region history table 用 <code>RIP[19:0]</code> 和 <code>Addr[5:4]</code> 的 hash 索引，<code>Addr[5:4]</code> 用来区分同一 RIP 在 cache line 内不同对齐位置产生的不同 line footprint。</li>
+<li>预测时在后续同 RIP miss 创建新 line entry 后读取 history entry，若某个 offset 的 2-bit counter 超过阈值，就对 home line 周围对应 cache line 发 region prefetch。</li>
+</ol>
+<p><img src="/figs/RIP-TaggedRegion.png" alt="GPT-Arch"></p>
+<h1 id="背景和动机"><a href="#背景和动机" class="headerlink" title="背景和动机"></a>背景和动机</h1><p>传统 stream prefetcher 主要识别两个或更多连续、顺序的 cache line 访问，然后按方向外推。这个机制适合 stride 为 <code>+1/-1</code> 的线性流，但很多真实程序的 load&#x2F;store 行为不是纯顺序流：同一条 load 指令可能在不同对象、bucket、node 或结构体实例上访问相似的局部字段集合，这些字段落在 home miss 附近若干 cache line 内，但访问顺序对 stream prefetcher 来说像 pseudo-random。</p>
+<p>该专利的动机可以拆成三点：</p>
+<ol>
+<li><strong>用指令身份稳定 pattern</strong>：把 region footprint 绑定到触发访问的 instruction pointer &#x2F; RIP，而不是只看地址流。这样同一条指令在不同 region 上触发相似空间 footprint 时可以复用历史。</li>
+<li><strong>只学习 stream prefetcher 不擅长的 pattern</strong>：连续升序&#x2F;降序访问本来就适合 stream prefetcher，region prefetcher 学习这些会造成重复预取和资源竞争。</li>
+<li><strong>用短期观察转成长期置信度</strong>：line entry table 暂存一次 region 的观测结果，entry aging out 时再把有效非顺序 footprint 训练到 region history table，降低偶发访问直接触发预取的风险。</li>
+</ol>
+<hr>
+<h1 id="Insight"><a href="#Insight" class="headerlink" title="Insight"></a>Insight</h1><p>专利的关键 insight 是：<strong>同一条指令访问不同内存区域时，局部 cache-line footprint 往往比全局地址序列更稳定</strong>。</p>
+<p>如果只看地址流，指针遍历、hash bucket、对象数组中的字段访问很容易呈现为不规则 miss；但如果把一次 miss 附近的 cache lines 看成一个 region，并以 RIP 作为语义标签，同一 RIP 后续在另一个 region 上 miss 时，就可以重放之前学习到的相对 line offsets。</p>
+<p>第二个 insight 是对齐问题。程序可能稳定地访问 4B&#x2F;8B&#x2F;16B 字段，但 cache line 是 64B；同样的字段级偏移在不同对象对齐下会映射到不同 cache-line footprint。专利把 <code>Addr[5:4]</code> 加到 region history table 索引里，让同一 RIP 能根据初始访问在 64B line 内的位置保存多个 footprint。</p>
+<p>第三个 insight 是 multi-prefetcher 分工。region prefetcher 不试图替代 stream prefetcher，而是通过 second-line access bits 识别顺序流并过滤掉，让 stream prefetcher 继续处理 contiguous pattern；region prefetcher 只保留非顺序、局部、可重复的 pattern。</p>
+<hr>
+<h1 id="核心设计"><a href="#核心设计" class="headerlink" title="核心设计"></a>核心设计</h1><ol>
+<li>data cache miss 创建或更新 line entry。每个 line entry 记录 <code>RIP</code>、home miss address、home 附近 <code>+6/-4</code> cache lines 的 access bits，以及 second-line access bits。</li>
+<li>后续 memory request 若落在某个 existing region 范围内，就设置该 region 对应的 line access bit。</li>
+<li>line entry aging out &#x2F; LRU eviction 时，根据 line access bits 与 second-line access bits 判断 pattern：纯顺序流被丢弃或交给 stream prefetcher；pseudo-random pattern 被训练到 region history table。</li>
+<li>region history table 用 <code>RIP</code> 和 <code>Addr[5:4]</code> 索引，每个 offset 对应 2-bit saturating counter。训练时 bit 为 1 则 increment，bit 为 0 则 decrement。</li>
+<li>后续同 RIP&#x2F;offset 的 miss 创建新 region 时读取 history entry，counter 超过阈值的 offsets 被送入 region prefetch generation unit，生成相对 home line 的 prefetch request。</li>
+</ol>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">                         +----------------------+</span><br><span class="line">                         |   Stream Prefetcher  |</span><br><span class="line">                         |   sequential streams |</span><br><span class="line">                         +----------^-----------+</span><br><span class="line">                                    | feedback / throttle</span><br><span class="line">                                    |</span><br><span class="line">Demand access / Dc miss             |</span><br><span class="line">        |                           |</span><br><span class="line">        v                           |</span><br><span class="line">+------------------+     non-seq pattern on eviction     +----------------------+</span><br><span class="line">| Line Entry Table | -----------------------------------&gt; | Region History Table |</span><br><span class="line">| 32 entries, CAM  |                                      | 512 entries          |</span><br><span class="line">| RIP, Addr, bits  | &lt;---------------- read by -----------| RIP + Addr[5:4]     |</span><br><span class="line">+---------+--------+            new miss RIP/offset       +----------+-----------+</span><br><span class="line">          |                                                       |</span><br><span class="line">          | existing region hit sets line access bits             |</span><br><span class="line">          v                                                       v</span><br><span class="line"> home +/- cache-line footprint                        counters above threshold</span><br><span class="line">                                                                  |</span><br><span class="line">                                                                  v</span><br><span class="line">                                                   +--------------------------+</span><br><span class="line">                                                   | Region Prefetch Gen Unit |</span><br><span class="line">                                                   +------------+-------------+</span><br><span class="line">                                                                |</span><br><span class="line">                                                                v</span><br><span class="line">                                                    Data cache prefetch queue</span><br></pre></td></tr></table></figure>
+
+<h2 id="设计点-1-Line-entry-table-作为短期训练结构"><a href="#设计点-1-Line-entry-table-作为短期训练结构" class="headerlink" title="设计点 1: Line entry table 作为短期训练结构"></a>设计点 1: Line entry table 作为短期训练结构</h2><p>针对的问题: region footprint 需要在程序执行时在线观察，但不能让一次偶发 miss 直接污染长期 predictor。</p>
+<p>解决的思路: data cache miss 创建一个短生命周期 line entry，entry 在 table 内存在期间只记录 home 附近 cache lines 是否被访问。等 entry 被替换或 aging out 时，再判断这个 footprint 是否值得写入 history。</p>
+<p>设计：</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Patent example</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Addr[47:4]</code></td>
+<td>44 bits</td>
+<td>home miss 的 cache-line address，可为 linear 或 physical</td>
+</tr>
+<tr>
+<td><code>RIP[19:0]</code></td>
+<td>20 bits</td>
+<td>触发 first access 的 instruction pointer</td>
+</tr>
+<tr>
+<td><code>AccessBits[+6:-4]</code></td>
+<td>11 bits</td>
+<td>home bit <code>0</code> 加上周围 <code>+6/-4</code> line footprint</td>
+</tr>
+<tr>
+<td><code>2ndAccessBits[1:-1]</code></td>
+<td>3 bits</td>
+<td>标记第二次访问是否为 <code>+1/-1</code> 顺序访问，或不是相邻 line</td>
+</tr>
+</tbody></table>
+<p>专利实施例中 line entry table 有 32 entries，可用 CAM 比较后续访问是否落在某个 region 范围内。一个 data cache miss 若没有更新现有 region，则创建新 region；若 table 需要替换，old line entry 按 LRU 被 evict，并进入 pattern 判断和 history 训练流程。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Line Entry</span><br><span class="line">+---------------+--------------------+</span><br><span class="line">| RIP[19:0]     | instruction tag    |</span><br><span class="line">| Addr[47:4]    | home cache line    |</span><br><span class="line">| Bits +6..-4   | region footprint   |</span><br><span class="line">| 2nd bits +1/0/-1 | stream filter   |</span><br><span class="line">+---------------+--------------------+</span><br></pre></td></tr></table></figure>
+
+<h2 id="设计点-2-second-line-access-bits-过滤顺序流"><a href="#设计点-2-second-line-access-bits-过滤顺序流" class="headerlink" title="设计点 2: second-line access bits 过滤顺序流"></a>设计点 2: second-line access bits 过滤顺序流</h2><p>针对的问题: region footprint 也会包含连续访问。如果把连续升序&#x2F;降序 stream 写入 region history table，会和 stream prefetcher 重复，增加 prefetch queue、MSHR、bandwidth 和 cache pollution 压力。</p>
+<p>解决的思路: 用 second-line access bits 观察 region 创建后的第二次访问。若第二次访问是 home 的 <code>+1</code> 或 <code>-1</code> cache line，说明它很可能是顺序流；若第二次访问不是相邻 line，则更像 region-local 非顺序 pattern。</p>
+<p>设计：</p>
+<ol>
+<li>first miss 创建 home bit。</li>
+<li>second access 若是 <code>home + 1</code> 或 <code>home - 1</code>，设置对应 second-line bit，后续可判定为 stream candidate。</li>
+<li>second access 若不是相邻 line，设置 second-line bit <code>0</code>，该 line entry 成为 region history table 候选。</li>
+<li>entry aging out 时再检查完整 access bits。专利给出的顺序过滤条件是：若 <code>2ndAccessBits[+1]</code> 且 <code>AccessBits[+6:+1]</code> 全部为 1，或 <code>2ndAccessBits[-1]</code> 且 <code>AccessBits[-1:-4]</code> 全部为 1，则认为是 contiguous&#x2F;sequential pattern，丢弃该 entry，不写入 region history table。</li>
+</ol>
+<pre><code class="highlight mermaid">flowchart TD
+    A[Data cache miss creates line entry] --&gt; B[Monitor later accesses in region]
+    B --&gt; C&#123;Second access is +/-1 line?&#125;
+    C --&gt;|yes| D[Mark sequential candidate]
+    C --&gt;|no| E[Mark non-sequential candidate]
+    D --&gt; F&#123;Aging out: contiguous stream bits?&#125;
+    E --&gt; F
+    F --&gt;|yes| G[Discard / let stream prefetcher handle]
+    F --&gt;|pseudo-random| H[Train region history table]
+    F --&gt;|other| I[Other processing]</code></pre>
+
+<h2 id="设计点-3-Region-history-table-保存-RIP-offset-footprint-置信度"><a href="#设计点-3-Region-history-table-保存-RIP-offset-footprint-置信度" class="headerlink" title="设计点 3: Region history table 保存 RIP&#x2F;offset footprint 置信度"></a>设计点 3: Region history table 保存 RIP&#x2F;offset footprint 置信度</h2><p>针对的问题: 短期 line entry table 只观察一次 region，容量也小；需要一个 backing structure 统计某个 RIP&#x2F;offset 是否反复出现相同 footprint。</p>
+<p>解决的思路: region history table 以 <code>RIP</code> 和 intra-line offset 为索引保存 per-offset 2-bit counters，用 saturating up&#x2F;down counter 表示某个相对 cache line 是否稳定出现在该 RIP 的 footprint 中。</p>
+<p>设计：</p>
+<table>
+<thead>
+<tr>
+<th>Structure</th>
+<th>Patent example</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Region history table</td>
+<td>512 entries</td>
+<td>backing predictor</td>
+</tr>
+<tr>
+<td>Index</td>
+<td>9-bit hash of <code>RIP[19:0]</code> and <code>Addr[5:4]</code></td>
+<td>将同一 RIP 的不同对齐 footprint 分开</td>
+</tr>
+<tr>
+<td>Counter field</td>
+<td>per access bit 2-bit up&#x2F;down counters</td>
+<td>训练各个相对 line offset 的置信度</td>
+</tr>
+<tr>
+<td>Threshold</td>
+<td>example: 2</td>
+<td>counter 超过阈值才生成 region prefetch</td>
+</tr>
+</tbody></table>
+<p>训练流程：</p>
+<ol>
+<li>old line entry 被 evict 且通过 non-sequential pattern 过滤。</li>
+<li>用 old entry 的 <code>RIP</code> 和 <code>Addr[5:4]</code> 读取 region history entry。</li>
+<li>遍历 line access bits。某 bit 为 1，则对应 2-bit counter saturating increment；某 bit 为 0，则对应 counter saturating decrement。</li>
+<li>counter 范围为 0 到 3。这样偶发 footprint 会逐步衰减，重复出现的 footprint 会积累置信度。</li>
+</ol>
+<p>预测流程：</p>
+<ol>
+<li>后续 data cache miss 创建 new line entry。</li>
+<li>用 new entry 的 <code>RIP</code> 和 <code>Addr[5:4]</code> 读取 region history entry。</li>
+<li>遍历除 home line 外的 offsets。若 counter 高于阈值，生成 <code>home + offset</code> 的 prefetch request。</li>
+<li>request 进入 data cache prefetch request queue &#x2F; FIFO。</li>
+</ol>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Old line entry on eviction:</span><br><span class="line">    RIP, Addr[5:4], AccessBits[+6:-4]</span><br><span class="line">             |</span><br><span class="line">             v</span><br><span class="line">    RHT[hash(RIP, Addr[5:4])]</span><br><span class="line">             |</span><br><span class="line">             +-- bit[offset] = 1 -&gt; counter[offset]++</span><br><span class="line">             +-- bit[offset] = 0 -&gt; counter[offset]--</span><br><span class="line"></span><br><span class="line">New miss:</span><br><span class="line">    RHT[hash(RIP, Addr[5:4])] -&gt; counters</span><br><span class="line">             |</span><br><span class="line">             +-- counter[offset] &gt; threshold -&gt; prefetch(home + offset)</span><br></pre></td></tr></table></figure>
+
+<h2 id="设计点-4-Addr-5-4-处理-cache-line-对齐造成的-footprint-分裂"><a href="#设计点-4-Addr-5-4-处理-cache-line-对齐造成的-footprint-分裂" class="headerlink" title="设计点 4: Addr[5:4] 处理 cache-line 对齐造成的 footprint 分裂"></a>设计点 4: <code>Addr[5:4]</code> 处理 cache-line 对齐造成的 footprint 分裂</h2><p>针对的问题: 程序实际 load&#x2F;store 的粒度通常是 4B、8B 或 16B，小于 64B cache line。即使同一 RIP 在每个对象内访问相同字段，若对象起始地址相对 64B boundary 的位置不同，这些字段会映射到不同的 cache line offsets。</p>
+<p>解决的思路: 在 region history table index 中加入 <code>Addr[5:4]</code>。这相当于把 64B cache line 分成 4 个 16B alignment buckets，让同一 RIP 可在不同初始对齐下保存不同 line footprint。</p>
+<p>设计含义：</p>
+<ol>
+<li>仅用 RIP 索引会把多个对齐场景混在一起，counter 互相干扰。</li>
+<li>加入 <code>Addr[5:4]</code> 后，RHT 可以区分 “同一指令、同一字段访问模式、不同 home alignment” 的情况。</li>
+<li>这是一种低成本 aliasing 缓解：只增加少量 index bits，不需要保存完整 byte-level footprint。</li>
+</ol>
+<h2 id="设计点-5-与-stream-prefetcher-协同"><a href="#设计点-5-与-stream-prefetcher-协同" class="headerlink" title="设计点 5: 与 stream prefetcher 协同"></a>设计点 5: 与 stream prefetcher 协同</h2><p>针对的问题: 多预取器并存时，重复预取和错误 prefetch arbitration 会抵消收益。</p>
+<p>解决的思路: region prefetcher 通过两种机制与 stream prefetcher 分工：</p>
+<ol>
+<li><strong>训练过滤</strong>：contiguous&#x2F;sequential line entry 不进入 region history table，由 stream prefetcher 负责。</li>
+<li><strong>反馈节流</strong>：专利描述可通过 flag 让 data cache region prefetcher 阻止 stream prefetcher 处理与 pending region prefetch request 相关的新 stream。</li>
+</ol>
+<h1 id="和传统空间预取器的区别"><a href="#和传统空间预取器的区别" class="headerlink" title="和传统空间预取器的区别"></a>和传统空间预取器的区别</h1><ol>
+<li>Region 设置：<ul>
+<li>传统使用 PC 索引的空间预取器，是用 PC 索引整个 region 的 footpoint (region 一般固定大小，且比较大，一般是 2KB 对齐)</li>
+<li>这篇专利使用 demand miss 附近的一段 cachelines 作为 region (-4&#x2F;+6)</li>
+</ul>
+</li>
+<li>Context 设置：<ul>
+<li>传统空间预取器一般使用 PC 或者 Demand Request Address 来索引</li>
+<li>这篇专利使用 PC 和 Demand Request Address Offset 的 hash 作为索引</li>
+</ul>
+</li>
+<li>Offset Confidence:<ul>
+<li>和 BOP&#x2F;Berti 比较类似，但 BOP 是按访存地址选 Best delta, Berti 是 Per Page 内选 Best Delta</li>
+<li>这篇论文是 Per PC 选择 Offset (语义上表示访存模式是否可信)</li>
+</ul>
+</li>
+<li>过滤 Stream<ul>
+<li>这篇专利对于顺序 Stream 请求直接过滤掉，由 Stream Prefetcher 处理</li>
+</ul>
+</li>
+</ol>
+<h1 id="局限和开放问题"><a href="#局限和开放问题" class="headerlink" title="局限和开放问题"></a>局限和开放问题</h1><ol>
+<li><strong>RIP 截断和 9-bit hash 有 alias 风险</strong>：说明书实施例中 RHT 只有 512 entries，多个 RIP&#x2F;offset pattern 可能互相污染。</li>
+<li><strong>固定 region 形状限制表达能力</strong>：<code>+6/-4</code> 对某些结构体布局合适，但对大对象、跨页、稀疏 gather 或多段 pattern 可能不足。</li>
+<li><strong>prefetch usefulness 反馈缺失</strong>：专利主要用 footprint counter，不直接根据 prefetch hit&#x2F;miss、late prefetch 或 cache pollution 反馈调节 aggressiveness。</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RIP-TaggedRegion/">https://xixi-shredp.github.io/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RIP-TaggedRegion/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/patent/">patent</a><a class="post-meta__tags" href="/tags/AMD/">AMD</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RegionPatternMatching/" title="Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher</div></div><div class="info-2"><div class="info-item-1">AMD 专利(US12360907B2) [2025] 解读：Region Pattern Matching - 将 region 内访问 footprint 记录成 subdivision bitmap，并通过 region type / direct pattern table 在相似 region 上重放预取。</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RegionPatternMatching/" title="Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-04-27</div><div class="info-item-2">Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher</div></div><div class="info-2"><div class="info-item-1">AMD 专利(US12360907B2) [2025] 解读：Region Pattern Matching - 将 region 内访问 footprint 记录成 subdivision bitmap，并通过 region type / direct pattern table 在相似 region 上重放预取。</div></div></div></a><a class="pagination-related" href="/2026/03/04/cpu/ooo/rob/patent_US11467844B2/" title="Alibaba Patents(US11467844B2): Storing multiple instructions in a single reordering buffer entry"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-04</div><div class="info-item-2">Alibaba Patents(US11467844B2): Storing multiple instructions in a single reordering buffer entry</div></div><div class="info-2"><div class="info-item-1">Alibaba 专利解读: ROB Entry 存储多个指令</div></div></div></a><a class="pagination-related" href="/2026/03/06/cpu/bpu/restore/patent_US20250328350A1/" title="Tenstorrent Patent(US20250328350A1): Branch Status Table and Control Instruction Buffer for Processor Instruction Pipeline"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-06</div><div class="info-item-2">Tenstorrent Patent(US20250328350A1): Branch Status Table and Control Instruction Buffer for Processor Instruction Pipeline</div></div><div class="info-2"><div class="info-item-1">Tenstorrent 专利解读: 分支预测恢复时对于控制类指令（如 vsetvl）的处理</div></div></div></a><a class="pagination-related" href="/2026/03/01/cpu/vector/rvv/patent_US20230367599A1/" title="SiFive Patents(US20230367599A1): Vector Gather with a Narrow Datapath"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-01</div><div class="info-item-2">SiFive Patents(US20230367599A1): Vector Gather with a Narrow Datapath</div></div><div class="info-2"><div class="info-item-1">SiFive 专利解读: RVV Gather 操作</div></div></div></a><a class="pagination-related" href="/2026/03/03/cpu/vector/rvv/patent_US20230367715A1/" title="SiFive Patents(US20230367715A1): Load-Store Pipeline Selection for Vector"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-03</div><div class="info-item-2">SiFive Patents(US20230367715A1): Load-Store Pipeline Selection for Vector</div></div><div class="info-2"><div class="info-item-1">SiFive 专利解读: Vector Store 旁路 L1D Cache 的预测</div></div></div></a><a class="pagination-related" href="/2026/03/08/cpu/bpu/btb/patent_US12190114B2/" title="Intel Patent(US12190114B2): Segmented branch target buffer based on branch instruction type"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-08</div><div class="info-item-2">Intel Patent(US12190114B2): Segmented branch target buffer based on branch instruction type</div></div><div class="info-2"><div class="info-item-1">Intel 专利简介：新型 BTB 结构设计 Segmented BTB</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">102</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">21</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">49</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%83%8C%E6%99%AF%E5%92%8C%E5%8A%A8%E6%9C%BA"><span class="toc-number">1.</span> <span class="toc-text">背景和动机</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Insight"><span class="toc-number">2.</span> <span class="toc-text">Insight</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1"><span class="toc-number">3.</span> <span class="toc-text">核心设计</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E7%82%B9-1-Line-entry-table-%E4%BD%9C%E4%B8%BA%E7%9F%AD%E6%9C%9F%E8%AE%AD%E7%BB%83%E7%BB%93%E6%9E%84"><span class="toc-number">3.1.</span> <span class="toc-text">设计点 1: Line entry table 作为短期训练结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E7%82%B9-2-second-line-access-bits-%E8%BF%87%E6%BB%A4%E9%A1%BA%E5%BA%8F%E6%B5%81"><span class="toc-number">3.2.</span> <span class="toc-text">设计点 2: second-line access bits 过滤顺序流</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E7%82%B9-3-Region-history-table-%E4%BF%9D%E5%AD%98-RIP-offset-footprint-%E7%BD%AE%E4%BF%A1%E5%BA%A6"><span class="toc-number">3.3.</span> <span class="toc-text">设计点 3: Region history table 保存 RIP&#x2F;offset footprint 置信度</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E7%82%B9-4-Addr-5-4-%E5%A4%84%E7%90%86-cache-line-%E5%AF%B9%E9%BD%90%E9%80%A0%E6%88%90%E7%9A%84-footprint-%E5%88%86%E8%A3%82"><span class="toc-number">3.4.</span> <span class="toc-text">设计点 4: Addr[5:4] 处理 cache-line 对齐造成的 footprint 分裂</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E7%82%B9-5-%E4%B8%8E-stream-prefetcher-%E5%8D%8F%E5%90%8C"><span class="toc-number">3.5.</span> <span class="toc-text">设计点 5: 与 stream prefetcher 协同</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%92%8C%E4%BC%A0%E7%BB%9F%E7%A9%BA%E9%97%B4%E9%A2%84%E5%8F%96%E5%99%A8%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-number">4.</span> <span class="toc-text">和传统空间预取器的区别</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%B1%80%E9%99%90%E5%92%8C%E5%BC%80%E6%94%BE%E9%97%AE%E9%A2%98"><span class="toc-number">5.</span> <span class="toc-text">局限和开放问题</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RegionPatternMatching/" title="Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher">Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher</a><time datetime="2026-04-26T16:00:00.000Z" title="Created 2026-04-27 00:00:00">2026-04-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RIP-TaggedRegion/" title="RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher">RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher</a><time datetime="2026-04-26T16:00:00.000Z" title="Created 2026-04-27 00:00:00">2026-04-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/cache-arch-aware/" title="Cache Architechture-Aware Cache Replacement">Cache Architechture-Aware Cache Replacement</a><time datetime="2026-04-23T09:36:07.000Z" title="Created 2026-04-23 17:36:07">2026-04-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/prefetcher-aware/" title="Prefetch-Aware Cache Replacement">Prefetch-Aware Cache Replacement</a><time datetime="2026-04-23T09:28:22.000Z" title="Created 2026-04-23 17:28:22">2026-04-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/04/23/cpu/cache/replacement/multicore-aware/" title="Multi-Core-Aware Cache Replacement">Multi-Core-Aware Cache Replacement</a><time datetime="2026-04-23T06:37:22.000Z" title="Created 2026-04-23 14:37:22">2026-04-23</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
