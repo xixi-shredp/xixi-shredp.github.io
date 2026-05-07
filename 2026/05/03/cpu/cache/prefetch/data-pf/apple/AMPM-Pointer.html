@@ -1,0 +1,533 @@
+<hr>
+<h2 id="title-“AMPM-Pointer-Apple-US9971694B1-2018-Prefetch-circuit-for-a-processor-with-pointer-optimization”date-2026-05-03categories-cpu-cache-prefetch-data-pf-description-“Apple-专利-US9971694B1-2018-解读：在-AMPM-预取器中识别-pointer-chasing、传递-pointer-indication，并结合-quality-factor-store-only-throttling-调整多级-cache-预取频率”tags-Apple"><a href="#title-“AMPM-Pointer-Apple-US9971694B1-2018-Prefetch-circuit-for-a-processor-with-pointer-optimization”date-2026-05-03categories-cpu-cache-prefetch-data-pf-description-“Apple-专利-US9971694B1-2018-解读：在-AMPM-预取器中识别-pointer-chasing、传递-pointer-indication，并结合-quality-factor-store-only-throttling-调整多级-cache-预取频率”tags-Apple" class="headerlink" title="title: “AMPM-Pointer(Apple US9971694B1)[2018]: Prefetch circuit for a processor with pointer optimization”date: 2026-05-03categories: [cpu,cache,prefetch,data-pf]description: “Apple 专利(US9971694B1) [2018] 解读：在 AMPM 预取器中识别 pointer chasing、传递 pointer indication，并结合 quality factor&#x2F;store-only throttling 调整多级 cache 预取频率”tags: [Apple]"></a>title: “AMPM-Pointer(Apple US9971694B1)[2018]: Prefetch circuit for a processor with pointer optimization”<br>date: 2026-05-03<br>categories: [cpu,cache,prefetch,data-pf]<br>description: “Apple 专利(US9971694B1) [2018] 解读：在 AMPM 预取器中识别 pointer chasing、传递 pointer indication，并结合 quality factor&#x2F;store-only throttling 调整多级 cache 预取频率”<br>tags: [Apple]</h2><table>
+<thead>
+<tr>
+<th>Title</th>
+<th>Patent Number</th>
+<th>Inc.</th>
+<th>Year</th>
+<th>url</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Prefetch circuit for a processor with pointer optimization</td>
+<td>US9971694B1</td>
+<td>Apple Inc.</td>
+<td>2018</td>
+<td><a href="https://patents.google.com/patent/US9971694B1/en">https://patents.google.com/patent/US9971694B1/en</a></td>
+</tr>
+<tr>
+<td>Prefetch circuit for a processor with pointer optimization</td>
+<td>US10402334B1</td>
+<td>Apple Inc.</td>
+<td>2019</td>
+<td><a href="https://patents.google.com/patent/US10402334B1/en">https://patents.google.com/patent/US10402334B1/en</a></td>
+</tr>
+</tbody></table>
+<p>这篇专利是在 AMPM(access map-pattern match) 数据 cache 预取器上加两个方向的优化：对 pointer chasing 负载更激进，对 store-only 区域更保守</p>
+<p>TLDR：</p>
+<ol>
+<li><strong>Pointer chasing 的检测不依赖地址 stride，而是在 LSU&#x2F;调度侧观察 load-use-load 依赖</strong>：某个 load 的目标寄存器被后续 load 当作源寄存器用于地址生成，则该 load 被标记为 pointer read</li>
+<li>L1 侧 prefetch circuit 为每个 access map entry 维护 pointer field (饱和计数器实现)<ul>
+<li>pointer read hit 该 access map 时增加该计数</li>
+<li>非 pointer load 可较小幅度递减</li>
+<li>生成预取请求时根据该 field 设置 pointer bit&#x2F;indication</li>
+</ul>
+</li>
+<li>外部 cache&#x2F;L2 侧 prefetch circuit 接收 L1 预取请求携带的 access map、matched pattern 和 pointer indication，在更低层继续提前预取；若 pointer bit 置位，则通过 quality factor 加 token，提高该区域后续二级预取频率</li>
+<li>每个 access map 还可维护 store-only field 和 quality factor(QF)<ul>
+<li>store-only 区域的预取消耗更多 token，因此发起频率更低</li>
+<li>成功被 demand 访问消费的预取返还 token</li>
+<li>过早&#x2F;重复命中 L1 的预取会被惩罚</li>
+</ul>
+</li>
+</ol>
+<h1 id="背景和动机"><a href="#背景和动机" class="headerlink" title="背景和动机"></a>背景和动机</h1><p>AMPM 预取器通过 access map 记录一个地址区域内哪些 cache block 已 demand-accessed、哪些已经 prefetched、哪些预取后来被 demand 命中消费，然后用 pattern memory 进行模式匹配。它比简单 stride prefetcher 更灵活，可以覆盖 unit stride、non-unit regular stride、反向 stride、wildcard pattern 和 irregular but predictable pattern。</p>
+<p>但是 pointer chasing 对传统 AMPM&#x2F;QF 机制是一个特殊痛点。链表、树、图、哈希桶等数据结构常出现如下依赖链：</p>
+<pre><code>p0 = load [base]
+p1 = load [p0 + off]
+p2 = load [p1 + off]
+...
+</code></pre>
+<p>这类访问可能在空间上不规则，每个 cache block 被访问的次数也少，access map 看起来可能像“低质量、低复用”的模式；但它们在执行时间上通常位于 load-to-use 的关键路径上，miss latency 很难被乱序窗口完全隐藏。</p>
+<p>专利的核心动机就是：<strong>不只用空间访问图判断预取价值，还要引入 LSU 能看到的 pointer-read&#x2F;依赖链信息</strong></p>
+<p>相关工作：</p>
+<table>
+<thead>
+<tr>
+<th>Title</th>
+<th>Authors, From</th>
+<th>url</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Access Map Pattern Matching for High Performance Data Cache Prefetch</td>
+<td>Yasuo Ishii et al., JILP 2011</td>
+<td><a href="https://jilp.org/vol13/v13paper4.pdf">https://jilp.org/vol13/v13paper4.pdf</a></td>
+</tr>
+<tr>
+<td>Access Map Pattern Matching Prefetch: Optimization Friendly Method</td>
+<td>Yasuo Ishii et al., NEC&#x2F;University of Tokyo 2009</td>
+<td><a href="https://patents.google.com/patent/US9971694B1/en">https://patents.google.com/patent/US9971694B1/en</a></td>
+</tr>
+<tr>
+<td>TCP: Tag Correlating Prefetchers</td>
+<td>Zhigang Hu, Margaret Martonosi, Stefanos Kaxiras, HPCA 2003</td>
+<td><a href="https://patents.google.com/patent/US9971694B1/en">https://patents.google.com/patent/US9971694B1/en</a></td>
+</tr>
+<tr>
+<td>Two-level Data Prefetching</td>
+<td>Fei Gao, Hanyu Cui, Suleyman Sair, ICCD 2007</td>
+<td><a href="https://patents.google.com/patent/US9971694B1/en">https://patents.google.com/patent/US9971694B1/en</a></td>
+</tr>
+<tr>
+<td>Runahead Execution vs. Conventional Data Prefetching in the IBM POWER6 Microprocessor</td>
+<td>Harold W. Cain, Priya Nagpurkar, ISPASS 2010</td>
+<td><a href="https://patents.google.com/patent/US9971694B1/en">https://patents.google.com/patent/US9971694B1/en</a></td>
+</tr>
+</tbody></table>
+<hr>
+<h1 id="Insight"><a href="#Insight" class="headerlink" title="Insight"></a>Insight</h1><h2 id="Insight-1-预取器看到的-spatial-access-quality-和处理器的-performance-criticality-并不一致"><a href="#Insight-1-预取器看到的-spatial-access-quality-和处理器的-performance-criticality-并不一致" class="headerlink" title="Insight 1: 预取器看到的 spatial access quality 和处理器的 performance criticality 并不一致"></a>Insight 1: 预取器看到的 spatial access quality 和处理器的 performance criticality 并不一致</h2><ul>
+<li>AMPM&#x2F;QF 从 access map 里看到的是某个区域中 A&#x2F;P&#x2F;S 的分布，即 demand 访问、已发预取、成功预取的空间模式；</li>
+<li>但 pointer chasing 的价值来自依赖链长度和 miss latency 是否直接阻塞住执行，而不是来自某个 cache block 的高复用或规则 stride</li>
+</ul>
+<p>对 pointer chasing 来说，一个预取即使只让一个后续 load 命中，也可能很值钱，因为该 load 的返回值是下一个地址，整个链条难以并行展开：</p>
+<ol>
+<li>普通 streaming&#x2F;stride 访问的预取价值常来自吞吐：连续 miss 可以被 pipeline 和内存级并行隐藏一部分，预取器主要降低带宽等待和 fill 延迟</li>
+<li>Pointer chasing 的预取价值常来自临界路径：一个 miss 阻塞下一个地址生成，MLP 低，乱序执行也缺少可并行的独立 miss</li>
+<li>AMPM 的 quality factor 如果只按“预取是否被消费、是否重复命中、访问图长度”等信号调节，可能会把 pointer 区域误判为不值得激进预取</li>
+</ol>
+<p>因此专利<strong>让 LSU 提供一个微架构语义信号：该 load 是否像 pointer read</strong>:  </p>
+<ul>
+<li>这个信号来自寄存器依赖，而不是地址序列本身</li>
+<li>L1 AMPM 把它聚合到对应 access map 的 pointer field，再随预取请求传给下一级预取器</li>
+<li>外部 cache 的 prefetch circuit 不需要重新理解寄存器依赖，只要相信上一级请求携带的 pointer indication，就可以提高该 map 的 QF token，从而允许更高频率地继续向更低层预取</li>
+</ul>
+<h2 id="Insight-2-store-only-map-的预取预算应更保守，以减少功耗和污染"><a href="#Insight-2-store-only-map-的预取预算应更保守，以减少功耗和污染" class="headerlink" title="Insight 2: store-only map 的预取预算应更保守，以减少功耗和污染"></a>Insight 2: store-only map 的预取预算应更保守，以减少功耗和污染</h2><p>store-only 区域的 latency 对前端执行通常没有 load 那么敏感，因为 store 可以进入 store queue&#x2F;buffer，之后异步写入 cache&#x2F;memory；除非出现 store buffer 满、写分配 miss、ordering fence 等情况，否则 store miss 不一定立即暴露到寄存器依赖链。于是 store-only map 的预取预算应更保守，以减少功耗和污染。</p>
+<hr>
+<p>最终，专利把预取 aggressiveness 拆成三个互补维度：</p>
+<ol>
+<li>Pattern confidence：AMPM pattern 是否匹配、匹配多长、是否包含 wildcard</li>
+<li>Criticality hint：该 access map 是否发生 pointer read，代表可能是 load-use-load 关键链</li>
+<li>Utility&#x2F;power budget：QF token 和 store-only field 控制预取频率，避免低价值预取泛滥</li>
+</ol>
+<hr>
+<h1 id="核心设计"><a href="#核心设计" class="headerlink" title="核心设计"></a>核心设计</h1><p><img src="/figs/AMPM_Pointer.png" alt="AMPM_Pointer"></p>
+<p>核心设计可以概括为一个带 pointer optimization 的多级 AMPM 预取系统：</p>
+<ol>
+<li>LSU 执行 load&#x2F;store，并为每个 memory op 附带属性，包括 pointer indication、load&#x2F;store 类型等</li>
+<li>L1 data cache 旁路的 prefetch circuit 监控 demand fetch&#x2F;prefetch request，通过 access map memory 记录每个访问区域内的 A&#x2F;P&#x2F;S 状态</li>
+<li>Shifter  根据当前访问的 cache-block offset 对齐 access point；access pattern memory 用硬编码或可编程 pattern 匹配 access map，control circuit 根据 P 位置生成预取请求</li>
+<li>每个 access map entry 可维护 QF、Ptr、St-O 等状态<ul>
+<li>QF 用 token 形式节流</li>
+<li>Ptr 由 pointer reads 更新</li>
+<li>St-O 由 load&#x2F;store 观察更新</li>
+</ul>
+</li>
+<li>L1 生成的预取请求可携带 pointer bit、access map 或 matched pattern；Lower level cache 中的 prefetch circuit 作为 slave prefetcher 接收这些信息，在 L2&#x2F;L3&#x2F;更低层继续提前预取。</li>
+<li>对 pointer map 提高预取频率，对 store-only map 降低预取频率。</li>
+</ol>
+<pre><code>                 +----------------- Processor --------------------+
+                 |                                                |
+                 |  Fetch/Decode/Map/Issue                        |
+                 |          |                                     |
+                 |   Execution Units                              |
+                 |          |                                     |
+                 |      LSUs                                      |
+                 |     |   |                                      |
+                 |     |   +-- pointer indication                 |
+                 |     |       (load result used by later load)   |
+                 |     v                                          |
+                 |    LQ  /  SQ  /  PQ                            |
+                 |          |                                     |
+                 |         Mux                                    |
+                 |          | demand/prefetch access + attrs      |
+                 |          v                                     |
+                 |     Data Cache    &lt;---- Prefetch Circuit       |
+                 |          |                 |                   |
+                 |          |                 | prefetch request  |
+                 |          |                 | + pointer bit     |
+                 +----------|-----------------|-------------------+
+                            v                 v
+                    External Interface     Prefetch Queue
+                            |
+                            v
+              +------------- External Cache ----------------+
+              |                                             |
+              |       Prefetch Circuit                      |
+              |       - receives L1 prefetch info           |
+              |       - prefetches ahead to lower memory    |
+              |       - boosts QF if pointer bit is set     |
+              +---------------------|-----------------------+
+                                    v
+                         lower cache / main memory
+</code></pre>
+<h2 id="设计点-1-AMPM-access-map-表达访问历史"><a href="#设计点-1-AMPM-access-map-表达访问历史" class="headerlink" title="设计点 1: AMPM access map 表达访问历史"></a>设计点 1: AMPM access map 表达访问历史</h2><p>为每个虚拟地址 region 维护一个 access map，按 cache block 记录访问状态；再用 pattern memory 匹配 map 中围绕当前 access point 的局部位图</p>
+<p>设计：</p>
+<ol>
+<li>Access map memory 保存多个 access map，每个 map 覆盖虚拟地址空间中的一个 aligned access region</li>
+<li>每个 region 包含多个连续 cache block；每个 cache block 在 access map 是一个 flag:<ul>
+<li><code>A</code>: demand-accessed cache block: 由真实 load&#x2F;store demand 访问触发</li>
+<li><code>P</code>: prefetched cache block: 预取器已经为该 block 生成&#x2F;发出预取</li>
+<li><code>S</code>: successful prefetch: 之前标为 <code>P</code> 的 block 后续被 demand 访问命中</li>
+<li><code>.</code>: invalid&#x2F;unaccessed: 尚未观察到访问</li>
+</ul>
+</li>
+<li>地址拆分：<ul>
+<li>cache block offset 的低 <code>N</code> bits 不进入 map 匹配</li>
+<li><code>VA[P:N]</code> 作为 access map 内的 cache-block offset，即当前 access point</li>
+<li><code>VA[M:P+1]</code> 作为 access region tag，用于 tag memory&#x2F;CAM 比较</li>
+</ul>
+</li>
+</ol>
+<pre><code>Virtual Address:
+
+   VA[M : P+1]       VA[P : N]        VA[N-1 : 0]
+ +---------------+----------------+----------------+
+ | access region | block index in | byte offset in |
+ | tag           | access map     | cache block    |
+ +---------------+----------------+----------------+
+         |                |
+         v                v
+   tag CAM 40A       access point / shifter alignment
+
+Access Map Entry:
+
+ +-----+-------------------+----------------------+
+ | V   | VA tag            | map RAM              |
+ +-----+-------------------+----------------------+
+                         map symbols: . A P S ...
+                         state: QF, Ptr, St-O, ...
+</code></pre>
+<h2 id="设计点-2-Shifter-pattern-memory-匹配当前-access-point"><a href="#设计点-2-Shifter-pattern-memory-匹配当前-access-point" class="headerlink" title="设计点 2: Shifter + pattern memory 匹配当前 access point"></a>设计点 2: Shifter + pattern memory 匹配当前 access point</h2><p>针对的问题：当前 demand access 可以位于 access region 中任意 cache block。如果直接把整个 map 和 pattern 比较，需要为不同 offset 复制大量 pattern 或做复杂匹配。</p>
+<p>解决的思路：把 access pattern 定义为围绕 access point 居中的局部 map ；每次访问时由 shifter 将 access map 平移，使当前访问位置对齐到 pattern memory 的 access point</p>
+<p>设计：</p>
+<ol>
+<li>Pattern memory 存储多个 access pattern，记为 <code>P0..PL</code></li>
+<li>Pattern 的 access point 大致居中，这允许同时表达 forward、backward 以及 access point 两侧都有约束的模式</li>
+<li>Shifter 根据 <code>VA[P:N]</code> 把 map 对齐到 pattern 的 AP</li>
+<li>Pattern memory 可以是 ROM + 比较逻辑、CAM，或 ROM&#x2F;CAM 混合；pattern 可以设计时 hardcode，也可以初始化时编程</li>
+<li>若一个 map 匹配多个 pattern，优先选择更长、更有置信度的 pattern。专利建议按长度排序，并用 priority encoder 选择最靠近一端的匹配项。</li>
+</ol>
+<pre><code>Access Map before shift:
+
+  region offset:   0  1  2  3  4  5  6  7 ...
+  map symbols:     .  A  A  .  A  .  .  .
+                             ^
+                             current access point
+
+After shifter:
+
+                 left of AP      AP      right of AP
+                    A  A  .      A       .  .  .
+                         \       |       /
+                          \      |      /
+                           v     v     v
+                       Access Pattern Memory
+</code></pre>
+<h2 id="设计点-3-Pattern-中的-A-P-S-、wildcard-和-irregular-pattern"><a href="#设计点-3-Pattern-中的-A-P-S-、wildcard-和-irregular-pattern" class="headerlink" title="设计点 3: Pattern 中的 A/P/S/.、wildcard 和 irregular pattern"></a>设计点 3: Pattern 中的 <code>A/P/S/.</code>、wildcard 和 irregular pattern</h2><p>针对的问题：真实程序访问不总是 unit stride。乱序执行还会让本来规则的访问在时间上重排，导致当前访问点附近出现 noisy wave front。</p>
+<p>解决的思路：pattern memory 不只保存 stride，还保存更一般的符号串；其中 <code>P</code> 表示匹配后应该生成的未来预取位置，wildcard <code>*</code> 用来容忍乱序噪声。</p>
+<p>设计：</p>
+<ol>
+<li>Unit stride forward：</li>
+</ol>
+<pre><code>Pattern:     A A A | AP | P P
+Meaning:     看到连续已访问块后，预取 AP+1、AP+2
+</code></pre>
+<ol start="2">
+<li>Non-unit regular stride forward，例如 stride&#x3D;2：</li>
+</ol>
+<pre><code>Pattern:     A . A . A | AP | . P . P
+Meaning:     匹配间隔访问后，预取 AP+2、AP+4
+</code></pre>
+<ol start="3">
+<li>Unit stride backward：</li>
+</ol>
+<pre><code>Pattern:     P P | AP | A A A
+Meaning:     反向遍历，预取 AP-1、AP-2
+</code></pre>
+<ol start="4">
+<li>Wildcard pattern：</li>
+</ol>
+<pre><code>Pattern:     A * A * A | AP | P
+Meaning:     * 可匹配 . / A / P / S 任意符号，容忍乱序执行导致的访问顺序变化
+</code></pre>
+<ol start="5">
+<li>Irregular pattern：</li>
+</ol>
+<pre><code>Pattern:     A . A A . | AP | . P P .
+Meaning:     非固定 stride，但在 trace 中可预测，仍可以通过 pattern memory 捕捉
+</code></pre>
+<ol start="6">
+<li>对包含 wildcard 的 pattern，可以减少 <code>P</code> 数量，或把 wildcard 按 1&#x2F;2、1&#x2F;3 等折扣权重计入置信度，因为 wildcard 提高泛化能力的同时也降低匹配确定性。</li>
+</ol>
+<p>AMPM 的 pattern memory 相当于一个小型、硬件可比较的“访问形状库”。它不需要动态学习复杂模型，只要用有限模式覆盖常见访问模式即可。</p>
+<h2 id="设计点-4-Pointer-read-检测和-Ptr-field-聚合"><a href="#设计点-4-Pointer-read-检测和-Ptr-field-聚合" class="headerlink" title="设计点 4: Pointer read 检测和 Ptr field 聚合"></a>设计点 4: Pointer read 检测和 Ptr field 聚合</h2><p>针对的问题：pointer chasing 通常空间不规则，pattern&#x2F;QF 可能认为其预取质量低，但它实际位于负载依赖关键路径，miss 代价高</p>
+<p>解决的思路：<strong>在 LSU 侧用寄存器依赖检测 pointer read</strong>，再在 access map entry 中维护 pointer field。预取请求携带 pointer indication，影响后续预取频率。</p>
+<p>Pointer Chasing 检测：通过 LSU 中的寄存器依赖检测</p>
+<ul>
+<li>若某个 load 的目标寄存器被另一个 load 用作源寄存器，且该源寄存器参与后续 load 的虚拟地址生成，则前一个 load 可被推断为 pointer read</li>
+<li>Pointer read 检测位置应在寄存器依赖可见处: LSUs 可检测目标寄存器是否被另一个 load 用作源寄存器；在实际乱序核中，可能需要依赖 rename map、scheduler wakeup&#x2F;select 信息、load queue 中的 uop dependency metadata，或 LSU 对地址生成源操作数的观察</li>
+<li>Pointer indication 的时序:<ul>
+<li>若必须等后续 load 出现才能知道前一个 load 是 pointer read，则可能需要在 load queue 或 retired&#x2F;commit 反馈路径上延迟更新对应 access map</li>
+<li>也可在调度&#x2F;rename 阶段根据 producer-consumer 关系提前标注</li>
+</ul>
+</li>
+</ul>
+<p>设计：</p>
+<ol>
+<li>LSU 随 memory op 传递 pointer indication 给 prefetch circuit 的 filter buffer</li>
+<li>Filter buffer 同时携带虚拟地址和属性，属性包括 pointer indication、load&#x2F;store 类型、load&#x2F;store 子类型等</li>
+<li>每个 access map entry 的 state 可包含 Ptr field</li>
+<li>Ptr field 可实现为饱和计数器：<ul>
+<li>若当前 op 的 pointer indication 置位，则增加较大幅度</li>
+<li>若 pointer indication 清零，则递减较小幅度</li>
+<li>专利给出例子：pointer 命中时 <code>+4</code>，非 pointer 时 <code>-1</code>。</li>
+</ul>
+</li>
+<li>新分配 map entry 时：<ul>
+<li>若 allocation-causing op 是 pointer read，则 Ptr 从 0 增加</li>
+<li>若不是 pointer read，则 Ptr 初始化为 0</li>
+</ul>
+</li>
+<li>生成预取请求时，control circuit 检查 Ptr field：<ul>
+<li>可与固定或可编程阈值比较</li>
+<li>一个实现中，只要 Ptr &gt; 0 就认为该区域存在 pointer read activity</li>
+<li>若检测到 pointer activity，则在预取请求中设置 pointer bit</li>
+</ul>
+</li>
+</ol>
+<pre><code>Load dependency observation:
+
+   Ld0: r10 = MEM[r1 + off]        ; r10 likely pointer
+                  |
+                  v
+   Ld1: r11 = MEM[r10 + off2]      ; r10 used for address
+
+LSU:
+   detects target(Ld0) == addr_source(Ld1)
+   marks Ld0 as pointer read
+
+Access Map Entry:
+   Ptr counter = sat(Ptr + 4) on pointer read
+   Ptr counter = sat(Ptr - 1) on non-pointer read
+
+Prefetch generation:
+   if Ptr &gt; threshold:
+       request.pointer_bit = 1
+</code></pre>
+<p>pointer field 是按 access map region 聚合的，不是每条 load 指令单独控制。这样可以把“此内存区域正在经历 pointer chasing”的信息传递给区域级 AMPM 逻辑。</p>
+<blockquote>
+<p>如果使用 AMPM，则此处的 Pointer Chasing 仅限于单个 region 内部的 pointer-chasing 关联预取，专利没有明确提到这一点?</p>
+</blockquote>
+<h2 id="设计点-5-Store-only-field-降低写主导区域的预取积极性"><a href="#设计点-5-Store-only-field-降低写主导区域的预取积极性" class="headerlink" title="设计点 5: Store-only field 降低写主导区域的预取积极性"></a>设计点 5: Store-only field 降低写主导区域的预取积极性</h2><p>针对的问题：store-only 区域对处理器性能的敏感度通常低于 load 区域，因为 store 可以进入 store queue&#x2F;store buffer，不一定立即阻塞后续寄存器依赖链。对 store-only 区域过度预取可能功耗和污染不划算</p>
+<p>解决的思路：每个 access map entry 维护 St-O(store-only) field。一旦观察到 load，该 field 清零；如果始终只有 store，则预取频率被降低</p>
+<p>设计：</p>
+<ol>
+<li>分配 entry 时：<ul>
+<li>若触发分配的是 store，则 St-O 初始化为 set。</li>
+<li>若触发分配的是 load，则 St-O 初始化为 clear。</li>
+</ul>
+</li>
+<li>后续更新：<ul>
+<li>只要观察到 load，St-O 清零。</li>
+<li>一旦清零，在该 entry 被重新分配给新 access region 前不再置位。</li>
+</ul>
+</li>
+<li>影响：<ul>
+<li>St-O &#x3D; set 表示该 access map 到目前只观察到 store memory operations。</li>
+<li>对该 map 发预取时消耗更多 QF token，使其预取频率低于 load-only 或 load&#x2F;store 混合区域。</li>
+</ul>
+</li>
+</ol>
+<p>该策略没有完全禁止 store-only 预取，保留了 store miss 可能仍有价值的情况，例如写分配 cache、store buffer 压力、write-combining 不佳等；但默认更保守。</p>
+<h2 id="设计点-6-Quality-Factor-token-机制"><a href="#设计点-6-Quality-Factor-token-机制" class="headerlink" title="设计点 6: Quality Factor token 机制"></a>设计点 6: Quality Factor token 机制</h2><p>针对的问题：pattern match 本身不能完全约束预取量。短 pattern、store-only pattern、重复命中 cache 的预取、慢速消费的预取都可能浪费带宽&#x2F;功耗。</p>
+<p>解决的思路：为每个 access map 维护 QF token。发预取消耗 token，成功消费返还 token；token 不足则暂缓或不发预取。</p>
+<p>设计：</p>
+<ol>
+<li>QF 表示该 access map 允许的 outstanding&#x2F;pending prefetch 预算</li>
+<li>当生成预取请求时扣 token</li>
+<li>当预取被后续 demand fetch 消费，即 map 中 <code>P</code> 变成 <code>S</code>，返还 token</li>
+<li>若预取请求命中 data cache，说明预取可能太早或多余，对 QF 进行惩罚</li>
+<li>对较长 access pattern，可以绕过 QF，因为长 pattern 置信度更高；阈值可以固定或可编程</li>
+</ol>
+<p>L1 prefetch circuit 的示例 QF 更新：</p>
+<table>
+<thead>
+<tr>
+<th>事件</th>
+<th align="right">Token 变化</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>初始分配</td>
+<td align="right">75</td>
+</tr>
+<tr>
+<td>最大值</td>
+<td align="right">100</td>
+</tr>
+<tr>
+<td>生成普通 prefetch</td>
+<td align="right">-8</td>
+</tr>
+<tr>
+<td>生成 store-only prefetch</td>
+<td align="right">-10</td>
+</tr>
+<tr>
+<td>prefetch 被 demand access 消费</td>
+<td align="right">+12</td>
+</tr>
+<tr>
+<td>prefetch request 命中 data cache 30</td>
+<td align="right">-4</td>
+</tr>
+</tbody></table>
+<p>外部 cache prefetch circuit 的示例 QF 更新：</p>
+<table>
+<thead>
+<tr>
+<th>事件</th>
+<th align="right">Token 变化</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>初始分配</td>
+<td align="right">32</td>
+</tr>
+<tr>
+<td>最大值</td>
+<td align="right">100</td>
+</tr>
+<tr>
+<td>生成普通 prefetch</td>
+<td align="right">-4</td>
+</tr>
+<tr>
+<td>生成 store-only prefetch</td>
+<td align="right">-6</td>
+</tr>
+<tr>
+<td>prefetch 被 demand access 消费</td>
+<td align="right">+8</td>
+</tr>
+<tr>
+<td>收到带 pointer bit 的 prefetch request</td>
+<td align="right">+12</td>
+</tr>
+</tbody></table>
+<p>微架构上，QF 是一个局部反馈控制器：</p>
+<pre><code>             pattern match
+                  |
+                  v
+        +--------------------+
+        | enough QF tokens ? |
+        +--------------------+
+          | yes          | no
+          v              v
+   generate prefetch   suppress/defer
+          |
+          v
+   QF -= cost
+          |
+          +--&gt; later demand consumes P: QF += reward
+          +--&gt; prefetch already in D$: QF -= penalty
+          +--&gt; pointer bit at L2: QF += pointer bonus
+</code></pre>
+<p>对 store-only 的“更贵 token cost”和对 pointer 的“额外 token reward”共同改变预取频率：store-only 慢下来，pointer chasing 快起来。</p>
+<h2 id="设计点-7-L1-和外部-cache-的两级协同预取"><a href="#设计点-7-L1-和外部-cache-的两级协同预取" class="headerlink" title="设计点 7: L1 和外部 cache 的两级协同预取"></a>设计点 7: L1 和外部 cache 的两级协同预取</h2><p>针对的问题：如果只在 L1 miss 后预取，深层 memory latency 仍可能过长。L2&#x2F;L3 侧若能根据 L1 的 access map 和 pattern 提前预取，可以在 L1 后续请求到来前把数据放到外部 cache。</p>
+<p>解决的思路：外部 cache 内建 prefetch circuit，它作为 L1 prefetch circuit 的 slave，接收 L1 预取请求附带的 access map、matched pattern、pointer bit 等信息，然后在外部 cache 层级继续 prefetch ahead</p>
+<p>设计：</p>
+<ol>
+<li>Prefetch circuit 生成 L1 预取请求，并可携带：<ul>
+<li>pointer indication</li>
+<li>access map 信息</li>
+<li>matched pattern 或包含潜在 prefetch 的 access map</li>
+</ul>
+</li>
+<li>若该预取在 data cache miss，经 external interface unit 到 external cache</li>
+<li>Prefetch circuit 接收该请求：<ul>
+<li>若自身 access map miss 且该请求是 processor 发来的 prefetch request，则为对应区域分配 map entry。</li>
+<li>用请求携带的 PA 和 map 初始化 entry。</li>
+<li>根据 pointer indication 和其他数据初始化 QF、St-O、Ptr。</li>
+<li>继续把当前预取发往下一层 memory&#x2F;cache，除非 external cache 命中</li>
+</ul>
+</li>
+<li>若后续请求命中 prefetch circuit 的 map，且 QF 有足够 token，则根据 hitting entry 的 access map 生成一个或多个更深层预取。</li>
+<li>对带 pointer bit 的 L1 预取请求，外部 prefetcher 的 QF 增加 12 token，使 pointer 区域在外部 cache 层更激进。</li>
+</ol>
+<pre><code>L1 data-cache side:
+
+  demand accesses
+       |
+       v
+  AMPM map/pattern match
+       |
+       +--&gt; L1 prefetch to D$
+       |
+       +--&gt; request metadata:
+            { access_map, matched_pattern, pointer_bit, store_only? }
+
+External cache side:
+
+  receive L1 prefetch miss
+       |
+       v
+  allocate/update external prefetch map
+       |
+       +--&gt; pointer_bit ? QF += 12 : unchanged
+       |
+       v
+  generate deeper prefetches if QF allows
+</code></pre>
+<p>这个结构把一级预取器做成“模式识别者”，把外部 cache 预取器做成“提前执行者”。二级预取器不必重复做完整 pattern matching，因为 L1 已经给出 pattern&#x2F;map 语义。</p>
+<h2 id="设计点-8-Filter-buffer-降低多端口-LSU-输入复杂度"><a href="#设计点-8-Filter-buffer-降低多端口-LSU-输入复杂度" class="headerlink" title="设计点 8: Filter buffer 降低多端口 LSU 输入复杂度"></a>设计点 8: Filter buffer 降低多端口 LSU 输入复杂度</h2><p>针对的问题：一个高性能 data cache 可能每周期有多个 load&#x2F;store 端口，LSU 可同时发出多个 memory ops。如果 AMPM 直接支持所有并发输入，access map CAM&#x2F;RAM、shifter、pattern compare 和 update 逻辑会变复杂</p>
+<p>解决的思路：在 prefetch circuit 输入端加入 filter buffer</p>
+<p>设计：</p>
+<ol>
+<li>Filter buffer 接收来自 mux&#x2F;LSU 的 Q 个并发 memory ops</li>
+<li>它捕获每个 op 的 VA 和属性</li>
+<li>它可以合并多个指向同一 access map 的 memory ops</li>
+<li>示例实现中，每周期向 access map memory 和 control circuit 发射一个 op；其他实现也可每周期发射多于一个但少于 Q 个</li>
+<li>这样降低 AMPM 内部存储结构和比较逻辑的端口需求</li>
+</ol>
+<h1 id="关键流程解读"><a href="#关键流程解读" class="headerlink" title="关键流程解读"></a>关键流程解读</h1><h2 id="Flow-1-L1-prefetch-circuit-20-处理一次访问"><a href="#Flow-1-L1-prefetch-circuit-20-处理一次访问" class="headerlink" title="Flow 1: L1 prefetch circuit 20 处理一次访问"></a>Flow 1: L1 prefetch circuit 20 处理一次访问</h2><pre><code>Input: VA, attributes(pointer indication, load/store, prefetch/demand)
+
+1. 用 VA[M:P+1] 查 access map memory 40。
+2. 若 miss:
+   a. 分配一个 map entry，可用 LRU/pseudo-LRU/random 替换。
+   b. 写入 VA tag 并置 valid。
+   c. 初始化 map：全 &quot;.&quot;，当前 access point 置 &quot;A&quot;。
+   d. 初始化 Ptr/St-O/QF。
+3. 若 hit:
+   a. 输出 access map。
+   b. shifter 42 按 VA[P:N] 对齐 access point。
+   c. pattern memory 44 比较 shifted map。
+   d. 若 pattern match，根据 pattern 中尚未发过的 &quot;P&quot; 位置生成预取。
+   e. 检查 Ptr field，若超过阈值，在 prefetch request 中设置 pointer bit。
+   f. 更新 map：
+      - demand access 到 &quot;.&quot; =&gt; &quot;A&quot;
+      - demand hit 到 &quot;P&quot; =&gt; &quot;S&quot;
+      - prefetch access 到 &quot;.&quot; =&gt; &quot;P&quot;
+      - 记录新生成的 prefetch 位置
+   g. 更新 Ptr：pointer op 增加，非 pointer op 递减。
+   h. 更新 St-O：观察到 load 则清零。
+   i. 更新 QF：发预取消耗，成功消费返还，重复命中惩罚。
+</code></pre>
+<h2 id="Flow-2-外部-prefetch-circuit-36-处理-L1-预取"><a href="#Flow-2-外部-prefetch-circuit-36-处理-L1-预取" class="headerlink" title="Flow 2: 外部 prefetch circuit 36 处理 L1 预取"></a>Flow 2: 外部 prefetch circuit 36 处理 L1 预取</h2><pre><code>Input: request from processor 10 / L1 prefetcher
+
+1. 查 prefetch circuit 36 内部 access maps。
+2. 若 miss 且输入是 prefetch request:
+   a. 为该 prefetch 影响的区域分配 map entry。
+   b. 用 request 携带的 PA 和 map 初始化。
+   c. 根据 pointer indication、store-only 等初始化 state。
+   d. 把当前 prefetch 发往下一层 memory/cache。
+3. 若 hit:
+   a. 检查 QF 是否足够。
+   b. 根据 hitting map 生成更深层 prefetch。
+   c. 更新 QF。
+4. 若 request 带 pointer bit:
+   a. QF 增加 pointer bonus。
+   b. 该 map 后续可更频繁地产生二级预取。
+</code></pre>
