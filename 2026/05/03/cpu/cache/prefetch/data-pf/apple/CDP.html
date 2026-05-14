@@ -148,7 +148,8 @@ stores           |  |  | L1 Data Cache   |&lt;-+--+-- L1D fills from LLC
                          +-----------+
 </code></pre>
 <hr>
-<h2 id="设计点-1-Pointer-Detection-Circuit-检测候选指针"><a href="#设计点-1-Pointer-Detection-Circuit-检测候选指针" class="headerlink" title="设计点 1: Pointer Detection Circuit 检测候选指针"></a>设计点 1: Pointer Detection Circuit 检测候选指针</h2><p>在数据 cache line fill 到达时扫描 line 内容，把“看起来像地址”的数据 word 提取为候选指针，然后尝试预取候选地址对应的 cache line</p>
+<h2 id="设计点-1-Pointer-Detection-Circuit-检测候选指针"><a href="#设计点-1-Pointer-Detection-Circuit-检测候选指针" class="headerlink" title="设计点 1: Pointer Detection Circuit 检测候选指针"></a>设计点 1: Pointer Detection Circuit 检测候选指针</h2><p><img src="/figs/CDP_design1_pointer_detection.png" alt="Pointer Detection Circuit 检测候选指针"></p>
+<p>在数据 cache line fill 到达时扫描 line 内容，把“看起来像地址”的数据 word 提取为候选指针，然后尝试预取候选地址对应的 cache line</p>
 <p>扫描设计：</p>
 <ul>
 <li>扫描对象:<ol>
@@ -185,7 +186,8 @@ stores           |  |  | L1 Data Cache   |&lt;-+--+-- L1D fills from LLC
 </ul>
 </li>
 </ul>
-<h2 id="设计点-2-History-Filter-抑制重复候选"><a href="#设计点-2-History-Filter-抑制重复候选" class="headerlink" title="设计点 2: History Filter 抑制重复候选"></a>设计点 2: History Filter 抑制重复候选</h2><p>针对的问题：同一个候选指针可能在短时间内被多条 fill 或重复扫描发现，如果每次都发预取，会浪费带宽和 LLC 端口</p>
+<h2 id="设计点-2-History-Filter-抑制重复候选"><a href="#设计点-2-History-Filter-抑制重复候选" class="headerlink" title="设计点 2: History Filter 抑制重复候选"></a>设计点 2: History Filter 抑制重复候选</h2><p><img src="/figs/CDP_design2_history_filter.png" alt="History Filter 抑制重复候选"></p>
+<p>针对的问题：同一个候选指针可能在短时间内被多条 fill 或重复扫描发现，如果每次都发预取，会浪费带宽和 LLC 端口</p>
 <p>解决的思路：维护一个记录“最近已发起预取的 pointer candidate”的 history filter。候选命中 history filter 时直接丢弃，不再发预取；未命中且其他 filter 通过时，插入 history filter。</p>
 <p>设计：</p>
 <ol>
@@ -196,7 +198,8 @@ stores           |  |  | L1 Data Cache   |&lt;-+--+-- L1D fills from LLC
 <blockquote>
 <p>hash collision 会导致误判，但专利认为预取本来就是 speculative task，不要求绝对精确。面积、能耗、性能可通过 workload modeling 调参</p>
 </blockquote>
-<h2 id="设计点-3-QF-table"><a href="#设计点-3-QF-table" class="headerlink" title="设计点 3: QF table"></a>设计点 3: QF table</h2><h3 id="用-hashed-PC-和-relative-offset-学习局部预取质量"><a href="#用-hashed-PC-和-relative-offset-学习局部预取质量" class="headerlink" title="用 hashed PC 和 relative offset 学习局部预取质量"></a>用 hashed PC 和 relative offset 学习局部预取质量</h3><p>QF table 存储多个 saturating 或有限范围 counter。候选指针根据多个独立索引值定位 counter。若 counter 满足阈值，例如非零，则允许预取；否则抑制。</p>
+<h2 id="设计点-3-QF-table"><a href="#设计点-3-QF-table" class="headerlink" title="设计点 3: QF table"></a>设计点 3: QF table</h2><p><img src="/figs/CDP_design3_qf_table.png" alt="QF table"></p>
+<h3 id="用-hashed-PC-和-relative-offset-学习局部预取质量"><a href="#用-hashed-PC-和-relative-offset-学习局部预取质量" class="headerlink" title="用 hashed PC 和 relative offset 学习局部预取质量"></a>用 hashed PC 和 relative offset 学习局部预取质量</h3><p>QF table 存储多个 saturating 或有限范围 counter。候选指针根据多个独立索引值定位 counter。若 counter 满足阈值，例如非零，则允许预取；否则抑制。</p>
 <p>counters 由两个维度索引：hashed PC 和 relative cache line offset</p>
 <ul>
 <li>hashed PC 来自引发该 cache line fill 的 load&#x2F;store 指令 PC</li>
@@ -256,7 +259,8 @@ prefetch allowed if selected_counter &gt;= threshold
 </li>
 <li>adjacent-line counter 同样在发起时 -cost，成功时 +credit，可独立 reset</li>
 </ol>
-<h2 id="设计点-4-Global-QF-Counter"><a href="#设计点-4-Global-QF-Counter" class="headerlink" title="设计点 4: Global QF Counter"></a>设计点 4: Global QF Counter</h2><p>针对的问题：即使局部 counter 尚未全部失效，某个程序 phase 中 content-directed pointer prefetching 整体可能已经弊大于利</p>
+<h2 id="设计点-4-Global-QF-Counter"><a href="#设计点-4-Global-QF-Counter" class="headerlink" title="设计点 4: Global QF Counter"></a>设计点 4: Global QF Counter</h2><p><img src="/figs/CDP_design4_global_qf.png" alt="Global QF Counter"></p>
+<p>针对的问题：即使局部 counter 尚未全部失效，某个程序 phase 中 content-directed pointer prefetching 整体可能已经弊大于利</p>
 <p>解决的思路：维护一个 global QF counter，所有候选共享。</p>
 <p>设计：</p>
 <ul>
@@ -265,7 +269,8 @@ prefetch allowed if selected_counter &gt;= threshold
 <li>候选只有在 global counter 满足阈值时才允许发出</li>
 <li>也可周期性 reset，周期可与 QF table 独立</li>
 </ul>
-<h2 id="设计点-5-Dispatch-Policy"><a href="#设计点-5-Dispatch-Policy" class="headerlink" title="设计点 5: Dispatch Policy"></a>设计点 5: Dispatch Policy</h2><p>针对的问题：pointer detection 可能基于虚拟地址，但 LLC 常是物理地址索引；预取请求真正发出前可能需要 TLB 翻译和仲裁</p>
+<h2 id="设计点-5-Dispatch-Policy"><a href="#设计点-5-Dispatch-Policy" class="headerlink" title="设计点 5: Dispatch Policy"></a>设计点 5: Dispatch Policy</h2><p><img src="/figs/CDP_design5_dispatch_policy.png" alt="Dispatch Policy"></p>
+<p>针对的问题：pointer detection 可能基于虚拟地址，但 LLC 常是物理地址索引；预取请求真正发出前可能需要 TLB 翻译和仲裁</p>
 <p>解决的思路：过滤通过后的候选进入等待&#x2F;dispatch 结构，满足物理地址可用、年龄顺序、LLC 端口仲裁等条件后发出。</p>
 <p>设计：</p>
 <ol>
@@ -275,7 +280,8 @@ prefetch allowed if selected_counter &gt;= threshold
 <li>CDP 需要与其他 prefetch requester 仲裁 LLC 访问。</li>
 <li>预取完成后，数据可以只保存到 LLC，不立即 refill 到 L1D。之后 L1D demand miss 到该地址，再由 LLC 快速 fill L1D (备选方案：也可同时安装到 LLC 和 L1D)</li>
 </ol>
-<h2 id="设计点-6-Prefetch-Request-Cache"><a href="#设计点-6-Prefetch-Request-Cache" class="headerlink" title="设计点 6: Prefetch Request Cache"></a>设计点 6: Prefetch Request Cache</h2><p>针对的问题：预取发出时知道 hashed PC 和 relative offset；预取 fill 回来时看到的是地址和 prefetch 标记。要给正确 QF counter 加 credit，必须恢复当初的 QF table index information</p>
+<h2 id="设计点-6-Prefetch-Request-Cache"><a href="#设计点-6-Prefetch-Request-Cache" class="headerlink" title="设计点 6: Prefetch Request Cache"></a>设计点 6: Prefetch Request Cache</h2><p><img src="/figs/CDP_design6_prefetch_request_cache.png" alt="Prefetch Request Cache"></p>
+<p>针对的问题：预取发出时知道 hashed PC 和 relative offset；预取 fill 回来时看到的是地址和 prefetch 标记。要给正确 QF counter 加 credit，必须恢复当初的 QF table index information</p>
 <p>解决的思路：发出预取时，把 QF index metadata 存入 prefetch request cache。fill 回来时用 hashed physical address 查 request cache，命中后取出 metadata，对相应 counter 加 credit</p>
 <p>设计：</p>
 <ul>
@@ -313,28 +319,4 @@ request_cache lookup by hash(Paddr)
         |
         +-- miss -&gt; local QF not credited
                    GlobalQF may still be updated/reset
-</code></pre>
-<hr>
-<h2 id="整体流程"><a href="#整体流程" class="headerlink" title="整体流程"></a>整体流程</h2><p>候选检测和预取发起：</p>
-<pre><code class="language-mermaid">flowchart TD
-    A[600: incoming L1D fill from LLC] --&gt; B[identify memory pointer candidate]
-    B --&gt; C[602: apply filters]
-    C --&gt; D{history miss? QF ok? global QF ok?}
-    D -- no --&gt; X[discard candidate]
-    D -- yes --&gt; E[604: initiate prefetch to LLC]
-    E --&gt; F{adjacent-line counter ok?}
-    F -- yes --&gt; G[also prefetch adjacent cache line]
-    F -- no --&gt; H[no adjacent prefetch]
-    G --&gt; I[606: debit counters for prefetch cost]
-    H --&gt; I
-    I --&gt; J[608: store QF index info in request cache]
-</code></pre>
-<p>预取 fill 回来后的 credit：</p>
-<pre><code class="language-mermaid">flowchart TD
-    A[700: detect CDP prefetch-initiated fill] --&gt; B[702: lookup prefetch request cache]
-    B --&gt; C{hit?}
-    C -- yes --&gt; D[704: use QF index metadata]
-    D --&gt; E[credit QF counter and optional adjacent counter]
-    E --&gt; F[reset/update global QF counter]
-    C -- no --&gt; G[706: update global QF only]
 </code></pre>

@@ -1,0 +1,688 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Hinted Indirect Prefetch(ARM US12292834B2)[2025]: Cache prefetching | xixi's blog</title><meta name="author" content="xixi"><meta name="copyright" content="xixi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="ARM 专利(US12292834B2) [2025] 解读： Hinted Indirect Prefetch 通过处理器 hint 标记地址指示数据，并在该数据进入缓存后生成间接目标地址继续预取">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hinted Indirect Prefetch(ARM US12292834B2)[2025]: Cache prefetching">
+<meta property="og:url" content="https://xixi-shredp.github.io/2026/05/03/cpu/cache/prefetch/data-pf/arm/hint_based_prefetcher/index.html">
+<meta property="og:site_name" content="xixi&#39;s blog">
+<meta property="og:description" content="ARM 专利(US12292834B2) [2025] 解读： Hinted Indirect Prefetch 通过处理器 hint 标记地址指示数据，并在该数据进入缓存后生成间接目标地址继续预取">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://xixi-shredp.github.io/img/avatar.jpg">
+<meta property="article:published_time" content="2026-05-02T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-13T08:11:33.271Z">
+<meta property="article:author" content="xixi">
+<meta property="article:tag" content="ARM">
+<meta property="article:tag" content="patent">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xixi-shredp.github.io/img/avatar.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Hinted Indirect Prefetch(ARM US12292834B2)[2025]: Cache prefetching",
+  "url": "https://xixi-shredp.github.io/2026/05/03/cpu/cache/prefetch/data-pf/arm/hint_based_prefetcher/",
+  "image": "https://xixi-shredp.github.io/img/avatar.jpg",
+  "datePublished": "2026-05-02T16:00:00.000Z",
+  "dateModified": "2026-05-13T08:11:33.271Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "xixi",
+      "url": "https://xixi-shredp.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.svg"><link rel="canonical" href="https://xixi-shredp.github.io/2026/05/03/cpu/cache/prefetch/data-pf/arm/hint_based_prefetcher/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Hinted Indirect Prefetch(ARM US12292834B2)[2025]: Cache prefetching',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="bg-animation" id="web_bg" style="background: linear-gradient(180deg, black, black, #23064D);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">110</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">52</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/index_top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/favicon.svg" alt="Logo"><span class="site-name">xixi's blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Hinted Indirect Prefetch(ARM US12292834B2)[2025]: Cache prefetching</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Hinted Indirect Prefetch(ARM US12292834B2)[2025]: Cache prefetching</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-05-02T16:00:00.000Z" title="Created 2026-05-03 00:00:00">2026-05-03</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-05-13T08:11:33.271Z" title="Updated 2026-05-13 16:11:33">2026-05-13</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/">cpu</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/">cache</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/prefetch/">prefetch</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cpu/cache/prefetch/data-pf/">data-pf</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><table>
+<thead>
+<tr>
+<th>Title</th>
+<th>Patent Number</th>
+<th>Inc.</th>
+<th>Year</th>
+<th>url</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cache prefetching</td>
+<td>US12292834B2</td>
+<td>ARM Ltd</td>
+<td>2025</td>
+<td><a target="_blank" rel="noopener" href="https://patents.google.com/patent/US12292834B2/en">https://patents.google.com/patent/US12292834B2/en</a></td>
+</tr>
+</tbody></table>
+<p>该专利要解决的是间接访存场景：先 load 一个 index&#x2F;pointer，再用它生成下一次 load 的地址。<br>传统 stride&#x2F;pattern prefetcher 只能看见前半段规则访问，看不见后半段由数据值决定的任意地址。</p>
+<p>TLDR：</p>
+<ol>
+<li>ARM 的方案是:<ul>
+<li>在处理器侧识别“本次访问返回的数据会被用于生成后续访存地址”</li>
+<li>把 hint 绑定到 demand request 或相关 prefetch request 上</li>
+<li>prefetcher 据此把该 request 关联为 indirect prefetch condition</li>
+</ul>
+</li>
+<li>当第一地址的数据已经在关联 cache 中可用时，address generation circuitry 用该数据直接作为 pointer，或与 offset&#x2F;base 组合成第二地址，然后 prefetch request issuing circuitry 对第二地址发起预取</li>
+<li>若第一地址的数据尚未进 cache，则 indirect prefetch buffer 记录第一地址或 request 标识，等数据填入 cache 后再触发地址生成和二级预取</li>
+<li>更关键的扩展是：若一串规则 demand access 中至少一个被 hint 标为地址指示数据，prefetcher 可以把同一 pattern 外推出的“一级预取”也标为 indirect，然后使用预取回来的 index&#x2F;pointer 继续生成“二级预取”，从而显著拉长预取距离</li>
+</ol>
+<h1 id="背景和动机"><a href="#背景和动机" class="headerlink" title="背景和动机"></a>背景和动机</h1><p>现代处理器依赖 cache 降低平均访存延迟。传统硬件 prefetcher 通常观察 demand access 的地址序列，并在发现 stride、stream 或其他规则 pattern 后外推未来地址。该机制对顺序数组、固定步长结构体遍历有效，但对许多 pointer chasing、稀疏矩阵、gather&#x2F;scatter 类访问较弱。</p>
+<p>本专利关注的访问形态可以抽象为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">load A[i]              ; A[i] 是 index 或 pointer</span><br><span class="line">addr = base + f(A[i])  ; 或 addr = A[i]</span><br><span class="line">load B[addr]           ; 第二次访问地址由第一次 load 的数据值决定</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>这里第一段 <code>A[i]</code> 可能是规则地址序列，所以常规 prefetcher 可以预取 index array；</li>
+<li>但第二段 <code>B[addr]</code> 的地址取决于内存中的数据值，可能没有稳定 stride。</li>
+<li>仅靠观察 demand 地址，prefetcher 在真正执行第二次 load 前无法知道目标地址。</li>
+</ul>
+<p>专利给出的典型动机是稀疏矩阵或类似结构：为了跳过零元素，内存中维护一个“非零元素位置数组”。处理器先访问该数组拿到 index，再用 index 加上矩阵基址访问实际非零元素。</p>
+<p>index array 的访问很规则，但矩阵元素地址是稀疏、任意的。若只预取 index array，真正的矩阵数据仍可能 miss；若等 demand load 拿到 index 后才预取矩阵数据，预取距离又太短。</p>
+<p>相关工作主要来自专利引用，方向集中在 hint-based prefetch、indirect prefetch 和 prefetch state 管理：</p>
+<table>
+<thead>
+<tr>
+<th>Title</th>
+<th>Authors, From</th>
+<th>url</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Run-time updating of prediction hint instructions</td>
+<td>Dale Morris, 2006</td>
+<td><a target="_blank" rel="noopener" href="https://patents.google.com/patent/US20060026408A1/en">https://patents.google.com/patent/US20060026408A1/en</a></td>
+</tr>
+<tr>
+<td>Prefetch hardware efficiency via prefetch hint instructions</td>
+<td>Sun Microsystems, 2009</td>
+<td><a target="_blank" rel="noopener" href="https://patents.google.com/patent/US7533242B1/en">https://patents.google.com/patent/US7533242B1/en</a></td>
+</tr>
+<tr>
+<td>Techniques for Multi-Level Indirect Data Prefetching</td>
+<td>Ravi K. Arimilli, 2009</td>
+<td><a target="_blank" rel="noopener" href="https://patents.google.com/patent/US20090198906A1/en">https://patents.google.com/patent/US20090198906A1/en</a></td>
+</tr>
+<tr>
+<td>Techniques for Prediction-Based Indirect Data Prefetching</td>
+<td>Ravi K. Arimilli, 2009</td>
+<td><a target="_blank" rel="noopener" href="https://patents.google.com/patent/US20090198905A1/en">https://patents.google.com/patent/US20090198905A1/en</a></td>
+</tr>
+<tr>
+<td>Data prefetch ramp implementation based on memory utilization</td>
+<td>IBM, 2016</td>
+<td><a target="_blank" rel="noopener" href="https://patents.google.com/patent/US20160034400A1/en">https://patents.google.com/patent/US20160034400A1/en</a></td>
+</tr>
+<tr>
+<td>Hardware prefetcher for indirect access patterns</td>
+<td>Intel, 2016</td>
+<td><a target="_blank" rel="noopener" href="https://patents.google.com/patent/US20160188476A1/en">https://patents.google.com/patent/US20160188476A1/en</a></td>
+</tr>
+<tr>
+<td>Prefetching from indirect buffers at a processing unit</td>
+<td>AMD, 2022</td>
+<td><a target="_blank" rel="noopener" href="https://patents.google.com/patent/US20220091847A1/en">https://patents.google.com/patent/US20220091847A1/en</a></td>
+</tr>
+<tr>
+<td>Producer prefetch filter</td>
+<td>Arm Limited, 2023</td>
+<td><a target="_blank" rel="noopener" href="https://patents.google.com/patent/US20230229596A1/en">https://patents.google.com/patent/US20230229596A1/en</a></td>
+</tr>
+</tbody></table>
+<hr>
+<h1 id="Insight"><a href="#Insight" class="headerlink" title="Insight"></a>Insight</h1><p>这个专利的核心 insight 有三层。</p>
+<h2 id="Insight-1-间接目标地址不能从历史地址直接预测，但可以从已加载的数据中计算"><a href="#Insight-1-间接目标地址不能从历史地址直接预测，但可以从已加载的数据中计算" class="headerlink" title="Insight 1: 间接目标地址不能从历史地址直接预测，但可以从已加载的数据中计算"></a>Insight 1: 间接目标地址不能从历史地址直接预测，但可以从已加载的数据中计算</h2><p>传统 prefetcher 把地址序列当作主要信号，而这里的未来地址隐藏在 cache line 的数据内容中。<br>只要硬件知道某个 load 返回的是 address indicating data，就可以在数据到达 cache 时把它解释为 index&#x2F;pointer，并主动生成下一跳地址</p>
+<h2 id="Insight-2-处理器前端或执行-pipeline-比-prefetcher-更早知道数据依赖语义"><a href="#Insight-2-处理器前端或执行-pipeline-比-prefetcher-更早知道数据依赖语义" class="headerlink" title="Insight 2: 处理器前端或执行 pipeline 比 prefetcher 更早知道数据依赖语义"></a>Insight 2: 处理器前端或执行 pipeline 比 prefetcher 更早知道数据依赖语义</h2><p>例如 decode 阶段看到类似下面的指令序列：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">LD1SW &#123;Z4.D&#125;, P2/Z, [X26, X20, LSL #2]</span><br><span class="line">LD1D  &#123;Z5.D&#125;, P2/Z, [X25, Z4.D, LSL #3]</span><br></pre></td></tr></table></figure>
+
+<p>第一条把内存数据装入向量寄存器 <code>Z4</code>，第二条用 <code>Z4</code> 的元素作为 index 生成多个 load 地址</p>
+<p>对 prefetcher 来说，第一条只是普通 load；对 pipeline 来说，这是一条 producer load，其结果随后会作为 address operand。<br>专利把这种语义信息压缩成 hint，随 request、旁路消息或共享状态传给 prefetcher，使 prefetcher 不必自己做复杂的数据依赖推断</p>
+<h2 id="Insight3-把间接预取条件传播给由常规-pattern-prefetcher-生成的-request，可以把二级预取提前到-demand-之前"><a href="#Insight3-把间接预取条件传播给由常规-pattern-prefetcher-生成的-request，可以把二级预取提前到-demand-之前" class="headerlink" title="Insight3: 把间接预取条件传播给由常规 pattern prefetcher 生成的 request，可以把二级预取提前到 demand 之前"></a>Insight3: 把间接预取条件传播给由常规 pattern prefetcher 生成的 request，可以把二级预取提前到 demand 之前</h2><p>如果 demand 访问 <code>[000]、[001]、[002]</code> 是规则访问 index array，pattern detection circuitry 会外推出 <code>[003]、[004]</code> 并发出一级 prefetch</p>
+<p>若同一序列中的 demand <code>[000]</code> 已经带 hint，硬件可以合理假设该序列访问的都是 address indicating data，于是把 <code>[003]、[004]</code> 的 prefetch 也标为 indirect。这样当 <code>[003]、[004]</code> 的 index 被预取回来时，硬件可进一步发出 <code>[109]、[101]</code> 等二级目标预取。这个动作发生在 CPU demand 真正访问 <code>[003]、[004]</code> 之前，因此比“等 demand load 返回 index 后再预取”有更长的隐藏延迟窗口</p>
+<p>从体系结构角度看，这是一种“语义提示 + 数据驱动预取 + pattern 外推”的组合：</p>
+<ol>
+<li>语义提示解决“哪些数据可以被当成地址”。</li>
+<li>数据驱动预取解决“任意地址如何产生”。</li>
+<li>pattern 外推解决“如何把时机提前到 producer demand 之前”。</li>
+</ol>
+<hr>
+<h1 id="核心设计"><a href="#核心设计" class="headerlink" title="核心设计"></a>核心设计</h1><p>该专利定义的硬件围绕一个增强型 prefetcher 展开: 在已有 stride&#x2F;pattern prefetcher 旁边加入 indirect prefetch condition 的标记、追踪和消费机制</p>
+<p><img src="/figs/hint-based-prefetcher-architecture.png" alt="Hint-based indirect prefetcher 架构图"></p>
+<p>整体路径如下：</p>
+<ol>
+<li>CPU&#x2F;coprocessor 观察指令或访存语义，在某个 demand memory access request 上附带 hint，表示该 request 返回的数据将用于生成后续访存地址</li>
+<li>associating circuitry 观察 demand request 和 prefetch request，把带有 hint 或间接继承 hint 的 request 关联到 indirect prefetch condition</li>
+<li>address generation circuitry 在 address indicating data 可用时生成第二地址：数据可以直接是 pointer，也可以是 index，需要与 offset&#x2F;base 组合</li>
+<li>prefetch request issuing circuitry 对第二地址发出 prefetch，使目标数据提前进入关联 cache</li>
+<li>若 address indicating data 暂不可用，indirect prefetch buffer 保存 request&#x2F;address 标识，等待 cache fill 后再触发地址生成</li>
+<li>pattern detection circuitry 仍负责识别常规规则序列，并将其外推出的一级 prefetch 与 indirect prefetch condition 结合，从而发起二级预取</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">             +----------------------+</span><br><span class="line">             |   CPU / Coprocessor  |</span><br><span class="line">             |  decode/execute hint |</span><br><span class="line">             +----------+-----------+</span><br><span class="line">                        |</span><br><span class="line">        demand request + hint / pattern hint</span><br><span class="line">                        |</span><br><span class="line">                        v</span><br><span class="line">+------------------------------------------------+</span><br><span class="line">|                   Prefetcher 40                |</span><br><span class="line">|                                                |</span><br><span class="line">|  +----------------+      +------------------+  |</span><br><span class="line">|  | Associating    |&lt;----&gt;| Pattern Detect   |  |</span><br><span class="line">|  | Circuitry 304  |      | Circuitry 308    |  |</span><br><span class="line">|  +-------+--------+      +---------+--------+  |</span><br><span class="line">|          |                         |           |</span><br><span class="line">|          | indirect condition      | pattern   |</span><br><span class="line">|          v                         v           |</span><br><span class="line">|  +----------------+      +------------------+  |</span><br><span class="line">|  | Address Gen    |&lt;----&gt;| Indirect Prefetch|  |</span><br><span class="line">|  | Circuitry 306  |      | Buffer 310       |  |</span><br><span class="line">|  +-------+--------+      +------------------+  |</span><br><span class="line">|          | generated second/further address     |</span><br><span class="line">|          v                                      |</span><br><span class="line">|  +---------------------------+                  |</span><br><span class="line">|  | Prefetch Request Issuing  | 312              |</span><br><span class="line">|  +-------------+-------------+                  |</span><br><span class="line">+----------------|-------------------------------+</span><br><span class="line">                 |</span><br><span class="line">                 v</span><br><span class="line">           +-----------+</span><br><span class="line">           | Cache 318 |</span><br><span class="line">           +-----------+</span><br></pre></td></tr></table></figure>
+
+<h2 id="设计点-1-hint-标记地址指示数据"><a href="#设计点-1-hint-标记地址指示数据" class="headerlink" title="设计点 1: hint 标记地址指示数据"></a>设计点 1: hint 标记地址指示数据</h2><p>针对的问题：prefetcher 仅看地址流，不知道某次 load 返回的数据是否会变成下一次访存地址。若盲目把数据当地址，会产生大量错误预取；若完全不做，则无法处理间接访问</p>
+<p>解决的思路：让 associated processing circuitry 负责识别语义，prefetcher 只消费低成本 hint。hint 可以来自指令序列检测、特定指令类型识别，或者 pattern metadata</p>
+<p>设计：</p>
+<ol>
+<li>CPU&#x2F;coprocessor 在检测到 producer load 和 consumer load 的依赖关系时发 hint<ul>
+<li>例如第一条指令 load 到寄存器，后续指令用该寄存器作为地址生成输入。</li>
+</ul>
+</li>
+<li>hint 可以随 demand access request 编码发送<ul>
+<li>request 字段包括 request type、address indication、other information，以及 hint information&#x2F;offset indication</li>
+</ul>
+</li>
+<li>hint 字段可以是一个 flag，表示 request 访问 address indicating data；也可以携带 offset&#x2F;base 信息，供 address generation circuitry 计算第二地址</li>
+<li>如果 offset 太大，也可以分布在多个 request 中，或者由处理器以其他共享方式提供</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Demand access request</span><br><span class="line">+--------------+--------------------+-------------------+---------------------------+</span><br><span class="line">| Request type | Address indication | Other information | hint / offset indication  |</span><br><span class="line">+--------------+--------------------+-------------------+---------------------------+</span><br></pre></td></tr></table></figure>
+
+<p>这个设计的要点是: 把“数据值是否可解释为地址”的判断放在更有语义上下文的处理器侧，而不是要求 prefetcher 从历史 miss 或寄存器依赖中反推</p>
+<h2 id="设计点-2-indirect-prefetch-condition-的关联与消费"><a href="#设计点-2-indirect-prefetch-condition-的关联与消费" class="headerlink" title="设计点 2: indirect prefetch condition 的关联与消费"></a>设计点 2: indirect prefetch condition 的关联与消费</h2><p>针对的问题：有了 hint 后，还需要把 hint 与具体 memory access request 精确绑定，并在数据到达 cache 时触发后续动作</p>
+<p>解决的思路：引入 associating circuitry，把某个 first memory access request 标成 indirect prefetch condition；address generation circuitry 只对满足该条件的 request 消费返回数据并生成第二地址</p>
+<p>设计：</p>
+<ol>
+<li>associating circuitry 同时观察 CPU demand request 和 prefetcher 自己发出的 prefetch request</li>
+<li>当 request 带有 hint，或者通过同一 pattern 间接继承 hint 时，将该 request 关联到 indirect prefetch condition</li>
+<li>如果第一地址的数据已经在关联 cache 中，address generation circuitry 直接读取该 address indicating data</li>
+<li>如果该数据是 pointer，则第二地址等于该数据值；如果是 index，则与 offset&#x2F;base 组合得到第二地址</li>
+<li>prefetch request issuing circuitry 发出对第二地址的 prefetch</li>
+</ol>
+<p>该路径本质上把“load value prediction”问题降级为“load value consumption after arrival”：硬件不预测 index&#x2F;pointer 的值，而是在它真实到达 cache 后尽快用它生成下一跳预取。</p>
+<h2 id="设计点-3-indirect-prefetch-buffer-处理数据尚未可用的窗口"><a href="#设计点-3-indirect-prefetch-buffer-处理数据尚未可用的窗口" class="headerlink" title="设计点 3: indirect prefetch buffer 处理数据尚未可用的窗口"></a>设计点 3: indirect prefetch buffer 处理数据尚未可用的窗口</h2><p>针对的问题：当 hint&#x2F;request 到达 prefetcher 时，第一地址的数据可能还没有命中 cache。若此时放弃，很多低层 cache 或内存返回的数据就无法用于间接预取</p>
+<p>解决的思路：indirect prefetch buffer 记录需要等待的数据来源，当 cache 中出现对应数据后再触发地址生成</p>
+<p>设计：</p>
+<ol>
+<li>当 request 被关联 indirect prefetch condition，但第一地址数据尚不可用时，address generation circuitry 把该 request 或第一地址的标识写入 indirect prefetch buffer</li>
+<li>buffer entry 至少需要能匹配“哪个 cache fill 或 cache-resident line 对应待消费的 address indicating data”</li>
+<li>硬件可以轮询或通过 cache fill 事件检查 buffer entry 是否满足</li>
+<li>一旦对应数据可用，address generation circuitry 读取数据生成第二地址，并由 issuing circuitry 发 prefetch</li>
+<li>该机制同样适用于 demand request 和被标为 indirect 的 prefetch request</li>
+</ol>
+<p>这避免了设计被限定为 L1 hit 才能工作。只要第一 request 最终使 index&#x2F;pointer 进入可见 cache，硬件就能延迟生成二级预取</p>
+<h2 id="设计点-4-与-pattern-detection-结合拉长预取距离"><a href="#设计点-4-与-pattern-detection-结合拉长预取距离" class="headerlink" title="设计点 4: 与 pattern detection 结合拉长预取距离"></a>设计点 4: 与 pattern detection 结合拉长预取距离</h2><p>针对的问题：若只在 demand producer load 返回后生成第二地址，预取距离可能仍然太短。尤其是 producer load 和 consumer load 紧邻时，二级预取未必赶得上真实 demand</p>
+<p>解决的思路：对 producer load 所在的规则序列做一级预取，并把 indirect condition 传播到这些一级 prefetch 上。这样“预取回来的 index&#x2F;pointer”也能作为地址生成输入</p>
+<p>设计：</p>
+<ol>
+<li>pattern detection circuitry 观察 demand request，识别出一串相关地址，例如 <code>[000]、[001]、[002]</code> 的 +1 stride</li>
+<li>prefetch request issuing circuitry 外推出 <code>[003]、[004]</code>，先预取 index array 中更远的位置</li>
+<li>如果该 demand 序列中至少一个 request 已经关联 indirect prefetch condition，则 associating circuitry 假设同一序列访问的也是 address indicating data</li>
+<li><code>[003]、[004]</code> 这些一级 prefetch 也被关联 indirect prefetch condition</li>
+<li>当 <code>[003]、[004]</code> 的 index&#x2F;pointer 返回后，address generation circuitry 继续生成 <code>[109]、[101]</code> 等任意地址，并发出二级 prefetch</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Index array / address indicating data        Target data region</span><br><span class="line"></span><br><span class="line">ADDR[000] -&gt; index[008] -- offset[100]+008 --&gt; ADDR[108]   D -&gt; P</span><br><span class="line">ADDR[001] -&gt; index[002] -- offset[100]+002 --&gt; ADDR[102]   D -&gt; P</span><br><span class="line">ADDR[002] -&gt; index[004] -- offset[100]+004 --&gt; ADDR[104]   D -&gt; P</span><br><span class="line">ADDR[003] -&gt; index[009] -- offset[100]+009 --&gt; ADDR[109]   P -&gt; P</span><br><span class="line">ADDR[004] -&gt; index[001] -- offset[100]+001 --&gt; ADDR[101]   P -&gt; P</span><br><span class="line"></span><br><span class="line">D: CPU demand access to producer/index array</span><br><span class="line">P: prefetch generated either for index array or target data</span><br></pre></td></tr></table></figure>
+
+<p>先通过 pattern prefetch 预取 producer 数据，再把 producer 数据当作二级 prefetch 的地址源”：</p>
+<p>该设计点是本专利相对常规 indirect prefetch 的关键增强。它不只是“根据 demand load 的返回值预取下一跳”，而是让被 pattern prefetch 提前取回的数据也能触发下一跳，从而把预取链条前移</p>
+<h2 id="设计点-5-指令级识别和-ISA-微架构接口"><a href="#设计点-5-指令级识别和-ISA-微架构接口" class="headerlink" title="设计点 5: 指令级识别和 ISA&#x2F;微架构接口"></a>设计点 5: 指令级识别和 ISA&#x2F;微架构接口</h2><p>针对的问题：硬件需要在 request 发出之前尽早知道哪些访问是 producer load，否则 hint 到达太晚</p>
+<p>解决的思路：在 pipeline 较早阶段检测指令类型或指令序列。例如 decode 阶段看到某 load 的结果会被后续地址生成指令消费，就在该 load 对应的 demand request 上携带 hint</p>
+<p>设计：</p>
+<ol>
+<li>通过指令序列识别：第一条指令产生 load，第二条指令使用第一条结果生成访存地址</li>
+<li>通过预定指令类型识别：某些 gather load 或加载 index vector 的指令在特定 workload 中高度暗示后续间接访问，即使尚未看到 consumer，也可发 hint</li>
+<li>hint 不一定需要暴露为软件可见 ISA。它可以是 decode&#x2F;issue&#x2F;load-store unit 内部生成的微架构 metadata</li>
+<li>若需要 offset&#x2F;base，处理器可在 demand request 的 hint field 中携带，也可以通过单独通道或共享存储提供</li>
+</ol>
+<p>该接口的优势是成本较低：prefetcher 不必理解完整指令流，只需要看到 request metadata；CPU 也不必负责真正发出目标预取，只负责告诉 prefetcher“这个 producer 值值得被当作地址源”</p>
+<h1 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h1><ol>
+<li>能覆盖传统 stride&#x2F;pattern prefetcher 难以处理的任意目标地址。目标地址由真实 index&#x2F;pointer 生成，不要求目标地址流本身有规律</li>
+<li>误判控制比纯硬件 value-based indirect prefetch 更好。hint 来自处理器侧的指令语义或 request metadata，减少把普通数据误当地址的概率</li>
+<li>与已有 prefetcher 兼容。pattern detection circuitry 仍然负责规则 producer stream，新增逻辑主要消费 hint 和 prefetched producer data</li>
+<li>可显著增加预取距离。通过把 indirect condition 传播到 pattern 外推出来的一级 prefetch，二级目标预取可发生在 producer demand 之前</li>
+<li>适合向量 gather、稀疏矩阵、索引数组遍历等场景。这些场景中 producer 地址规则而 consumer 地址稀疏，正好匹配专利假设</li>
+<li>支持 pointer 和 index 两种数据形式。地址生成既可以直接使用 pointer，也可以组合 offset&#x2F;base，覆盖更广数据布局</li>
+<li>indirect prefetch buffer 使机制不依赖 immediate cache hit。只要 producer 数据稍后进入关联 cache，仍可触发二级预取</li>
+</ol>
+<h1 id="缺点和实现代价"><a href="#缺点和实现代价" class="headerlink" title="缺点和实现代价"></a>缺点和实现代价</h1><ol>
+<li>需要处理器和 prefetcher 之间新增 hint 通道或 request metadata。若 request encoding 已经紧张，加入 hint&#x2F;offset 字段会增加协议和验证成本</li>
+<li>需要额外硬件状态。associating circuitry、address generation circuitry、indirect prefetch buffer，以及 pattern state 中的 indirect 标记都会占面积和功耗</li>
+<li>需要读取 cache data 并把 data path 接入地址生成逻辑。prefetcher 不再只处理地址流，还要在合适时刻消费 cache 中的数据值，这会增加时序、端口和一致性设计复杂度</li>
+<li>错误 hint 或过度传播会导致污染。若某个 pattern 序列中只有部分元素是真正的 address indicating data，把 condition 传播到整条 stream 可能产生无用二级 prefetch</li>
+<li>安全和隔离需要谨慎处理。硬件根据数据值主动访问第二地址，必须遵守权限、地址翻译、异常抑制、side-channel 缓解和 prefetch 不可见语义</li>
+<li>对不规则 producer stream 帮助有限。若 index&#x2F;pointer 本身也无法被提前预取，则机制退化为 demand producer 返回后再发二级预取，预取距离可能不足</li>
+<li>可能增加 cache 带宽压力。二级 prefetch 访问任意地址，局部性可能弱，若 confidence 不足会挤占 demand miss、普通 prefetch 和写回流量</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io">xixi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://xixi-shredp.github.io/2026/05/03/cpu/cache/prefetch/data-pf/arm/hint_based_prefetcher/">https://xixi-shredp.github.io/2026/05/03/cpu/cache/prefetch/data-pf/arm/hint_based_prefetcher/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/patent/">patent</a><a class="post-meta__tags" href="/tags/ARM/">ARM</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/05/03/cpu/cache/prefetch/data-pf/apple/AMPM-Pointer/" title="AMPM-Pointer(Apple US9971694B1)[2018]: Prefetch circuit for a processor with pointer optimization"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">AMPM-Pointer(Apple US9971694B1)[2018]: Prefetch circuit for a processor with pointer optimization</div></div><div class="info-2"><div class="info-item-1">Apple 专利(US9971694B1) [2018] 解读：在 AMPM 预取器中识别 pointer chasing、传递 pointer indication，并结合 quality factor/store-only throttling 调整多级 cache 预取频率</div></div></div></a><a class="pagination-related" href="/2026/05/03/cpu/ooo/lsu/pointer_chasing_prediction/" title="Pointer Chasing Prediction(Apple US9116817B2)[2015]: Pointer chasing prediction"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Pointer Chasing Prediction(Apple US9116817B2)[2015]: Pointer chasing prediction</div></div><div class="info-2"><div class="info-item-1">Apple 专利(US9116817B2) [2015] 解读：Pointer Chasing Prediction 通过识别 load-to-load 指针追踪依赖，并预测生产 load 的结果可从 L1 D-cache/LSU 内部转发，使消费 load 在源操作数写回调度器/寄存器文件前提前发射。</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RIP-TaggedRegion/" title="RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-04-27</div><div class="info-item-2">RIP-Tagged Region Prefetcher(AMD US12204459B2)[2022]: Data cache region prefetcher</div></div><div class="info-2"><div class="info-item-1">AMD 专利(US12204459B2) [2022] 解读：RIP-Tagged Region Prefetcher - 用 RIP 和 cache-line offset 标记 region footprint，训练非顺序区域访问并在后续同 RIP miss 时触发预取。</div></div></div></a><a class="pagination-related" href="/2026/04/27/cpu/cache/prefetch/data-pf/spatial/RegionPatternMatching/" title="Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-04-27</div><div class="info-item-2">Region Pattern Matching(AMD US12360907B2)[2025]: Region pattern-matching hardware prefetcher</div></div><div class="info-2"><div class="info-item-1">AMD 专利(US12360907B2) [2025] 解读：Region Pattern Matching - 将 region 内访问 footprint 记录成 subdivision bitmap，并通过 region type / direct pattern table 在相似 region 上重放预取。</div></div></div></a><a class="pagination-related" href="/2026/03/04/cpu/ooo/rob/patent_US11467844B2/" title="Alibaba Patents(US11467844B2): Storing multiple instructions in a single reordering buffer entry"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-04</div><div class="info-item-2">Alibaba Patents(US11467844B2): Storing multiple instructions in a single reordering buffer entry</div></div><div class="info-2"><div class="info-item-1">Alibaba 专利解读: ROB Entry 存储多个指令</div></div></div></a><a class="pagination-related" href="/2026/03/10/cpu/bpu/btb/patent_US12487830B1/" title="Ventana Patent(US12487830B1): Prediction unit with first predictor that provides a hashed fetch address of a current fetch block to its own input and to a second predictor that uses it to predict the fetch address of a next fetch block"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-03-10</div><div class="info-item-2">Ventana Patent(US12487830B1): Prediction unit with first predictor that provides a hashed fetch address of a current fetch block to its own input and to a second predictor that uses it to predict the fetch address of a next fetch block</div></div><div class="info-2"><div class="info-item-1">Ventana 专利简介：BTB 预测 ICache Set/Way + SCP 前端完整流水线</div></div></div></a><a class="pagination-related" href="/2026/05/06/cpu/cache/prefetch/data-pf/arm/Offset_Based_Pointer_Predictor/" title="Offset Based Pointer Prefetcher(Arm US10445241B2)[2019]: Prefetching using offset data to access a pointer within a current data element for use in prefetching a subsequent data element"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-06</div><div class="info-item-2">Offset Based Pointer Prefetcher(Arm US10445241B2)[2019]: Prefetching using offset data to access a pointer within a current data element for use in prefetching a subsequent data element</div></div><div class="info-2"><div class="info-item-1">Arm 专利(US10445241B2) [2019] 解读：用 offset data 学习数据元素之间的地址关系，并对链表、指针数组等间接访问执行下一元素预取</div></div></div></a><a class="pagination-related" href="/2026/05/03/cpu/cache/prefetch/data-pf/apple/" title="Apple Data Prefetcher Overview"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-03</div><div class="info-item-2">Apple Data Prefetcher Overview</div></div><div class="info-2"><div class="info-item-1">Apple 数据预取器简介（专利）</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">xixi</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">110</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">52</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xixi-shredp"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/xixi-shredp" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my blog, for learning and communication purposes only. If there is any copyright infringement, please leave a message via email on GitHub.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%83%8C%E6%99%AF%E5%92%8C%E5%8A%A8%E6%9C%BA"><span class="toc-number">1.</span> <span class="toc-text">背景和动机</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Insight"><span class="toc-number">2.</span> <span class="toc-text">Insight</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Insight-1-%E9%97%B4%E6%8E%A5%E7%9B%AE%E6%A0%87%E5%9C%B0%E5%9D%80%E4%B8%8D%E8%83%BD%E4%BB%8E%E5%8E%86%E5%8F%B2%E5%9C%B0%E5%9D%80%E7%9B%B4%E6%8E%A5%E9%A2%84%E6%B5%8B%EF%BC%8C%E4%BD%86%E5%8F%AF%E4%BB%A5%E4%BB%8E%E5%B7%B2%E5%8A%A0%E8%BD%BD%E7%9A%84%E6%95%B0%E6%8D%AE%E4%B8%AD%E8%AE%A1%E7%AE%97"><span class="toc-number">2.1.</span> <span class="toc-text">Insight 1: 间接目标地址不能从历史地址直接预测，但可以从已加载的数据中计算</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Insight-2-%E5%A4%84%E7%90%86%E5%99%A8%E5%89%8D%E7%AB%AF%E6%88%96%E6%89%A7%E8%A1%8C-pipeline-%E6%AF%94-prefetcher-%E6%9B%B4%E6%97%A9%E7%9F%A5%E9%81%93%E6%95%B0%E6%8D%AE%E4%BE%9D%E8%B5%96%E8%AF%AD%E4%B9%89"><span class="toc-number">2.2.</span> <span class="toc-text">Insight 2: 处理器前端或执行 pipeline 比 prefetcher 更早知道数据依赖语义</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Insight3-%E6%8A%8A%E9%97%B4%E6%8E%A5%E9%A2%84%E5%8F%96%E6%9D%A1%E4%BB%B6%E4%BC%A0%E6%92%AD%E7%BB%99%E7%94%B1%E5%B8%B8%E8%A7%84-pattern-prefetcher-%E7%94%9F%E6%88%90%E7%9A%84-request%EF%BC%8C%E5%8F%AF%E4%BB%A5%E6%8A%8A%E4%BA%8C%E7%BA%A7%E9%A2%84%E5%8F%96%E6%8F%90%E5%89%8D%E5%88%B0-demand-%E4%B9%8B%E5%89%8D"><span class="toc-number">2.3.</span> <span class="toc-text">Insight3: 把间接预取条件传播给由常规 pattern prefetcher 生成的 request，可以把二级预取提前到 demand 之前</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1"><span class="toc-number">3.</span> <span class="toc-text">核心设计</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E7%82%B9-1-hint-%E6%A0%87%E8%AE%B0%E5%9C%B0%E5%9D%80%E6%8C%87%E7%A4%BA%E6%95%B0%E6%8D%AE"><span class="toc-number">3.1.</span> <span class="toc-text">设计点 1: hint 标记地址指示数据</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E7%82%B9-2-indirect-prefetch-condition-%E7%9A%84%E5%85%B3%E8%81%94%E4%B8%8E%E6%B6%88%E8%B4%B9"><span class="toc-number">3.2.</span> <span class="toc-text">设计点 2: indirect prefetch condition 的关联与消费</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E7%82%B9-3-indirect-prefetch-buffer-%E5%A4%84%E7%90%86%E6%95%B0%E6%8D%AE%E5%B0%9A%E6%9C%AA%E5%8F%AF%E7%94%A8%E7%9A%84%E7%AA%97%E5%8F%A3"><span class="toc-number">3.3.</span> <span class="toc-text">设计点 3: indirect prefetch buffer 处理数据尚未可用的窗口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E7%82%B9-4-%E4%B8%8E-pattern-detection-%E7%BB%93%E5%90%88%E6%8B%89%E9%95%BF%E9%A2%84%E5%8F%96%E8%B7%9D%E7%A6%BB"><span class="toc-number">3.4.</span> <span class="toc-text">设计点 4: 与 pattern detection 结合拉长预取距离</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E7%82%B9-5-%E6%8C%87%E4%BB%A4%E7%BA%A7%E8%AF%86%E5%88%AB%E5%92%8C-ISA-%E5%BE%AE%E6%9E%B6%E6%9E%84%E6%8E%A5%E5%8F%A3"><span class="toc-number">3.5.</span> <span class="toc-text">设计点 5: 指令级识别和 ISA&#x2F;微架构接口</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BC%98%E7%82%B9"><span class="toc-number">4.</span> <span class="toc-text">优点</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%BC%BA%E7%82%B9%E5%92%8C%E5%AE%9E%E7%8E%B0%E4%BB%A3%E4%BB%B7"><span class="toc-number">5.</span> <span class="toc-text">缺点和实现代价</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/05/06/cpu/cache/prefetch/data-pf/arm/Offset_Based_Pointer_Predictor/" title="Offset Based Pointer Prefetcher(Arm US10445241B2)[2019]: Prefetching using offset data to access a pointer within a current data element for use in prefetching a subsequent data element">Offset Based Pointer Prefetcher(Arm US10445241B2)[2019]: Prefetching using offset data to access a pointer within a current data element for use in prefetching a subsequent data element</a><time datetime="2026-05-05T16:00:00.000Z" title="Created 2026-05-06 00:00:00">2026-05-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/05/06/cpu/cache/prefetch/data-pf/amd/AopPrefetcher/" title="Pointer Array Prefetcher(AMD US12050916B2)[2024]: Array of pointers prefetching">Pointer Array Prefetcher(AMD US12050916B2)[2024]: Array of pointers prefetching</a><time datetime="2026-05-05T16:00:00.000Z" title="Created 2026-05-06 00:00:00">2026-05-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/05/03/cpu/cache/prefetch/data-pf/apple/" title="Apple Data Prefetcher Overview">Apple Data Prefetcher Overview</a><time datetime="2026-05-03T02:21:02.000Z" title="Created 2026-05-03 10:21:02">2026-05-03</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/05/03/cpu/ooo/lsu/Load2AGUBypass/" title="Load-to-AGU Early Bypass(Apple US9710268B2)[2017]: Reducing latency for pointer chasing loads">Load-to-AGU Early Bypass(Apple US9710268B2)[2017]: Reducing latency for pointer chasing loads</a><time datetime="2026-05-02T16:00:00.000Z" title="Created 2026-05-03 00:00:00">2026-05-03</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/05/03/cpu/ooo/lsu/pointer_chasing_prediction/" title="Pointer Chasing Prediction(Apple US9116817B2)[2015]: Pointer chasing prediction">Pointer Chasing Prediction(Apple US9116817B2)[2015]: Pointer chasing prediction</a><time datetime="2026-05-02T16:00:00.000Z" title="Created 2026-05-03 00:00:00">2026-05-03</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(160deg, #4D063C, #3E064D, #23064D, #08064D);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By xixi</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></span></div><div class="footer_custom_text">Life is so Beautify!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/metingjs/dist/Meting.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
